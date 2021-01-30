@@ -1,28 +1,33 @@
-<template lang="pug">
-  b-container(ref="playlistRef" style="min-height: calc(100vh - 49px);").fluid.pt-2
-    b-row
-      b-col
-        span.title.text-default.mb-2 {{ translate('menu.playlist') }}
+<template>
+  <v-container ref="playlistRef" style='min-height: 100vh'>
+    <h2>{{ translate('menu.playlist') }}</h2>
+    <v-text-field
+      v-model="search"
+      append-icon="mdi-magnify"
+      label="Search"
+      single-line
+      hide-details
+    ></v-text-field>
 
-    panel
-      template(v-slot:left)
-        button-with-icon(icon="caret-left" href="#/").btn-secondary.btn-reverse {{translate('commons.back')}}
-      template(v-slot:right)
-        b-pagination(
-          v-model="currentPage"
-          :total-rows="count"
-          :per-page="perPage"
-          ).m-0
-
-    loading(v-if="state.loading !== $state.success")
-    b-table(v-else striped small :items="playlist" :fields="fields" @row-clicked="linkTo($event)").table-p-0
-      template(v-slot:cell(thumbnail)="data")
-        img(v-bind:src="generateThumbnail(data.item.videoId)").float-left.pr-3
+    <v-data-table
+      :server-items-length="count"
+      hide-default-header
+      :loading="state.loading !== $state.success"
+      :headers="headers"
+      :options.sync="options"
+      :items="playlist"
+      @click:row="linkTo($event)"
+    >
+      <template v-slot:[`item.thumbnail`]="{ item }">
+        <v-img class="fitThumbnail" :src="generateThumbnail(item.videoId)"></v-img>
+      </template>
+    </v-data-table>
+  </v-container>
 </template>
 
 <script lang="ts">
 import {
-  defineComponent, onMounted, ref, watch, 
+  defineComponent, onMounted, ref, watch,
 } from '@vue/composition-api';
 import VueScrollTo from 'vue-scrollto';
 
@@ -37,9 +42,9 @@ export default defineComponent({
   components: { loading: () => import('src/panel/components/loading.vue') },
   setup(props, ctx) {
     const playlist = ref([] as SongPlaylistInterface[]);
+    const search = ref('');
 
-    const currentPage = ref(1);
-    const perPage = ref(25);
+    const options = ref({} as { sortBy?: string, sortDesc?: string, page?: number, itemsPerPage?: number });
     const count = ref(0);
 
     const playlistRef = ref(null as Element | null);
@@ -48,20 +53,23 @@ export default defineComponent({
       loading: number;
     });
 
-    const fields = [
-      {
-        key: 'thumbnail', label: '', tdClass: 'fitThumbnail', 
-      },
-      { key: 'title', label: '' },
-      { key: 'buttons', label: '' },
+    const headers = [
+      { value: 'thumbnail', label: '', tdClass: 'fitThumbnail' },
+      { value: 'title', label: '' },
     ];
+
     const refreshPlaylist = () => {
       state.value.loading = ButtonStates.progress;
       socket.emit('current.playlist.tag', (err1: string | null, tag: string) => {
         if (err1) {
           return console.error(err1);
         }
-        socket.emit('find.playlist', { page: (currentPage.value - 1), tag }, (err: string | null, items: SongPlaylistInterface[], countOfItems: number) => {
+        socket.emit('find.playlist', {
+          perPage: (options.value.itemsPerPage ?? 1),
+          page: ((options.value.page ?? 1) - 1),
+          tag,
+          search: search.value,
+        }, (err: string | null, items: SongPlaylistInterface[], countOfItems: number) => {
           if (err) {
             return console.error(err);
           }
@@ -79,10 +87,9 @@ export default defineComponent({
     const moveTo = () => {
       VueScrollTo.scrollTo(playlistRef.value as Element, 500, {
         container: 'body',
-        force:     true,
-        offset:    -49,
-        onDone:    function() {
-          const scrollPos = window.scrollY || document.getElementsByTagName('html')[0].scrollTop;
+        force: true,
+        onDone: function() {
+          const scrollPos = window.scrollY || document.getElementsByTagName("html")[0].scrollTop;
           if (scrollPos === 0) {
             setTimeout(() => moveTo(), 100);
           }
@@ -90,7 +97,7 @@ export default defineComponent({
       });
     };
 
-    watch(currentPage, () => refreshPlaylist());
+    watch([options, search], () => refreshPlaylist(), { deep: true });
 
     onMounted(() => {
       refreshPlaylist();
@@ -111,24 +118,22 @@ export default defineComponent({
     return {
       linkTo,
       generateThumbnail,
-      fields,
-      perPage,
+      headers,
       count,
-      currentPage,
       playlistRef,
       state,
       translate,
       playlist,
-    };
-  },
+      options,
+      search,
+    }
+  }
 });
 </script>
 
 <style>
-.table-p-0 td {
-  padding: 0 !important;
-}
 .fitThumbnail {
   width: 100px;
+  margin: 2px;
 }
 </style>

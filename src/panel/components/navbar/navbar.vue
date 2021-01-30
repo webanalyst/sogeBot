@@ -26,10 +26,6 @@
 </template>
 
 <script lang="ts">
-import { library } from '@fortawesome/fontawesome-svg-core';
-import {
-  faBars, faSignInAlt, faSignOutAlt,
-} from '@fortawesome/free-solid-svg-icons';
 import {
   defineComponent, onMounted, ref,
 } from '@vue/composition-api';
@@ -39,8 +35,7 @@ import vueHeadful from 'vue-headful';
 import { getSocket } from 'src/panel/helpers/socket';
 import translate from 'src/panel/helpers/translate';
 
-Vue.component('vue-headful', vueHeadful);
-library.add(faBars, faSignInAlt, faSignOutAlt);
+Vue.component('VueHeadful', vueHeadful);
 
 const socket = getSocket('/');
 

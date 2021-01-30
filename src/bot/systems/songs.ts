@@ -124,12 +124,13 @@ class Songs extends System {
         cb(e, []);
       }
     });
-    publicEndpoint(this.nsp, 'find.playlist', async (opts: { page?: number; search?: string, tag?: string }, cb) => {
+    publicEndpoint(this.nsp, 'find.playlist', async (opts: { perPage?: number, page?: number; search?: string, tag?: string }, cb) => {
       const connection = await getConnection();
       opts.page = opts.page ?? 0;
+      opts.perPage = opts.perPage ?? 25;
       const query = getRepository(SongPlaylist).createQueryBuilder('playlist')
-        .offset(opts.page * 25)
-        .limit(25);
+        .offset(opts.page * opts.perPage)
+        .limit(opts.perPage);
 
       if (typeof opts.search !== 'undefined') {
         query.andWhere(new Brackets(w => {

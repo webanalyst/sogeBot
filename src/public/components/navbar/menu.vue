@@ -1,19 +1,25 @@
 <template>
-  <perfect-scrollbar class="main-menu" :options="{useBothWheelAxes: true, suppressScrollY: true}">
-    <nav id="menu-detach" class="nav d-flex justify-content-between" style="width: max-content">
-      <b-nav-item :key="item.name" v-for="item of menu" :href="'#/' + item.id.replace(/\./g, '/')">
-        {{translate('menu.' + item.name)}}
-      </b-nav-item>
-    </nav>
-  </perfect-scrollbar>
+  <v-list
+    nav
+    dense
+  >
+    <v-list-item
+      v-for="item of menu"
+      :key="item.name"
+      :href="'#/' + item.id.replace(/\./g, '/')"
+    >
+      <v-list-item-icon>
+        <v-icon>{{ icons.get(item.name) }}</v-icon>
+      </v-list-item-icon>
+      <v-list-item-title>{{ translate('menu.' + item.name) }}</v-list-item-title>
+    </v-list-item>
+  </v-list>
 </template>
 
 <script lang="ts">
 import {
-  defineComponent, onMounted, ref, 
+  defineComponent, onMounted, ref,
 } from '@vue/composition-api';
-import { PerfectScrollbar } from 'vue2-perfect-scrollbar';
-import 'vue2-perfect-scrollbar/dist/vue2-perfect-scrollbar.css';
 
 import type { menuPublic } from 'src/bot/helpers/panel';
 import { getSocket } from 'src/panel/helpers/socket';
@@ -21,8 +27,14 @@ import translate from 'src/panel/helpers/translate';
 
 const socket = getSocket('/');
 
+const icons = new Map<string, string>([
+  ['dashboard', 'mdi-view-dashboard'],
+  ['playlist', 'mdi-playlist-music'],
+  ['quotes', 'mdi-comment-quote'],
+  ['songs', 'mdi-playlist-play'],
+]);
+
 export default defineComponent({
-  components: { PerfectScrollbar },
   setup() {
     const menu = ref([] as typeof menuPublic);
 
@@ -46,7 +58,9 @@ export default defineComponent({
         }
       });
     });
-    return { menu, translate };
+    return {
+      menu, translate, icons,
+    };
   },
 });
 </script>

@@ -1,23 +1,33 @@
-<template lang="pug">
-  b-container(ref="songrequestsRef" style="min-height: calc(100vh - 49px);").fluid.pt-2
-    b-row
-      b-col
-        span.title.text-default.mb-2 {{ translate('song-requests') }}
+<template>
+  <v-container ref="songrequestsRef" style='min-height: 100vh'>
+    <h2>{{ translate('song-requests') }}</h2>
 
-    panel
-      template(v-slot:left)
-        button-with-icon(icon="caret-left" href="#/").btn-secondary.btn-reverse {{translate('commons.back')}}
+    <v-text-field
+      v-model="search"
+      append-icon="mdi-magnify"
+      label="Search"
+      single-line
+      hide-details
+    ></v-text-field>
 
-    loading(v-if="state.loading !== $state.success")
-    b-table(v-else striped small :items="requests" :fields="fields" @row-clicked="linkTo($event)").table-p-0
-      template(v-slot:cell(thumbnail)="data")
-        img(v-bind:src="generateThumbnail(data.item.videoId)").float-left.pr-3
+    <v-data-table
+      hide-default-header
+      hide-default-footer
+      :search="search"
+      :loading="state.loading !== $state.success"
+      :headers="headers"
+      :items="requests"
+      @click:row="linkTo($event)"
+    >
+      <template v-slot:[`item.thumbnail`]="{ item }">
+        <v-img class="fitThumbnail" :src="generateThumbnail(item.videoId)"></v-img>
+      </template>
+    </v-data-table>
+  </v-container>
 </template>
 
 <script lang="ts">
-import {
-  defineComponent, onMounted, ref, 
-} from '@vue/composition-api';
+import { defineComponent, ref, onMounted, watch } from '@vue/composition-api'
 import VueScrollTo from 'vue-scrollto';
 
 import { SongRequestInterface } from 'src/bot/database/entity/song';
@@ -28,30 +38,28 @@ import translate from 'src/panel/helpers/translate';
 const socket = getSocket('/systems/songs', true);
 
 export default defineComponent({
-  components: { loading: () => import('src/panel/components/loading.vue') },
   setup(props, ctx) {
     const requests = ref([] as SongRequestInterface[]);
+    const search = ref('');
+
     const songrequestsRef = ref(null as Element | null);
 
     const state = ref({ loading: ButtonStates.progress } as {
       loading: number;
     });
 
-    const fields = [
-      {
-        key: 'thumbnail', label: '', tdClass: 'fitThumbnail', 
-      },
-      { key: 'title', label: '' },
-      { key: 'username', label: '' },
+    const headers = [
+      { value: 'thumbnail', label: '', tdClass: 'fitThumbnail' },
+      { value: 'title', label: '' },
+      { value: 'username', label: '' },
     ];
 
     const moveTo = () => {
       VueScrollTo.scrollTo(songrequestsRef.value as Element, 500, {
         container: 'body',
-        force:     true,
-        offset:    -49,
-        onDone:    function() {
-          const scrollPos = window.scrollY || document.getElementsByTagName('html')[0].scrollTop;
+        force: true,
+        onDone: function() {
+          const scrollPos = window.scrollY || document.getElementsByTagName("html")[0].scrollTop;
           if (scrollPos === 0) {
             setTimeout(() => moveTo(), 100);
           }
@@ -59,19 +67,24 @@ export default defineComponent({
       });
     };
 
+    watch([search], () => refresh(), { deep: true });
+
     onMounted(() => {
+      refresh();
+      ctx.root.$nextTick(() => {
+        moveTo();
+      });
+    });
+    const refresh = () => {
       state.value.loading = ButtonStates.progress;
       setInterval(() => {
         socket.emit('songs::getAllRequests', {}, (err: string | null, items: SongRequestInterface[]) => {
           console.debug('Loaded', { requests: items });
           requests.value = items;
           state.value.loading = ButtonStates.success;
-        });
-      }, 2000);
-      ctx.root.$nextTick(() => {
-        moveTo();
-      });
-    });
+        })
+      }, 2000)
+    };
 
     const generateThumbnail = (videoId: string) => {
       return `https://img.youtube.com/vi/${videoId}/1.jpg`;
@@ -83,9 +96,10 @@ export default defineComponent({
     };
 
     return {
+      search,
       generateThumbnail,
       linkTo,
-      fields,
+      headers,
       requests,
       songrequestsRef,
       state,
@@ -96,10 +110,8 @@ export default defineComponent({
 </script>
 
 <style>
-.table-p-0 td {
-  padding: 0 !important;
-}
 .fitThumbnail {
   width: 100px;
+  margin: 2px;
 }
 </style>
