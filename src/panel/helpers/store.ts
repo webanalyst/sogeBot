@@ -12,6 +12,7 @@ const store = new Vuex.Store({
     currentTags:   [],
     loadingMsg:    '',
     isUILoaded:    false,
+    isMobile:      false,
   },
   mutations: {
     setLoggedUser (state, user) {
@@ -34,6 +35,9 @@ const store = new Vuex.Store({
     },
     setUILoaded (state) {
       Vue.set(state, 'isUILoaded', true);
+    },
+    setMobile (state, value) {
+      Vue.set(state, 'isMobile', value);
     },
   },
 });

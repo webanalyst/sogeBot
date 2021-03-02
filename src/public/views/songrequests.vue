@@ -1,6 +1,11 @@
 <template>
-  <v-container ref="songrequestsRef" style='min-height: 100vh'>
-    <h2>{{ translate('song-requests') }}</h2>
+  <v-container
+    ref="songrequestsRef"
+    style="min-height: 100vh"
+  >
+    <h2 :class="{ 'pl-6': $store.state.isMobile }">
+      {{ translate('song-requests') }}
+    </h2>
 
     <v-text-field
       v-model="search"
@@ -8,7 +13,7 @@
       label="Search"
       single-line
       hide-details
-    ></v-text-field>
+    />
 
     <v-data-table
       hide-default-header
@@ -19,16 +24,20 @@
       :items="requests"
       @click:row="linkTo($event)"
     >
-      <template v-slot:[`item.thumbnail`]="{ item }">
-        <v-img class="fitThumbnail" :src="generateThumbnail(item.videoId)"></v-img>
+      <template #[`item.thumbnail`]="{ item }">
+        <v-img
+          class="fitThumbnail"
+          :src="generateThumbnail(item.videoId)"
+        />
       </template>
     </v-data-table>
   </v-container>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted, watch } from '@vue/composition-api'
-import VueScrollTo from 'vue-scrollto';
+import {
+  defineComponent, onMounted, ref, watch,
+} from '@vue/composition-api';
 
 import { SongRequestInterface } from 'src/bot/database/entity/song';
 import { ButtonStates } from 'src/panel/helpers/buttonStates';
@@ -49,31 +58,27 @@ export default defineComponent({
     });
 
     const headers = [
-      { value: 'thumbnail', label: '', tdClass: 'fitThumbnail' },
+      {
+        value: 'thumbnail', label: '', tdClass: 'fitThumbnail',
+      },
       { value: 'title', label: '' },
       { value: 'username', label: '' },
     ];
 
-    const moveTo = () => {
-      VueScrollTo.scrollTo(songrequestsRef.value as Element, 500, {
-        container: 'body',
-        force: true,
-        onDone: function() {
-          const scrollPos = window.scrollY || document.getElementsByTagName("html")[0].scrollTop;
-          if (scrollPos === 0) {
-            setTimeout(() => moveTo(), 100);
-          }
-        },
-      });
-    };
-
     watch([search], () => refresh(), { deep: true });
+
+    const moveTo = async () => {
+      const scroll = await ctx.root.$vuetify.goTo(songrequestsRef.value as HTMLElement);
+      if (!scroll) {
+        setTimeout(() => {
+          moveTo();
+        }, 200);
+      }
+    };
 
     onMounted(() => {
       refresh();
-      ctx.root.$nextTick(() => {
-        moveTo();
-      });
+      moveTo();
     });
     const refresh = () => {
       state.value.loading = ButtonStates.progress;
@@ -82,8 +87,8 @@ export default defineComponent({
           console.debug('Loaded', { requests: items });
           requests.value = items;
           state.value.loading = ButtonStates.success;
-        })
-      }, 2000)
+        });
+      }, 2000);
     };
 
     const generateThumbnail = (videoId: string) => {

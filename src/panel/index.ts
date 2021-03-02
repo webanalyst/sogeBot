@@ -1,7 +1,7 @@
 // eslint-disable-next-line
 import LoadScript from 'vue-plugin-load-script';
 
-import VueCompositionAPI, { defineAsyncComponent } from '@vue/composition-api';
+import VueCompositionAPI from '@vue/composition-api';
 import { get } from 'lodash-es';
 import Vue from 'vue';
 import VueRouter from 'vue-router';
@@ -223,8 +223,6 @@ const main = async () => {
     ],
   });
 
-  const user = defineAsyncComponent({ loader: () => import('src/panel/components/navbar/user.vue') });
-
   const VueApp = new Vue({
     store,
     router,
@@ -235,7 +233,6 @@ const main = async () => {
       statsbar:         () => import('./components/statsbar/statsbar.vue'),
       changegamedialog: () => import('./components/dialog/changegamedialog.vue'),
       footerbar:        () => import('./components/footer.vue'),
-      user,
     },
     created() {
       // set proper dayjs locale
@@ -246,7 +243,6 @@ const main = async () => {
         <template v-if="$store.state.isUILoaded">
           <navbar/>
           <v-main>
-            <user/>
             <!--statsbar/>
             <dashboard
               class="view pt-1"

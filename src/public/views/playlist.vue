@@ -1,13 +1,18 @@
 <template>
-  <v-container ref="playlistRef" style='min-height: 100vh'>
-    <h2>{{ translate('menu.playlist') }}</h2>
+  <v-container
+    ref="playlistRef"
+    style="min-height: 100vh"
+  >
+    <h2 :class="{ 'pl-6': $store.state.isMobile }">
+      {{ translate('menu.playlist') }}
+    </h2>
     <v-text-field
       v-model="search"
       append-icon="mdi-magnify"
       label="Search"
       single-line
       hide-details
-    ></v-text-field>
+    />
 
     <v-data-table
       :server-items-length="count"
@@ -18,8 +23,11 @@
       :items="playlist"
       @click:row="linkTo($event)"
     >
-      <template v-slot:[`item.thumbnail`]="{ item }">
-        <v-img class="fitThumbnail" :src="generateThumbnail(item.videoId)"></v-img>
+      <template #[`item.thumbnail`]="{ item }">
+        <v-img
+          class="fitThumbnail"
+          :src="generateThumbnail(item.videoId)"
+        />
       </template>
     </v-data-table>
   </v-container>
@@ -29,7 +37,6 @@
 import {
   defineComponent, onMounted, ref, watch,
 } from '@vue/composition-api';
-import VueScrollTo from 'vue-scrollto';
 
 import { SongPlaylistInterface } from 'src/bot/database/entity/song';
 import { ButtonStates } from 'src/panel/helpers/buttonStates';
@@ -39,7 +46,6 @@ import translate from 'src/panel/helpers/translate';
 const socket = getSocket('/systems/songs', true);
 
 export default defineComponent({
-  components: { loading: () => import('src/panel/components/loading.vue') },
   setup(props, ctx) {
     const playlist = ref([] as SongPlaylistInterface[]);
     const search = ref('');
@@ -54,7 +60,9 @@ export default defineComponent({
     });
 
     const headers = [
-      { value: 'thumbnail', label: '', tdClass: 'fitThumbnail' },
+      {
+        value: 'thumbnail', label: '', tdClass: 'fitThumbnail',
+      },
       { value: 'title', label: '' },
     ];
 
@@ -66,9 +74,9 @@ export default defineComponent({
         }
         socket.emit('find.playlist', {
           perPage: (options.value.itemsPerPage ?? 1),
-          page: ((options.value.page ?? 1) - 1),
+          page:    ((options.value.page ?? 1) - 1),
           tag,
-          search: search.value,
+          search:  search.value,
         }, (err: string | null, items: SongPlaylistInterface[], countOfItems: number) => {
           if (err) {
             return console.error(err);
@@ -84,26 +92,20 @@ export default defineComponent({
       });
     };
 
-    const moveTo = () => {
-      VueScrollTo.scrollTo(playlistRef.value as Element, 500, {
-        container: 'body',
-        force: true,
-        onDone: function() {
-          const scrollPos = window.scrollY || document.getElementsByTagName("html")[0].scrollTop;
-          if (scrollPos === 0) {
-            setTimeout(() => moveTo(), 100);
-          }
-        },
-      });
+    const moveTo = async () => {
+      const scroll = await ctx.root.$vuetify.goTo(playlistRef.value as HTMLElement);
+      if (!scroll) {
+        setTimeout(() => {
+          moveTo();
+        }, 200);
+      }
     };
 
     watch([options, search], () => refreshPlaylist(), { deep: true });
 
     onMounted(() => {
       refreshPlaylist();
-      ctx.root.$nextTick(() => {
-        moveTo();
-      });
+      moveTo();
     });
 
     const generateThumbnail = (videoId: string) => {
@@ -126,8 +128,8 @@ export default defineComponent({
       playlist,
       options,
       search,
-    }
-  }
+    };
+  },
 });
 </script>
 

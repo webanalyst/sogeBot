@@ -39,10 +39,6 @@ export default defineComponent({
     const menu = ref([] as typeof menuPublic);
 
     onMounted(async () => {
-      // Workaround for touch screens - https://github.com/mdbootstrap/perfect-scrollbar/issues/867
-      if (typeof (window as any).DocumentTouch === 'undefined') {
-        (window as any).DocumentTouch = HTMLDocument;
-      }
 
       socket.emit('menu::public', (err: string | null, data: typeof menuPublic) => {
         if (err) {

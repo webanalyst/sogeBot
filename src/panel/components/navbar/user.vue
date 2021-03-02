@@ -4,135 +4,157 @@
     dense
   >
     <template v-if="isViewerLoaded && $store.state.loggedUser">
-      <v-speed-dial
+      <v-menu
         v-model="menu"
-        fixed
-        top
-        right
-        direction="bottom"
-        transition="slide-x-reverse-transition"
+        :close-on-content-click="false"
+        :nudge-width="200"
+        offset-x
       >
-        <template #activator>
-          <v-btn>
-            <v-list-item
-              class="px-0"
-              style="height: 72px"
-            >
+        <template #activator="{ on, attrs }">
+          <v-list-item
+            class="px-0"
+            style="height: 72px"
+            v-bind="attrs"
+            v-on="on"
+          >
+            <v-list-item-avatar>
+              <v-avatar>
+                <v-img :src="$store.state.loggedUser.profile_image_url" />
+              </v-avatar>
+            </v-list-item-avatar>
+            <v-list-item-content>
+              <v-list-item-title>{{ $store.state.loggedUser.login }}</v-list-item-title>
+              <v-list-item-subtitle v-if="viewer.permission">
+                {{ viewer.permission.name }}
+              </v-list-item-subtitle>
+            </v-list-item-content>
+          </v-list-item>
+        </template>
+
+        <v-card>
+          <v-list>
+            <v-list-item>
               <v-list-item-avatar>
                 <v-avatar>
                   <v-img :src="$store.state.loggedUser.profile_image_url" />
                 </v-avatar>
               </v-list-item-avatar>
+
               <v-list-item-content>
                 <v-list-item-title>{{ $store.state.loggedUser.login }}</v-list-item-title>
                 <v-list-item-subtitle v-if="viewer.permission">
                   {{ viewer.permission.name }}
                 </v-list-item-subtitle>
+                <v-list-item-subtitle>
+                  <v-chip
+                    v-for="k of viewerIs"
+                    :key="k"
+                    x-small
+                    pill
+                    color="orange"
+                  >
+                    {{ k }}
+                  </v-chip>
+                </v-list-item-subtitle>
               </v-list-item-content>
+
+              <v-list-item-action>
+                <theme />
+              </v-list-item-action>
             </v-list-item>
-          </v-btn>
-        </template>
+          </v-list>
 
-        <v-btn
-          v-if="!isPublicPage && viewer.permission.id === defaultPermissions.CASTERS"
-          text
-          @click="joinBot"
-        >
-          &nbsp;{{ translate('join-channel') }}
-        </v-btn>
+          <v-divider />
 
-        <v-btn
-          v-if="!isPublicPage && viewer.permission.id === defaultPermissions.CASTERS"
-          text
-          @click="leaveBot"
-        >
-          &nbsp;{{ translate('leave-channel') }}
-        </v-btn>
+          <v-container>
+            <v-row>
+              <v-col class="font-weight-medium text-center pa-1">
+                {{ Intl.NumberFormat($store.state.configuration.lang).format(viewer.points) }}
+                <div class="font-weight-thin">
+                  {{ translate('points') }}
+                </div>
+              </v-col>
+              <v-col class="font-weight-medium text-center pa-1">
+                {{ Intl.NumberFormat($store.state.configuration.lang).format(viewer.messages) }}
+                <div class="font-weight-thin">
+                  {{ translate('messages') }}
+                </div>
+              </v-col>
+              <v-col class="font-weight-medium text-center pa-1">
+                {{ Intl.NumberFormat($store.state.configuration.lang).format(viewer.aggregatedBits) }}
+                <div class="font-weight-thin">
+                  {{ translate('bits') }}
+                </div>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col class="font-weight-medium text-center pa-1">
+                {{ Intl.NumberFormat($store.state.configuration.lang, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(viewer.watchedTime / 1000 / 60 / 60) }} h
+                <div class="font-weight-thin">
+                  {{ translate('watched-time') }}
+                </div>
+              </v-col>
+              <v-col class="font-weight-medium text-center pa-1">
+                {{ Intl.NumberFormat($store.state.configuration.lang, { style: 'currency', currency: $store.state.configuration.currency }).format(viewer.aggregatedTips) }}
+                <div class="font-weight-thin">
+                  {{ translate('tips') }}
+                </div>
+              </v-col>
+              <v-col class="font-weight-medium text-center pa-1" />
+            </v-row>
+          </v-container>
 
-        <v-btn
-          v-if="isPublicPage && viewer.permission.id === defaultPermissions.CASTERS"
-          text
-          href="/"
-        >
-          <v-icon>
-            mdi-account-cog
-          </v-icon>
-          &nbsp;{{ translate('go-to-admin') }}
-        </v-btn>
+          <v-card-actions>
+            <v-spacer />
 
-        <v-btn
-          v-if="!isPublicPage"
-          text
-          href="/public/"
-        >
-          <v-icon>
-            mdi-earth
-          </v-icon>
-          &nbsp;{{ translate('go-to-public') }}
-        </v-btn>
+            <v-btn
+              text
+              @click="menu = false"
+            >
+              {{ translate('close') }}
+            </v-btn>
+            <v-btn
+              color="danger"
+              text
+              @click="logout"
+            >
+              <v-icon class="red--text">
+                mdi-logout
+              </v-icon>
+              {{ translate('logout') }}
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-menu>
 
-        <theme />
-
-        <div class="font-weight-medium text-center">
-          {{ Intl.NumberFormat($store.state.configuration.lang).format(viewer.points) }}
-          <span class="font-weight-thin">
-            {{ translate('points') }}
-          </span>
-        </div>
-
-        <div class="font-weight-medium text-center">
-          {{ Intl.NumberFormat($store.state.configuration.lang).format(viewer.messages) }}
-          <span class="font-weight-thin">
-            {{ translate('messages') }}
-          </span>
-        </div>
-
-        <div class="font-weight-medium text-center">
-          {{ Intl.NumberFormat($store.state.configuration.lang).format(viewer.aggregatedBits) }}
-          <span class="font-weight-thin">
-            {{ translate('bits') }}
-          </span>
-        </div>
-
-        <div class="font-weight-medium text-center">
-          {{ Intl.NumberFormat($store.state.configuration.lang, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(viewer.watchedTime / 1000 / 60 / 60) }} h
-          <span class="font-weight-thin">
-            {{ translate('watched-time') }}
-          </span>
-        </div>
-
-        <div class="font-weight-medium text-center">
-          {{ Intl.NumberFormat($store.state.configuration.lang, { style: 'currency', currency: $store.state.configuration.currency }).format(viewer.aggregatedTips) }}
-          <span class="font-weight-thin">
-            {{ translate('tips') }}
-          </span>
-        </div>
-
-        <v-btn
-          color="danger"
-          text
-          @click="logout"
-        >
-          <v-icon class="red--text">
-            mdi-logout
-          </v-icon>
-          {{ translate('logout') }}
-        </v-btn>
-      </v-speed-dial>
+      <v-list-item
+        v-if="!isPublicPage"
+        href="/public/"
+        class="mt-3"
+      >
+        <v-list-item-icon>
+          <v-icon>mdi-earth</v-icon>
+        </v-list-item-icon>
+        <v-list-item-title>{{ translate('go-to-public') }}</v-list-item-title>
+      </v-list-item>
+      <v-list-item
+        v-if="isPublicPage && viewer.permission.id === defaultPermissions.CASTERS"
+        href="/"
+        class="mt-3"
+      >
+        <v-list-item-icon>
+          <v-icon>mdi-account-cog</v-icon>
+        </v-list-item-icon>
+        <v-list-item-title>{{ translate('go-to-admin') }}</v-list-item-title>
+      </v-list-item>
     </template>
     <template v-else>
-      <v-btn
-        fixed
-        top
-        right
-        text
-        @click="login"
-      >
-        <v-icon>
-          mdi-login
-        </v-icon>
-        &nbsp;{{ translate('not-logged-in') }}
-      </v-btn>
+      <v-list-item @click="login">
+        <v-list-item-icon>
+          <v-icon>mdi-login</v-icon>
+        </v-list-item-icon>
+        <v-list-item-title>{{ translate('not-logged-in') }}</v-list-item-title>
+      </v-list-item>
     </template>
   </v-list>
 </template>

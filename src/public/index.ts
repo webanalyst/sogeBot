@@ -1,13 +1,14 @@
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faCaretLeft } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
-import VueCompositionAPI, { defineAsyncComponent } from '@vue/composition-api';
+import VueCompositionAPI from '@vue/composition-api';
 import Vue from 'vue';
 import VueRouter from 'vue-router';
 
 import { setLocale } from 'src/bot/helpers/dayjs';
 import { ButtonStates } from 'src/panel/helpers/buttonStates';
 import { isBotStarted } from 'src/panel/helpers/isBotStarted';
+import { isMobile } from 'src/panel/helpers/isMobile';
 import { isUserLoggedIn } from 'src/panel/helpers/isUserLoggedIn';
 import { getConfiguration, getTranslations } from 'src/panel/helpers/socket';
 import { store } from 'src/panel/helpers/store';
@@ -52,14 +53,11 @@ const main = async () => {
     ],
   });
 
-  const user = defineAsyncComponent({ loader: () => import('src/panel/components/navbar/user.vue') });
-
   const VueApp = new Vue({
     store,
     router,
     vuetify,
     components: {
-      user,
       navbar: () => import('./components/navbar/navbar.vue'),
       twitch: () => import('./components/twitch.vue'),
     },
@@ -68,7 +66,6 @@ const main = async () => {
         <template v-if="$store.state.isUILoaded">
           <navbar/>
           <v-main>
-            <user/>
             <twitch/>
             <router-view></router-view>
           </v-main>
@@ -97,6 +94,7 @@ const main = async () => {
 
   const configuration = await getConfiguration();
   store.commit('setConfiguration', configuration);
+  store.commit('setMobile', isMobile);
   setLocale(configuration.lang as string);
   store.commit('setUILoaded');
 };

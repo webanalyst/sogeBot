@@ -1,6 +1,11 @@
 <template>
-  <v-container ref="quotesRef" style='min-height: 100vh'>
-    <h2>{{ translate('menu.quotes') }}</h2>
+  <v-container
+    ref="quotesRef"
+    style="min-height: 100vh"
+  >
+    <h2 :class="{ 'pl-6': $store.state.isMobile }">
+      {{ translate('menu.quotes') }}
+    </h2>
 
     <v-text-field
       v-model="search"
@@ -8,7 +13,7 @@
       label="Search"
       single-line
       hide-details
-    ></v-text-field>
+    />
 
     <v-data-table
       :loading="state.loading !== $state.success"
@@ -16,11 +21,19 @@
       :search="search"
       :items="items"
     >
-      <template v-slot:[`item.createdAt`]="{ item }">
-        {{ dayjs(item.createdAt).format('LL')}} {{ dayjs(item.createdAt).format('LTS') }}
+      <template #[`item.createdAt`]="{ item }">
+        {{ dayjs(item.createdAt).format('LL') }} {{ dayjs(item.createdAt).format('LTS') }}
       </template>
-      <template v-slot:[`item.tags`]="{ item }">
-        <v-chip v-for="tag of item.tags" v-bind:key="tag" small color="orange" class="ma-1">{{ tag }}</v-chip>
+      <template #[`item.tags`]="{ item }">
+        <v-chip
+          v-for="tag of item.tags"
+          :key="tag"
+          small
+          color="orange"
+          class="ma-1"
+        >
+          {{ tag }}
+        </v-chip>
       </template>
     </v-data-table>
   </v-container>
@@ -30,7 +43,6 @@
 import {
   defineComponent, onMounted, ref,
 } from '@vue/composition-api';
-import VueScrollTo from 'vue-scrollto';
 
 import { QuotesInterface } from 'src/bot/database/entity/quotes';
 import { dayjs } from 'src/bot/helpers/dayjs';
@@ -40,7 +52,6 @@ import translate from 'src/panel/helpers/translate';
 
 const socket = getSocket('/systems/quotes', true);
 export default defineComponent({
-  components: { loading: () => import('src/panel/components/loading.vue') },
   setup(props, ctx) {
     const items = ref([] as QuotesInterface[]);
     const quotesRef = ref(null as Element | null);
@@ -55,19 +66,15 @@ export default defineComponent({
       { value: 'quote', text: translate('systems.quotes.quote.name') },
       { value: 'tags', text: translate('systems.quotes.tags.name') },
       { value: 'quotedByName', text: translate('systems.quotes.by.name') },
-    ]
+    ];
 
-    const moveTo = () => {
-      VueScrollTo.scrollTo(quotesRef.value as Element, 500, {
-        container: 'body',
-        force: true,
-        onDone: function() {
-          const scrollPos = window.scrollY || document.getElementsByTagName("html")[0].scrollTop;
-          if (scrollPos === 0) {
-            setTimeout(() => moveTo(), 100);
-          }
-        },
-      });
+    const moveTo = async () => {
+      const scroll = await ctx.root.$vuetify.goTo(quotesRef.value as HTMLElement);
+      if (!scroll) {
+        setTimeout(() => {
+          moveTo();
+        }, 200);
+      }
     };
 
     onMounted(() => {
@@ -77,9 +84,7 @@ export default defineComponent({
         items.value = itemsGetAll;
         state.value.loading = ButtonStates.success;
       });
-      ctx.root.$nextTick(() => {
-        moveTo();
-      });
+      moveTo();
     });
 
     return {
