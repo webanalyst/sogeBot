@@ -15,6 +15,7 @@ import {
 } from './helpers/log';
 import { channelId, loadedTokens } from './helpers/oauth';
 import { botId } from './helpers/oauth/botId';
+import { botProfileUrl } from './helpers/oauth/botProfileUrl';
 import { botUsername } from './helpers/oauth/botUsername';
 import { broadcasterId } from './helpers/oauth/broadcasterId';
 import { broadcasterUsername } from './helpers/oauth/broadcasterUsername';
@@ -25,6 +26,7 @@ import { setStatus } from './helpers/parser';
 import { cleanViewersCache } from './helpers/permissions';
 import { tmiEmitter } from './helpers/tmi';
 import { getIdFromTwitch } from './microservices/getIdFromTwitch';
+import { getUserFromTwitch } from './microservices/getUserFromTwitch';
 
 class OAuth extends Core {
   private toWait = 10;
@@ -313,6 +315,11 @@ class OAuth extends Core {
       if (type === 'bot') {
         this.botUsername = request.data.login;
         this.botCurrentScopes = request.data.scopes;
+
+        // load profile image of a bot
+        const userFromTwitch = await getUserFromTwitch(request.data.login);
+        botProfileUrl.value = userFromTwitch.profile_image_url;
+
       } else {
         this.broadcasterUsername = request.data.login;
         this.broadcasterCurrentScopes = request.data.scopes;

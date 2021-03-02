@@ -1,7 +1,7 @@
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faCaretLeft } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
-import VueCompositionAPI from '@vue/composition-api';
+import VueCompositionAPI, { defineAsyncComponent } from '@vue/composition-api';
 import Vue from 'vue';
 import VueRouter from 'vue-router';
 
@@ -52,11 +52,14 @@ const main = async () => {
     ],
   });
 
+  const user = defineAsyncComponent({ loader: () => import('src/panel/components/navbar/user.vue') });
+
   const VueApp = new Vue({
     store,
     router,
     vuetify,
     components: {
+      user,
       navbar: () => import('./components/navbar/navbar.vue'),
       twitch: () => import('./components/twitch.vue'),
     },
@@ -65,6 +68,7 @@ const main = async () => {
         <template v-if="$store.state.isUILoaded">
           <navbar/>
           <v-main>
+            <user/>
             <twitch/>
             <router-view></router-view>
           </v-main>

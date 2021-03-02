@@ -15,6 +15,7 @@
     >
       mdi-moon-waxing-crescent
     </v-icon>
+    &nbsp;THEME
   </v-btn>
 </template>
 

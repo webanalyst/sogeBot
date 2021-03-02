@@ -5,12 +5,8 @@
     expand-on-hover
     app
   >
-    <vue-headful :title="name.toUpperCase() + &quot; @ &quot; + channelName" />
+    <vue-headful :title="name.toUpperCase() + '@' + channelName" />
     <navmenu />
-
-    <template #append>
-      <user />
-    </template>
   </v-navigation-drawer>
 </template>
 
@@ -24,13 +20,11 @@ import { getSocket } from 'src/panel/helpers/socket';
 
 const socket = getSocket('/', true);
 
-const user = defineAsyncComponent({ loader: () => import('src/panel/components/navbar/user.vue') });
 const navmenu = defineAsyncComponent({ loader: () => import('src/public/components/navbar/menu.vue') });
 
 export default defineComponent({
   components: {
     vueHeadful,
-    user,
     navmenu,
   },
   setup() {
@@ -52,7 +46,7 @@ export default defineComponent({
     });
 
     return {
-      name, channelName, updatedAt, 
+      name, channelName, updatedAt,
     };
   },
 });
