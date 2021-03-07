@@ -30,7 +30,7 @@ const socket = getSocket('/');
 const icons = new Map<string, string>([
   ['dashboard', 'mdi-view-dashboard'],
   ['playlist', 'mdi-playlist-music'],
-  ['quotes', 'mdi-comment-quote'],
+  ['quotes', 'mdi-format-quote-close'],
   ['songs', 'mdi-playlist-play'],
 ]);
 

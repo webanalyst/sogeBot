@@ -10,6 +10,13 @@
 
       <v-spacer />
       <navmenu />
+      <template #append>
+        <div class="text-center text-caption">
+          <a href="https://github.com/sogehige/SogeBot">GitHub</a> |
+          <a href="https://github.com/sogehige/SogeBot/issues">Issues</a> |
+          <a href="https://github.com/sogehige/SogeBot/blob/master/LICENSE">GPL-3.0 License</a>
+        </div>
+      </template>
     </v-navigation-drawer>
     <v-app-bar-nav-icon
       style="z-index: 4; position: fixed; transform: translateY(13px)"

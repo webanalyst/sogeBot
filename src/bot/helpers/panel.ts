@@ -10,7 +10,7 @@ import { Server as io } from 'socket.io';
 import type { Module } from '../_interface';
 import { info } from './log';
 
-export const menu: { category: string; name: string; id: string; this: Module | null }[] = [];
+export const menu: { category?: string; name: string; id: string; this: Module | null }[] = [];
 export const menuPublic: { name: string; id: string }[] = [];
 export const widgets: { id: string; name: string; icon: string }[] = [];
 

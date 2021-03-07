@@ -36,7 +36,7 @@ class Price extends System {
   constructor () {
     super();
     this.addMenu({
-      category: 'manage', name: 'price', id: 'manage/price/list', this: this,
+      category: 'commands', name: 'price', id: 'manage/price/list', this: this,
     });
   }
 

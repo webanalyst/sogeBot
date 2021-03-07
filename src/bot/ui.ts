@@ -1,5 +1,5 @@
 import {
-  filter, isString, set, 
+  filter, isString, set,
 } from 'lodash';
 
 import Core from './_interface';
@@ -33,9 +33,6 @@ class UI extends Core {
 
   @settings()
   public shortennumbers = true;
-
-  @settings()
-  public stickystats = true;
 
   @settings()
   public showdiff = true;

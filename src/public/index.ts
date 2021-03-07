@@ -13,7 +13,7 @@ import { isUserLoggedIn } from 'src/panel/helpers/isUserLoggedIn';
 import { getConfiguration, getTranslations } from 'src/panel/helpers/socket';
 import { store } from 'src/panel/helpers/store';
 
-import vuetify from './vuetify'; // path to vuetify export
+import vuetify from '../panel/vuetify'; // path to vuetify export
 
 Vue.component('Fa', FontAwesomeIcon);
 Vue.component('FontAwesomeIcon', FontAwesomeIcon);

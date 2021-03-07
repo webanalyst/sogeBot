@@ -47,7 +47,7 @@ class Alias extends System {
     super();
 
     this.addMenu({
-      category: 'manage', name: 'alias', id: 'manage/alias', this: this,
+      category: 'commands', name: 'alias', id: 'manage/alias', this: this,
     });
   }
 

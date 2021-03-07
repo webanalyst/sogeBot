@@ -143,7 +143,7 @@
         class="mt-3"
       >
         <v-list-item-icon>
-          <v-icon>mdi-account-cog</v-icon>
+          <v-icon>mdi-shield</v-icon>
         </v-list-item-icon>
         <v-list-item-title>{{ translate('go-to-admin') }}</v-list-item-title>
       </v-list-item>

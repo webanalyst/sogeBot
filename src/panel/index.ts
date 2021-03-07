@@ -230,7 +230,6 @@ const main = async () => {
     components: {
       dashboard:        () => import('./views/dashboard/dashboard.vue'),
       navbar:           () => import('./components/navbar/navbar.vue'),
-      statsbar:         () => import('./components/statsbar/statsbar.vue'),
       changegamedialog: () => import('./components/dialog/changegamedialog.vue'),
       footerbar:        () => import('./components/footer.vue'),
     },
@@ -242,24 +241,21 @@ const main = async () => {
       <v-app id="app">
         <template v-if="$store.state.isUILoaded">
           <navbar/>
-          <v-main>
-            <!--statsbar/>
-            <dashboard
-              class="view pt-1"
-              :style="{
-                visibility: $route.path === '/' ? 'visible' : 'hidden',
-                position: $route.path === '/' ? 'inherit' : 'absolute'
-              }"
-            />
-            <router-view
-              class="view pt-1"
-              :style="{
-                visibility: $route.path !== '/' ? 'visible' : 'hidden',
-                position: $route.path !== '/' ? 'inherit' : 'absolute'
-              }"
-            />
-            <footerbar/-->
+          <dashboard
+            :style="{
+              top:  $route.path === '/' ? '0': '-99999999px',
+              visibility: $route.path === '/' ? 'visible' : 'hidden',
+              position: $route.path === '/' ? 'inherit' : 'absolute'
+            }"
+          />
+          <v-main
+            :style="{
+              visibility: $route.path !== '/' ? 'visible' : 'hidden',
+              position: $route.path !== '/' ? 'inherit' : 'absolute'
+            }">
+            <router-view/>
           </v-main>
+          <footerbar/>
         </template>
         <v-overlay :value="!$store.state.isUILoaded" :dark="$vuetify.theme.dark">
           <v-row>

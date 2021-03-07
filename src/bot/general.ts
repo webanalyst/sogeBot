@@ -70,6 +70,9 @@ class General extends Core {
 
   @onStartup()
   onStartup() {
+    this.addMenu({
+      name: 'dashboard', id: '', this: this, 
+    });
     this.addMenuPublic({ name: 'dashboard', id: '' });
     setInterval(gracefulExit, 1000);
   }
