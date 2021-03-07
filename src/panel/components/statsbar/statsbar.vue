@@ -1,54 +1,58 @@
 <template>
   <div>
-    <v-snackbar
+    <v-alert
       v-for="error of errors"
       :key="error.name + error.message + error.date"
-      app
-      :title="error.name"
-      :timeout="getErrorType(error.type) !== 'success' ? -1 : 5000"
-      :color="getErrorType(error.type)"
-      :value="true"
+      :type="getErrorType(error.type)"
+      dismissible
+      prominent
+      dense
     >
-      <div v-html="error.message" />
-    </v-snackbar>
-    <v-snackbar
+      <h5>{{ error.name }}</h5>
+      <div
+        class="text-caption"
+        v-html="error.message"
+      />
+    </v-alert>
+    <v-alert
       v-if="!$store.state.configuration.isChannelSet"
-      app
-      :title="translate('errors.channel_is_not_set')"
-      :timeout="-1"
-      color="danger"
-      :value="true"
+      type="danger"
+      dismissible
+      prominent
+      dense
     >
-      <div v-html="translate('errors.please_set_your_channel')" />
-    </v-snackbar>
-    <v-snackbar
+      <h5>{{ translate('errors.channel_is_not_set') }}</h5>
+      <div
+        class="text-caption"
+        v-html="translate('errors.please_set_your_channel')"
+      />
+    </v-alert>
+    <v-alert
       v-if="!$store.state.configuration.isCastersSet"
-      app
-      :title="translate('errors.owner_and_broadcaster_oauth_is_not_set')"
-      :timeout="-1"
-      color="danger"
-      :value="true"
+      type="info"
+      dismissible
+      prominent
+      dense
     >
-      <div v-html="translate('errors.please_set_your_broadcaster_oauth_or_owners')" />
-    </v-snackbar>
-    <v-snackbar
+      <h5>{{ translate('errors.owner_and_broadcaster_oauth_is_not_set') }}</h5>
+      <div
+        class="text-caption"
+        v-html="translate('errors.please_set_your_broadcaster_oauth_or_owners')"
+      />
+    </v-alert>
+    <v-alert
       v-if="update.version"
-      app
-      :title="translate('errors.new_update_available')"
-      :timeout="-1"
-      color="red"
-      :value="true"
+      type="info"
+      dismissible
+      prominent
+      dense
     >
-      <div v-html="translate('errors.new_bot_version_available_at').replace(/\$version/gmi, update.version)" />
-      <template #action="{ attrs }">
-        <v-btn
-          text
-          v-bind="attrs"
-        >
-          Close
-        </v-btn>
-      </template>
-    </v-snackbar>
+      <h5>{{ translate('errors.new_update_available') }}</h5>
+      <div
+        class="text-caption"
+        v-html="translate('errors.new_bot_version_available_at').replace(/\$version/gmi, update.version)"
+      />
+    </v-alert>
 
     <v-container>
       <v-row class="pa-2">
