@@ -3,7 +3,7 @@
     ref="playlistRef"
     style="min-height: 100vh"
   >
-    <h2 :class="{ 'pl-6': $store.state.isMobile }">
+    <h2 v-if="!$vuetify.breakpoint.mobile">
       {{ translate('menu.playlist') }}
     </h2>
     <v-text-field

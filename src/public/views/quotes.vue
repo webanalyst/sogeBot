@@ -3,7 +3,7 @@
     ref="quotesRef"
     style="min-height: 100vh"
   >
-    <h2 :class="{ 'pl-6': $store.state.isMobile }">
+    <h2 v-if="!$vuetify.breakpoint.mobile">
       {{ translate('menu.quotes') }}
     </h2>
 

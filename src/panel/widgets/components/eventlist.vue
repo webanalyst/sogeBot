@@ -1,5 +1,20 @@
 <template>
-<div class="widget">
+<div>
+  <v-toolbar>
+    <v-app-bar-nav-icon></v-app-bar-nav-icon>
+    <v-toolbar-title>{{translate('widget-title-eventlist') }}</v-toolbar-title>
+    <v-spacer></v-spacer>
+    <v-btn icon>
+      <v-icon>mdi-magnify</v-icon>
+    </v-btn>
+    <v-btn icon>
+      <v-icon>mdi-heart</v-icon>
+    </v-btn>
+    <v-btn icon>
+      <v-icon>mdi-dots-vertical</v-icon>
+    </v-btn>
+  </v-toolbar>
+  <!--
   <b-card class="border-0 h-100" no-body="no-body">
     <b-tabs class="h-100" pills="pills" card="card" style="overflow:hidden">
       <template v-slot:tabs-start>
@@ -145,7 +160,7 @@
         </li>
       </template>
     </b-tabs>
-  </b-card>
+  </b-card-->
 </div>
 </template>
 
@@ -299,17 +314,17 @@ export default {
     },
     'areAlertsMuted': function(val) {
       this.socketAlerts.emit('alerts::areAlertsMuted', this.areAlertsMuted, () => {
-        return; 
+        return;
       });
     },
     'isTTSMuted': function(val) {
       this.socketAlerts.emit('alerts::isTTSMuted', this.isTTSMuted, () => {
-        return; 
+        return;
       });
     },
     'isSoundMuted': function(val) {
       this.socketAlerts.emit('alerts::isSoundMuted', this.isSoundMuted, () => {
-        return; 
+        return;
       });
     },
     'state.editation': function (val) {
@@ -344,7 +359,7 @@ export default {
   methods: {
     removeSelected() {
       this.socket.emit('eventlist::removeById', this.selected, () => {
-        return; 
+        return;
       });
       this.events = this.events.filter(o => !this.selected.includes(o.id));
       this.selected = [];

@@ -1,7 +1,10 @@
 <template>
   <v-container
     fluid
-    style="padding: 0; height: 100vh;"
+    :style="{
+      height: 'calc(100vh - ' + ($vuetify.breakpoint.mobile ? '48px' : '0') + ')'
+    }"
+    style="padding: 0;"
   >
     <v-row
       no-gutters

@@ -45,7 +45,7 @@ const main = async () => {
         path: '/playlist', name: 'Playlist', component: () => import('./views/playlist.vue'),
       },
       {
-        path: '/songrequests', name: 'SongRequests', component: () => import('./views/songrequests.vue'),
+        path: '/songrequests', name: 'Songs', component: () => import('./views/songrequests.vue'),
       },
       {
         path: '/quotes', name: 'Quotes', component: () => import('./views/quotes.vue'),

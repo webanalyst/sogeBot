@@ -1,5 +1,11 @@
 <template>
   <span>
+    <v-app-bar v-if="$vuetify.breakpoint.mobile" fixed app dense>
+      <v-app-bar-nav-icon
+        @click.stop="drawer = !drawer"
+      />
+      <v-toolbar-title>{{translate('menu.' + $route.name.toLowerCase())}}</v-toolbar-title>
+    </v-app-bar>
     <v-navigation-drawer
       v-model="drawer"
       app
@@ -18,10 +24,6 @@
         </div>
       </template>
     </v-navigation-drawer>
-    <v-app-bar-nav-icon
-      style="z-index: 4; position: fixed; transform: translateY(13px)"
-      @click.stop="drawer = !drawer"
-    />
   </span>
 </template>
 
@@ -30,8 +32,8 @@ import {
   defineAsyncComponent, defineComponent, onMounted, ref,
 } from '@vue/composition-api';
 import vueHeadful from 'vue-headful';
+import translate from 'src/panel/helpers/translate';
 
-import { isMobile } from 'src/panel/helpers/isMobile';
 import { getSocket } from 'src/panel/helpers/socket';
 
 const socket = getSocket('/', true);
@@ -45,10 +47,10 @@ export default defineComponent({
     navmenu,
     user,
   },
-  setup() {
+  setup(props, ctx) {
     const name = ref('');
     const channelName = ref('');
-    const drawer = ref(!isMobile);
+    const drawer = ref(!ctx.root.$vuetify.breakpoint.mobile);
 
     onMounted(() => {
       socket.emit('name', (recvName: string) => name.value = recvName );
@@ -56,7 +58,7 @@ export default defineComponent({
     });
 
     return {
-      name, channelName, drawer,
+      name, channelName, drawer, translate
     };
   },
 });
