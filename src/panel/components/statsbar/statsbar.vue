@@ -54,14 +54,23 @@
       />
     </v-alert>
 
-    <v-container fluid class="pa-1">
+    <v-container
+      fluid
+      class="pa-1"
+    >
       <v-row no-gutters>
-        <v-col cols="6" lg="2" md="4" sm="4">
+        <v-col
+          cols="6"
+          lg="2"
+          md="4"
+          sm="4"
+        >
           <v-skeleton-loader
-            type="card"
             v-if="!isLoaded"
+            type="card"
             min-height="60"
-            max-height="60"/>
+            max-height="60"
+          />
           <v-hover
             v-else
             v-slot="{ hover }"
@@ -72,7 +81,12 @@
               elevation="1"
               @click="saveHighlight"
             >
-              <v-card-title class="pa-1">{{ getTime(uptime, false) }}</v-card-title>
+              <v-card-title
+                :key="timestamp"
+                class="pa-1"
+              >
+                {{ getTime(uptime, false) }}
+              </v-card-title>
               <v-card-subtitle class="pa-1 text-caption">
                 {{ translate('uptime') }}
                 <template v-if="hover">
@@ -83,12 +97,18 @@
           </v-hover>
         </v-col>
 
-        <v-col cols="6" lg="1" md="4" sm="4">
+        <v-col
+          cols="6"
+          lg="1"
+          md="4"
+          sm="4"
+        >
           <v-skeleton-loader
-            type="card"
             v-if="!isLoaded"
+            type="card"
             min-height="60"
-            max-height="60"/>
+            max-height="60"
+          />
           <v-hover
             v-else
             v-slot="{ hover }"
@@ -99,7 +119,10 @@
               elevation="1"
               @click="toggleViewerShow"
             >
-              <v-card-title class="pa-1">
+              <v-card-title
+                :key="timestamp"
+                class="pa-1"
+              >
                 <template v-if="!hideStats">
                   {{
                     Intl.NumberFormat($store.state.configuration.lang).format(
@@ -121,12 +144,18 @@
           </v-hover>
         </v-col>
 
-        <v-col cols="6" lg="1" md="4" sm="4">
+        <v-col
+          cols="6"
+          lg="1"
+          md="4"
+          sm="4"
+        >
           <v-skeleton-loader
-            type="card"
             v-if="!isLoaded"
+            type="card"
             min-height="60"
-            max-height="60"/>
+            max-height="60"
+          />
           <v-hover
             v-else
             v-slot="{ hover }"
@@ -137,7 +166,10 @@
               elevation="1"
               @click="toggleViewerShow"
             >
-              <v-card-title class="pa-1">
+              <v-card-title
+                :key="timestamp"
+                class="pa-1"
+              >
                 <template v-if="!hideStats">
                   {{
                     Intl.NumberFormat($store.state.configuration.lang).format(
@@ -158,7 +190,9 @@
                       :style="{
                         'vertical-align': isTrending('maxViewers') ? 'super' : 'sub',
                       }"
-                      x-small :color="isTrending('maxViewers') ? 'green' : 'red'">{{ isTrending('maxViewers') ? 'mdi-trending-up' : 'mdi-trending-down' }}</v-icon>
+                      x-small
+                      :color="isTrending('maxViewers') ? 'green' : 'red'"
+                    >{{ isTrending('maxViewers') ? 'mdi-trending-up' : 'mdi-trending-down' }}</v-icon>
                     <span
                       :style="{
                         'vertical-align': isTrending('maxViewers') ? 'super' : 'sub',
@@ -183,12 +217,18 @@
           </v-hover>
         </v-col>
 
-        <v-col cols="6" lg="1" md="4" sm="4">
+        <v-col
+          cols="6"
+          lg="1"
+          md="4"
+          sm="4"
+        >
           <v-skeleton-loader
-            type="card"
             v-if="!isLoaded"
+            type="card"
             min-height="60"
-            max-height="60"/>
+            max-height="60"
+          />
           <v-hover
             v-else
             v-slot="{ hover }"
@@ -199,7 +239,10 @@
               elevation="1"
               @click="toggleViewerShow"
             >
-              <v-card-title class="pa-1">
+              <v-card-title
+                :key="timestamp"
+                class="pa-1"
+              >
                 <template v-if="!hideStats">
                   <span
                     v-html="
@@ -221,7 +264,9 @@
                       :style="{
                         'vertical-align': isTrending('newChatters') ? 'super' : 'sub',
                       }"
-                      x-small :color="isTrending('newChatters') ? 'green' : 'red'">{{ isTrending('newChatters') ? 'mdi-trending-up' : 'mdi-trending-down' }}</v-icon>
+                      x-small
+                      :color="isTrending('newChatters') ? 'green' : 'red'"
+                    >{{ isTrending('newChatters') ? 'mdi-trending-up' : 'mdi-trending-down' }}</v-icon>
                     <span
                       :style="{
                         'vertical-align': isTrending('newChatters') ? 'super' : 'sub',
@@ -248,19 +293,28 @@
           </v-hover>
         </v-col>
 
-        <v-col cols="6" lg="1" md="4" sm="4">
+        <v-col
+          cols="6"
+          lg="1"
+          md="4"
+          sm="4"
+        >
           <v-skeleton-loader
-            type="card"
             v-if="!isLoaded"
+            type="card"
             min-height="60"
-            max-height="60"/>
+            max-height="60"
+          />
           <v-card
             v-else
             tile
             min-height="60"
             elevation="1"
           >
-            <v-card-title class="pa-1">
+            <v-card-title
+              :key="timestamp"
+              class="pa-1"
+            >
               <span
                 v-html="
                   Intl.NumberFormat($store.state.configuration.lang, {  
@@ -281,40 +335,51 @@
                   :style="{
                     'vertical-align': isTrending('chatMessages') ? 'super' : 'sub',
                   }"
-                  x-small :color="isTrending('chatMessages') ? 'green' : 'red'">{{ isTrending('chatMessages') ? 'mdi-trending-up' : 'mdi-trending-down' }}</v-icon>
-                  <span
-                    :style="{
-                      'vertical-align': isTrending('chatMessages') ? 'super' : 'sub',
-                    }"
-                    v-html="
-                      Intl.NumberFormat($store.state.configuration.lang, {  
-                        style: b_percentage ? 'percent' : 'decimal',
-                        notation: b_shortenNumber ? 'compact' : 'standard',
-                        maximumFractionDigits: b_shortenNumber && !b_percentage ? 1 : 0,
-                      }).format(b_percentage ? Math.abs(currentStats.chatMessages - averageStats.chatMessages) / (averageStats.chatMessages || 1) : currentStats.chatMessages - averageStats.chatMessages)
-                    "
-                  />
+                  x-small
+                  :color="isTrending('chatMessages') ? 'green' : 'red'"
+                >{{ isTrending('chatMessages') ? 'mdi-trending-up' : 'mdi-trending-down' }}</v-icon>
+                <span
+                  :style="{
+                    'vertical-align': isTrending('chatMessages') ? 'super' : 'sub',
+                  }"
+                  v-html="
+                    Intl.NumberFormat($store.state.configuration.lang, {  
+                      style: b_percentage ? 'percent' : 'decimal',
+                      notation: b_shortenNumber ? 'compact' : 'standard',
+                      maximumFractionDigits: b_shortenNumber && !b_percentage ? 1 : 0,
+                    }).format(b_percentage ? Math.abs(currentStats.chatMessages - averageStats.chatMessages) / (averageStats.chatMessages || 1) : currentStats.chatMessages - averageStats.chatMessages)
+                  "
+                />
               </small>
             </v-card-title>
-              <v-card-subtitle class="pa-1 text-caption">
+            <v-card-subtitle class="pa-1 text-caption">
               {{ translate('chat-messages') }}
             </v-card-subtitle>
           </v-card>
         </v-col>
 
-        <v-col cols="6" lg="1" md="4" sm="4">
+        <v-col
+          cols="6"
+          lg="1"
+          md="4"
+          sm="4"
+        >
           <v-skeleton-loader
-            type="card"
             v-if="!isLoaded"
+            type="card"
             min-height="60"
-            max-height="60"/>
+            max-height="60"
+          />
           <v-card
             v-else
             tile
             min-height="60"
             elevation="1"
           >
-            <v-card-title class="pa-1">
+            <v-card-title
+              :key="timestamp"
+              class="pa-1"
+            >
               <span
                 v-html="
                   Intl.NumberFormat($store.state.configuration.lang, {  
@@ -335,7 +400,9 @@
                   :style="{
                     'vertical-align': isTrending('currentViews') ? 'super' : 'sub',
                   }"
-                  x-small :color="isTrending('currentViews') ? 'green' : 'red'">{{ isTrending('currentViews') ? 'mdi-trending-up' : 'mdi-trending-down' }}</v-icon>
+                  x-small
+                  :color="isTrending('currentViews') ? 'green' : 'red'"
+                >{{ isTrending('currentViews') ? 'mdi-trending-up' : 'mdi-trending-down' }}</v-icon>
                 <span
                   :style="{
                     'vertical-align': isTrending('currentViews') ? 'super' : 'sub',
@@ -356,19 +423,28 @@
           </v-card>
         </v-col>
 
-        <v-col cols="6" lg="1" md="4" sm="4">
+        <v-col
+          cols="6"
+          lg="1"
+          md="4"
+          sm="4"
+        >
           <v-skeleton-loader
-            type="card"
             v-if="!isLoaded"
+            type="card"
             min-height="60"
-            max-height="60"/>
+            max-height="60"
+          />
           <v-card
             v-else
             tile
             min-height="60"
             elevation="1"
           >
-            <v-card-title class="pa-1">
+            <v-card-title
+              :key="timestamp"
+              class="pa-1"
+            >
               <span
                 v-html="
                   Intl.NumberFormat($store.state.configuration.lang, {  
@@ -389,7 +465,9 @@
                   :style="{
                     'vertical-align': isTrending('currentFollowers') ? 'super' : 'sub',
                   }"
-                  x-small :color="isTrending('currentFollowers') ? 'green' : 'red'">{{ isTrending('currentFollowers') ? 'mdi-trending-up' : 'mdi-trending-down' }}</v-icon>
+                  x-small
+                  :color="isTrending('currentFollowers') ? 'green' : 'red'"
+                >{{ isTrending('currentFollowers') ? 'mdi-trending-up' : 'mdi-trending-down' }}</v-icon>
                 <span
                   :style="{
                     'vertical-align': isTrending('currentFollowers') ? 'super' : 'sub',
@@ -410,19 +488,28 @@
           </v-card>
         </v-col>
 
-        <v-col cols="6" lg="1" md="4" sm="4">
+        <v-col
+          cols="6"
+          lg="1"
+          md="4"
+          sm="4"
+        >
           <v-skeleton-loader
-            type="card"
             v-if="!isLoaded"
+            type="card"
             min-height="60"
-            max-height="60"/>
+            max-height="60"
+          />
           <v-card
             v-else
             tile
             min-height="60"
             elevation="1"
           >
-            <v-card-title v-if="broadcasterType !== ''" class="pa-1">
+            <v-card-title
+              v-if="broadcasterType !== ''"
+              class="pa-1"
+            >
               <span
                 v-html="
                   Intl.NumberFormat($store.state.configuration.lang, {  
@@ -443,7 +530,9 @@
                   :style="{
                     'vertical-align': isTrending('currentSubscribers') ? 'super' : 'sub',
                   }"
-                  x-small :color="isTrending('currentSubscribers') ? 'green' : 'red'">{{ isTrending('currentSubscribers') ? 'mdi-trending-up' : 'mdi-trending-down' }}</v-icon>
+                  x-small
+                  :color="isTrending('currentSubscribers') ? 'green' : 'red'"
+                >{{ isTrending('currentSubscribers') ? 'mdi-trending-up' : 'mdi-trending-down' }}</v-icon>
                 <span
                   :style="{
                     'vertical-align': isTrending('currentSubscribers') ? 'super' : 'sub',
@@ -458,7 +547,10 @@
                 />
               </small>
             </v-card-title>
-            <v-card-title v-else  class="pa-1">
+            <v-card-title
+              v-else
+              class="pa-1"
+            >
               {{ translate('not-affiliate-or-partner') }}
             </v-card-title>
             <v-card-subtitle class="pa-1 text-caption">
@@ -467,19 +559,28 @@
           </v-card>
         </v-col>
 
-        <v-col cols="6" lg="1" md="4" sm="4">
+        <v-col
+          cols="6"
+          lg="1"
+          md="4"
+          sm="4"
+        >
           <v-skeleton-loader
-            type="card"
             v-if="!isLoaded"
+            type="card"
             min-height="60"
-            max-height="60"/>
+            max-height="60"
+          />
           <v-card
             v-else
             tile
             min-height="60"
             elevation="1"
           >
-            <v-card-title v-if="broadcasterType !== ''" class="pa-1">
+            <v-card-title
+              v-if="broadcasterType !== ''"
+              class="pa-1"
+            >
               <span
                 v-html="
                   Intl.NumberFormat($store.state.configuration.lang, {  
@@ -500,7 +601,9 @@
                   :style="{
                     'vertical-align': isTrending('currentBits') ? 'super' : 'sub',
                   }"
-                  x-small :color="isTrending('currentBits') ? 'green' : 'red'">{{ isTrending('currentBits') ? 'mdi-trending-up' : 'mdi-trending-down' }}</v-icon>
+                  x-small
+                  :color="isTrending('currentBits') ? 'green' : 'red'"
+                >{{ isTrending('currentBits') ? 'mdi-trending-up' : 'mdi-trending-down' }}</v-icon>
                 <span
                   :style="{
                     'vertical-align': isTrending('currentBits') ? 'super' : 'sub',
@@ -515,7 +618,10 @@
                 />
               </small>
             </v-card-title>
-            <v-card-title v-else class="pa-1">
+            <v-card-title
+              v-else
+              class="pa-1"
+            >
               {{ translate('not-affiliate-or-partner') }}
             </v-card-title>
             <v-card-subtitle class="pa-1 text-caption">
@@ -524,19 +630,28 @@
           </v-card>
         </v-col>
 
-        <v-col cols="6" lg="1" md="4" sm="4">
+        <v-col
+          cols="6"
+          lg="1"
+          md="4"
+          sm="4"
+        >
           <v-skeleton-loader
-            type="card"
             v-if="!isLoaded"
+            type="card"
             min-height="60"
-            max-height="60"/>
+            max-height="60"
+          />
           <v-card
             v-else
             tile
             min-height="60"
             elevation="1"
           >
-            <v-card-title class="pa-1">
+            <v-card-title
+              :key="timestamp"
+              class="pa-1"
+            >
               <span
                 v-html="
                   Intl.NumberFormat($store.state.configuration.lang, {
@@ -557,7 +672,9 @@
                   :style="{
                     'vertical-align': isTrending('currentTips') ? 'super' : 'sub',
                   }"
-                  x-small :color="isTrending('currentTips') ? 'green' : 'red'">{{ isTrending('currentTips') ? 'mdi-trending-up' : 'mdi-trending-down' }}</v-icon>
+                  x-small
+                  :color="isTrending('currentTips') ? 'green' : 'red'"
+                >{{ isTrending('currentTips') ? 'mdi-trending-up' : 'mdi-trending-down' }}</v-icon>
                 <span
                   :style="{
                     'vertical-align': isTrending('currentTips') ? 'super' : 'sub',
@@ -577,19 +694,28 @@
           </v-card>
         </v-col>
 
-        <v-col cols="6" lg="1" md="4" sm="4">
+        <v-col
+          cols="6"
+          lg="1"
+          md="4"
+          sm="4"
+        >
           <v-skeleton-loader
-            type="card"
             v-if="!isLoaded"
+            type="card"
             min-height="60"
-            max-height="60"/>
+            max-height="60"
+          />
           <v-card
             v-else
             tile
             min-height="60"
             elevation="1"
           >
-            <v-card-title class="pa-1">
+            <v-card-title
+              :key="timestamp"
+              class="pa-1"
+            >
               <span
                 class="data"
                 v-html="
@@ -615,12 +741,14 @@
                   :style="{
                     'vertical-align': isTrending('currentWatched') ? 'super' : 'sub',
                   }"
-                  x-small :color="isTrending('currentWatched') ? 'green' : 'red'">{{ isTrending('currentWatched') ? 'mdi-trending-up' : 'mdi-trending-down' }}</v-icon>
+                  x-small
+                  :color="isTrending('currentWatched') ? 'green' : 'red'"
+                >{{ isTrending('currentWatched') ? 'mdi-trending-up' : 'mdi-trending-down' }}</v-icon>
                 <span
+                  v-if="b_percentage"
                   :style="{
                     'vertical-align': isTrending('currentWathced') ? 'super' : 'sub',
                   }"
-                  v-if="b_percentage"
                   v-html="
                     [
                       ...Intl.NumberFormat($store.state.configuration.lang, {  
@@ -630,10 +758,10 @@
                   "
                 />
                 <span
+                  v-else
                   :style="{
                     'vertical-align': isTrending('currentWathced') ? 'super' : 'sub',
                   }"
-                  v-else
                   v-html="
                     [
                       ...Intl.NumberFormat($store.state.configuration.lang, {  
@@ -1025,7 +1153,7 @@ export default defineComponent({
 
     const isTrending = (key: string) => {
       return currentStats[key] - averageStats[key] > 0;
-    }
+    };
 
     return {
       isTrending,
