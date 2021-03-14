@@ -74,12 +74,8 @@ const main = async () => {
         path: '/stats/profiler', name: 'ProfilerStats', component: () => import('./views/stats/profiler.vue'),
       },
 
-      { path: '/manage/alias/', redirect: '/manage/alias/list' },
       {
-        path: '/manage/alias/list', name: 'aliasManager', component: () => import('./views/managers/alias.vue'),
-      },
-      {
-        path: '/manage/alias/edit/:id?', name: 'aliasManagerEdit', component: () => import('./views/managers/alias.vue'),
+        path: '/manage/alias', name: 'alias', component: () => import('./views/managers/alias.vue'),
       },
       { path: '/manage/commands/', redirect: '/manage/commands/list' },
       {
