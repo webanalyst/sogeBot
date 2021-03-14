@@ -19,7 +19,6 @@
       v-model="selected"
       calculate-widths
       group-by="group"
-      dark
       show-select
       :search="search"
       :loading="state.loadingAls !== $state.success && state.loadingPrm !== $state.success"
@@ -37,6 +36,7 @@
             label="Search"
             single-line
             hide-details
+            :clearable="true"
             class="pr-2"
           />
 
@@ -48,23 +48,21 @@
               <template #activator="{ on, attrs }">
                 <v-btn
                   color="red"
-                  dark
-                  class="mb-2 pr-2"
+                  class="mb-2 mr-1"
                   v-bind="attrs"
                   v-on="on"
                 >
-                  Delete {{ selected.length }} Alias(es)
+                  Delete {{ selected.length }} Item(s)
                 </v-btn>
               </template>
 
               <v-card>
                 <v-card-title>
-                  <span class="headline">Delete {{ selected.length }} Alias(es)?</span>
+                  <span class="headline">Delete {{ selected.length }} Item(s)?</span>
                 </v-card-title>
 
                 <v-card-text>
                   <v-data-table
-                    dark
                     dense
                     :items="selected"
                     :headers="headersWithoutPerm"
@@ -93,13 +91,12 @@
           </template>
 
           <v-dialog
-            v-model="dialog"
+            v-model="newDialog"
             max-width="500px"
           >
             <template #activator="{ on, attrs }">
               <v-btn
                 color="primary"
-                dark
                 class="mb-2"
                 v-bind="attrs"
                 v-on="on"
@@ -110,7 +107,7 @@
 
             <v-card>
               <v-card-title>
-                <span class="headline">{{ formTitle }}</span>
+                <span class="headline">New alias</span>
               </v-card-title>
 
               <v-card-text>
@@ -123,16 +120,18 @@
 
       <template #[`item.alias`]="{ item }">
         <v-edit-dialog
+          persistent
+          large
           :return-value.sync="item.alias"
-          @save="update(item)"
+          @save="update(item, false, 'alias')"
         >
           {{ item.alias }}
           <template #input>
             <v-text-field
               v-model="item.alias"
-              :rules="alias"
-              label="Edit"
+              :rules="rules.alias"
               single-line
+              :clearable="true"
               counter
             />
           </template>
@@ -142,25 +141,34 @@
       <template #[`item.command`]="{ item }">
         <v-edit-dialog
           :return-value.sync="item.command"
-          @save="update(item)"
+          persistent
+          large
+          @save="update(item, false, 'command')"
         >
           {{ item.command }}
           <template #input>
-            <v-text-field
-              v-model="item.command"
-              :rules="rules.command"
-              label="Edit"
-              single-line
-              counter
-            />
+            <v-lazy>
+              <v-textarea
+                v-model="item.command"
+                :rows="1"
+                :rules="rules.command"
+                single-line
+                counter
+                :clearable="true"
+                auto-grow
+                autofocus
+              />
+            </v-lazy>
           </template>
         </v-edit-dialog>
       </template>
 
       <template #[`item.permission`]="{ item }">
         <v-edit-dialog
+          persistent
+          large
           :return-value.sync="item.permission"
-          @save="update(item)"
+          @save="update(item, true, 'permission')"
         >
           {{ getPermissionName(item.permission, permissions) }}
           <template #input>
@@ -175,14 +183,14 @@
       <template #[`item.enabled`]="{ item }">
         <v-simple-checkbox
           v-model="item.enabled"
-          @click="update(item)"
+          @click="update(item, true, 'enabled')"
         />
       </template>
 
       <template #[`item.visible`]="{ item }">
         <v-simple-checkbox
           v-model="item.visible"
-          @click="update(item)"
+          @click="update(item, true, 'visible')"
         />
       </template>
     </v-data-table>
@@ -212,7 +220,7 @@
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faKey, faObjectGroup } from '@fortawesome/free-solid-svg-icons';
 import {
-  computed, defineComponent, getCurrentInstance, onMounted, ref,
+  computed, defineComponent, onMounted, ref,
 } from '@vue/composition-api';
 import {
   escapeRegExp, isNil, orderBy,
@@ -245,8 +253,7 @@ export default defineComponent({
 
     const selected = ref([] as AliasInterface[]);
     const deleteDialog = ref(false);
-
-    const instance = getCurrentInstance()?.proxy;
+    const newDialog = ref(false);
 
     const items = ref([] as AliasInterface[]);
     const permissions = ref([] as PermissionsInterface[]);
@@ -272,6 +279,7 @@ export default defineComponent({
       save: number;
       pending: boolean;
     });
+
     const permissionItems = computed(() => {
       return permissions.value.map((item) => ({
         text:     item.name,
@@ -308,13 +316,13 @@ export default defineComponent({
     const headers = [
       { value: 'alias', text: translate('alias') },
       {
-        value: 'permission', text: translate('permission'), width: '7rem', 
+        value: 'permission', text: translate('permission'), width: '7rem',
       },
       {
-        value: 'enabled', text: translate('enabled'), width: '6rem', 
+        value: 'enabled', text: translate('enabled'), width: '6rem',
       },
       {
-        value: 'visible', text: translate('visible'), width: '6rem', 
+        value: 'visible', text: translate('visible'), width: '6rem',
       },
       { value: 'command', text: translate('command') },
     ];
@@ -334,6 +342,14 @@ export default defineComponent({
       });
       socket.alias.emit('generic::getAll', (err: string | null, itemsGetAll: typeof items.value) => {
         items.value = orderBy(itemsGetAll, 'alias', 'asc');
+
+        // we also need to reset selection values
+        if (selected.value.length > 0) {
+          selected.value.forEach((selectedItem, index) => {
+            selectedItem = itemsGetAll.find(o => o.id === selectedItem.id) || selectedItem;
+            selected.value[index] = selectedItem;
+          });
+        }
         state.value.loadingAls = ButtonStates.success;
       });
     };
@@ -370,7 +386,7 @@ export default defineComponent({
       });
       ctx.root.$forceUpdate();
     };
-    const update = (item: typeof items.value[number]) => {
+    const update = async (item: typeof items.value[number], multi = false, attr: keyof typeof items.value[number]) => {
       // check validity
       for (const key of Object.keys(rules)) {
         for (const rule of (rules as any)[key]) {
@@ -386,72 +402,27 @@ export default defineComponent({
           }
         }
       }
-      socket.alias.emit('generic::setById', { id: item.id, item }, () => {
-        snack.value = true;
-        snackColor.value = 'success';
-        snackText.value = 'Alias updated.';
-      });
-    };
-    const resetModal = () => {
-      newGroupName.value = '';
-      newGroupNameUpdated.value = false;
-    };
-    const handleOk = (bvModalEvt: Event) => {
-      // Prevent modal from closing
-      bvModalEvt.preventDefault();
-      // Trigger submit handler
-      handleSubmit();
-    };
-    const handleSubmit = () => {
-      if (!newGroupNameValidity.value) {
-        return;
-      }
 
-      updateGroup(newGroupForAliasId.value, newGroupName.value);
-      // Hide the modal manually
-      ctx.root.$nextTick(() => {
-        instance?.$bvModal.hide('create-new-group');
-      });
-    };
-    /*const save = () =>  {
-      const $v = instance?.$v;
-      $v?.$touch();
-      if (!$v?.$invalid) {
-        state.value.save = ButtonStates.progress;
-
-        socket.alias.emit('generic::setById', { id: ctx.root.$route.params.id, item: editationItem.value }, (err: string | null, data: AliasInterface) => {
-          if (err) {
-            state.value.save = ButtonStates.fail;
-            return error(err);
-          } else {
-            console.groupCollapsed('generic::setById');
-            console.log({ data });
-            console.groupEnd();
-            state.value.save = ButtonStates.success;
-            ctx.root.$nextTick(() => {
-              refresh();
-              state.value.pending = false;
-              ctx.root.$router.push({ name: 'aliasManagerEdit', params: { id: String(data.id) } }).catch(() => {
-                return;
-              });
+      await Promise.all(
+        [item, ...(multi ? selected.value : [])].map(async (itemToUpdate) => {
+          return new Promise((resolve) => {
+            console.log('Updating', { itemToUpdate }, { attr, value: item[attr] });
+            socket.alias.emit('generic::setById', {
+              id:   itemToUpdate.id, item: {
+                ...itemToUpdate,
+                [attr]: item[attr], // save new value for all selected items
+              },
+            }, () => {
+              resolve(true);
             });
-          }
-          setTimeout(() => {
-            state.value.save = ButtonStates.idle;
-          }, 1000);
-        });
-      }
+          });
+        }),
+      );
+      refresh();
+      snack.value = true;
+      snackColor.value = 'success';
+      snackText.value = 'Alias updated.';
     };
-    const del = (id: string) => {
-      if (confirm('Do you want to delete alias ' + items.value.find(o => o.id === id)?.alias + '?')) {
-        socket.alias.emit('generic::deleteById', id, (err: string | null) => {
-          if (err) {
-            return error(err);
-          }
-          refresh();
-        });
-      }
-    };*/
 
     const deleteSelected = async () => {
       deleteDialog.value = false;
@@ -475,12 +446,6 @@ export default defineComponent({
       selected.value = [];
     };
 
-    function save () {
-      snack.value = true;
-      snackColor.value = 'success';
-      snackText.value = 'Data saved';
-    }
-
     return {
       items,
       permissions,
@@ -498,10 +463,6 @@ export default defineComponent({
       updateGroup,
       updatePermission,
       update,
-      resetModal,
-      handleOk,
-      handleSubmit,
-      save,
       deleteSelected,
       translate,
       getPermissionName,
@@ -513,6 +474,7 @@ export default defineComponent({
       snackText,
       selected,
       deleteDialog,
+      newDialog,
       permissionItems,
 
       rules,
@@ -522,7 +484,7 @@ export default defineComponent({
 </script>
 
 <style>
-.alias-table-btn button {
-  padding: 6px !important;
+tr:nth-of-type(odd) {
+  background-color: rgba(0, 0, 0, .05);
 }
 </style>
