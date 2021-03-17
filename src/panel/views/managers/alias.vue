@@ -1,5 +1,8 @@
 <template>
-  <v-container>
+  <v-container
+    fluid
+    :class="{ 'pa-4': !$vuetify.breakpoint.mobile }"
+  >
     <v-alert
       v-if="!$systems.find(o => o.name === 'alias').enabled"
       dismissible
@@ -23,7 +26,7 @@
       :search="search"
       :loading="state.loadingAls !== $state.success && state.loadingPrm !== $state.success"
       :headers="headers"
-      :items-per-page="15"
+      :items-per-page="-1"
       :items="items"
     >
       <template #top>
@@ -110,12 +113,41 @@
                 <span class="headline">New alias</span>
               </v-card-title>
 
-              <v-card-text>
-                TODO
+              <v-card-text :key="timestamp">
+                <alias-new-item
+                  @close="newDialog = false"
+                  @save="newAliasSaved"
+                />
               </v-card-text>
             </v-card>
           </v-dialog>
         </v-toolbar>
+      </template>
+
+      <template #[`group.header`]="{ items, isOpen, toggle }">
+        <th colspan="7">
+          <v-icon
+            @click="toggle"
+          >
+            {{ isOpen ? 'mdi-minus' : 'mdi-plus' }}
+          </v-icon>
+
+          <v-simple-checkbox
+            class="d-inline-block px-4"
+            style="transform: translateY(5px)"
+            inline
+            :value="isGroupSelected(items[0].group)"
+            @click="toggleGroupSelection(items[0].group)"
+          />
+
+          <span
+            v-if="items[0].group === null"
+            class="red--text text--lighten-1"
+          >Ungrouped</span>
+          <span v-else>
+            {{ items[0].group }}
+          </span>
+        </th>
       </template>
 
       <template #[`item.alias`]="{ item }">
@@ -157,8 +189,39 @@
                 :clearable="true"
                 auto-grow
                 autofocus
+                @keydown.enter.prevent
               />
             </v-lazy>
+          </template>
+        </v-edit-dialog>
+      </template>
+
+      <template #[`item.groupToBeShownInTable`]="{ item }">
+        <v-edit-dialog
+          persistent
+          large
+          :return-value.sync="item.groupToBeShownInTable"
+          @save="update(item, true, 'group')"
+        >
+          <span :class="{ 'text--lighten-1': item.groupToBeShownInTable === null, 'red--text': item.groupToBeShownInTable === null }">
+            {{ item.groupToBeShownInTable === null ? 'unset' : item.groupToBeShownInTable }}
+          </span>
+          <template #input>
+            <v-combobox
+              v-model="item.groupToBeShownInTable"
+              clearable
+              solo
+              :search-input.sync="item.groupToBeShownInTable"
+              :return-object="false"
+              :items="groupItems"
+            >
+              <template #no-data>
+                <v-list-item>
+                  <span class="subheading">Create</span>
+                  <strong class="pl-2">{{ item.groupToBeShownInTable }}</strong>
+                </v-list-item>
+              </template>
+            </v-combobox>
           </template>
         </v-edit-dialog>
       </template>
@@ -216,11 +279,8 @@
 </template>
 
 <script lang="ts">
-
-import { library } from '@fortawesome/fontawesome-svg-core';
-import { faKey, faObjectGroup } from '@fortawesome/free-solid-svg-icons';
 import {
-  computed, defineComponent, onMounted, ref,
+  computed, defineAsyncComponent, defineComponent, onMounted, ref, watch,
 } from '@vue/composition-api';
 import {
   escapeRegExp, isNil, orderBy,
@@ -234,51 +294,61 @@ import { getPermissionName } from 'src/panel/helpers/getPermissionName';
 import { getSocket } from 'src/panel/helpers/socket';
 import translate from 'src/panel/helpers/translate';
 
-library.add(faKey, faObjectGroup);
-
 const socket = {
   permission: getSocket('/core/permissions'),
   alias:      getSocket('/systems/alias'),
 } as const;
 
+type AliasInterfaceUI = AliasInterface & { groupToBeShownInTable: null | string };
+
+const aliasNewItem = defineAsyncComponent({ loader: () => import('./alias-newItem.vue') });
+
 export default defineComponent({
+  components: { aliasNewItem },
   setup(props, ctx) {
-    const required = (v: string) => v.length > 0 || 'This value is required';
-    const startsWithExclamation = (v: string) => v.length > 0 && v[0] === '!' || 'Must start with !';
-    const startsWithExclamationOrCustomVariable = (v: string) => v.length > 0 && (v[0] === '!' || v[0] === '$') || 'Must start with ! or should be custom variable';
+    const required = (v?: string) => (typeof v === 'string' && v.length > 0) || 'This value is required';
+    const minLength2 = (v?: string) => (typeof v === 'string' && v.length > 2) || 'Min length of this value is 2';
+    const startsWithExclamation = (v?: string) => (typeof v === 'string' && v.length > 0 && v[0] === '!') || 'Must start with !';
+    const startsWithExclamationOrCustomVariable = (v?: string) => (typeof v === 'string' && v.length > 0 && (v[0] === '!' || v[0] === '$')) || 'Must start with ! or should be custom variable';
 
     const snack = ref(false);
     const snackColor = ref('');
     const snackText = ref('');
 
-    const selected = ref([] as AliasInterface[]);
+    const timestamp = ref(Date.now());
+
+    const selected = ref([] as AliasInterfaceUI[]);
     const deleteDialog = ref(false);
     const newDialog = ref(false);
 
-    const items = ref([] as AliasInterface[]);
+    const items = ref([] as AliasInterfaceUI[]);
     const permissions = ref([] as PermissionsInterface[]);
-
-    const newGroupForAliasId = ref('');
-    const newGroupName = ref('');
-    const newGroupNameUpdated = ref(false);
 
     const rules = {
       alias:   [startsWithExclamation, required],
-      command: [startsWithExclamationOrCustomVariable, required],
+      command: [startsWithExclamationOrCustomVariable, minLength2],
     };
 
     const search = ref('');
     const state = ref({
       loadingAls: ButtonStates.progress,
       loadingPrm: ButtonStates.idle,
-      save:       ButtonStates.idle,
-      pending:    false,
     } as {
       loadingAls: number;
       loadingPrm: number;
-      save: number;
-      pending: boolean;
     });
+
+    watch(newDialog, () => {
+      timestamp.value = Date.now();
+    });
+
+    const newAliasSaved = () => {
+      refresh();
+      snack.value = true;
+      snackColor.value = 'success';
+      snackText.value = 'Data updated.';
+      newDialog.value = false;
+    };
 
     const permissionItems = computed(() => {
       return permissions.value.map((item) => ({
@@ -287,21 +357,18 @@ export default defineComponent({
         disabled: false,
       }));
     });
+    const groupItems = computed(() => {
+      return [...new Set(items.value.filter(o => o.group !== null).map(o => o.group).sort())].map(item => ({
+        text:     item,
+        value:    item,
+        disabled: false,
+      }));
+    });
 
     onMounted(() => {
       refresh();
     });
 
-    const newGroupNameValidity = computed(() => {
-      if (newGroupNameUpdated.value) {
-        return newGroupName.value.length > 0;
-      } else {
-        return null;
-      }
-    });
-    const groups = computed(() => {
-      return [null, ...new Set(items.value.filter(o => o.group !== null).map(o => o.group).sort())];
-    });
     const fItems = computed(() => {
       if (search.value.length === 0) {
         return items.value;
@@ -312,9 +379,32 @@ export default defineComponent({
         return isSearchInAlias || isSearchInCommand;
       });
     });
+    const isGroupSelected = (group: string) => {
+      for (const item of items.value.filter(o => o.group === group)) {
+        if (!selected.value.find(o => o.id === item.id)) {
+          return false;
+        }
+      }
+      return true;
+    };
+    const toggleGroupSelection = (group: string) => {
+      if (isGroupSelected(group)) {
+        // deselect all
+        selected.value = selected.value.filter(o => o.group !== group);
+      } else {
+        for (const item of items.value.filter(o => o.group === group)) {
+          if (!selected.value.find(o => o.id === item.id)) {
+            selected.value.push(item);
+          }
+        }
+      }
+    };
 
     const headers = [
       { value: 'alias', text: translate('alias') },
+      {
+        value: 'groupToBeShownInTable', text: translate('group'), width: '8rem',
+      },
       {
         value: 'permission', text: translate('permission'), width: '7rem',
       },
@@ -342,6 +432,9 @@ export default defineComponent({
       });
       socket.alias.emit('generic::getAll', (err: string | null, itemsGetAll: typeof items.value) => {
         items.value = orderBy(itemsGetAll, 'alias', 'asc');
+        for (const item of items.value) {
+          item.groupToBeShownInTable = item.group; // we need this to have group shown even when group-by
+        }
 
         // we also need to reset selection values
         if (selected.value.length > 0) {
@@ -353,40 +446,11 @@ export default defineComponent({
         state.value.loadingAls = ButtonStates.success;
       });
     };
-    const removeGroup = async (group: AliasInterface['group']) => {
-      if (confirm('Do you want to delete group ' + group + '?')) {
-        const promises: Promise<void>[] = [];
-        for (const item of items.value.filter((o) => o.group === group)) {
-          item.group = null;
-          promises.push(new Promise<void>(resolve => {
-            socket.alias.emit('generic::setById', { id: item.id, item }, () => {
-              resolve();
-            });
-          }));
-        }
-        await Promise.all(promises);
-        ctx.root.$forceUpdate();
-      }
-    };
-    const updateGroup = (id: string, group: AliasInterface['group']) => {
-      const item = items.value.find((o) => o.id === id);
-      if (item) {
-        item.group = group;
-        socket.alias.emit('generic::setById', { id: item.id, item }, () => {
-          return;
-        });
-        ctx.root.$forceUpdate();
-      }
-    };
-    const updatePermission = (id: string, permission: string) => {
-      const item = items.value.filter((o) => o.id === id)[0];
-      item.permission = permission;
-      socket.alias.emit('generic::setById', { id: item.id, item }, () => {
-        return;
-      });
-      ctx.root.$forceUpdate();
-    };
     const update = async (item: typeof items.value[number], multi = false, attr: keyof typeof items.value[number]) => {
+      if (attr === 'group') {
+        console.log(item.groupToBeShownInTable);
+        item.group = item.groupToBeShownInTable;
+      }
       // check validity
       for (const key of Object.keys(rules)) {
         for (const rule of (rules as any)[key]) {
@@ -421,7 +485,7 @@ export default defineComponent({
       refresh();
       snack.value = true;
       snackColor.value = 'success';
-      snackText.value = 'Alias updated.';
+      snackText.value = 'Data updated.';
     };
 
     const deleteSelected = async () => {
@@ -442,26 +506,19 @@ export default defineComponent({
 
       snack.value = true;
       snackColor.value = 'success';
-      snackText.value = 'Data removed';
+      snackText.value = 'Data removed.';
       selected.value = [];
     };
 
     return {
       items,
       permissions,
-      newGroupForAliasId,
-      newGroupName,
-      newGroupNameUpdated,
       search,
       state,
       headers,
       headersWithoutPerm,
-      newGroupNameValidity,
-      groups,
+      groupItems,
       fItems,
-      removeGroup,
-      updateGroup,
-      updatePermission,
       update,
       deleteSelected,
       translate,
@@ -478,6 +535,11 @@ export default defineComponent({
       permissionItems,
 
       rules,
+      isGroupSelected,
+      toggleGroupSelection,
+
+      timestamp,
+      newAliasSaved,
     };
   },
 });
