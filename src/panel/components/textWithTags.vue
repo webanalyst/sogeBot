@@ -29,7 +29,7 @@ export default defineComponent({
       if (!isNil(matches)) {
         for (const match of matches) {
           output = output.replace(match,
-            `<code>${translate('responses.variable.' + match.replace('$', ''))}</code>&nbsp;`);
+            `<code>${translate('responses.variable.' + match.replace('$', ''))}</code>`);
         }
       }
       return output;

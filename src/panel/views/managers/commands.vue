@@ -226,11 +226,21 @@
                   </v-icon>
                   {{ r.stopIfExecuted ? translate('commons.stop-if-executed') : translate('commons.continue-if-executed') }}
                 </v-col>
+                <v-col
+                  v-if="r.filter.length > 0"
+                  cols="auto"
+                  class="caption"
+                  style="line-height: 2.5rem;"
+                >
+                  <v-icon>
+                    mdi-filter
+                  </v-icon>
+                  <text-with-tags
+                    class="d-inline-block"
+                    :value="r.filter"
+                  />
+                </v-col>
               </v-row>
-              <text-with-tags
-                v-if="r.filter.length > 0"
-                :value="r.filter"
-              />
               <text-with-tags :value="r.response" />
             </div>
           </template>
@@ -248,7 +258,10 @@
               >
                 <v-list-item-content>
                   <v-row>
-                    <v-col cols="9">
+                    <v-col
+                      cols="12"
+                      md="8"
+                    >
                       <v-lazy>
                         <v-textarea
                           v-model="item.responses[i].response"
@@ -270,6 +283,8 @@
                               :filters="['sender', 'param', '!param', 'touser']"
                               @input="item.responses[i].response = item.responses[i].response + $event"
                             />
+                          </template>
+                          <template #append-outer>
                             <input-permissions
                               :permissions="permissions"
                               :permission="item.responses[i].permission"
@@ -287,7 +302,10 @@
                         </v-textarea>
                       </v-lazy>
                     </v-col>
-                    <v-col cols="3">
+                    <v-col
+                      cols="12"
+                      md="4"
+                    >
                       <v-lazy>
                         <v-textarea
                           v-model="item.responses[i].filter"
@@ -295,16 +313,23 @@
                           :label="translate('systems.customcommands.filter.name')"
                           :rows="1"
                           counter
-                          append-outer-icon="mdi-trash-can"
                           auto-grow
                           @keydown.enter.prevent
-                          @click:append-outer="item.responses.splice(i, 1)"
                         >
                           <template #append>
                             <input-variables
                               :filters="['sender', 'source', 'param', 'haveParam', 'is.moderator', 'is.subscriber', 'is.vip', 'is.follower', 'is.broadcaster', 'is.bot', 'is.owner', 'rank', 'game', 'language', 'title', 'views', 'followers', 'subscribers', 'isBotSubscriber']"
                               @input="item.responses[i].filter = item.responses[i].filter + $event"
                             />
+                          </template>
+                          <template #append-outer>
+                            <v-btn
+                              dark
+                              icon
+                              @click:append-outer="item.responses.splice(i, 1)"
+                            >
+                              <v-icon>mdi-trash-can</v-icon>
+                            </v-btn>
                           </template>
                         </v-textarea>
                       </v-lazy>

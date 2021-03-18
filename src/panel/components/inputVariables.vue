@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="d-inline-block">
     <v-menu
       v-model="menu"
       :close-on-content-click="false"
@@ -18,6 +18,7 @@
 
       <v-combobox
         autofocus
+        class="ma-2"
         label="Select variable"
         :search-input.sync="filterToAdd"
         :return-object="false"

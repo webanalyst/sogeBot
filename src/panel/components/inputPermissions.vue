@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="d-inline-block">
     <v-menu
       v-model="menu"
       :close-on-content-click="false"
@@ -17,9 +17,9 @@
       </template>
 
       <v-select
+        class="ma-2"
         :value="permission"
         :label="translate('permission')"
-        prepend-icon="mdi-key"
         :items="permissionItems"
         @change="triggerEvent"
       />
