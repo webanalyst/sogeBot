@@ -77,12 +77,8 @@ const main = async () => {
       {
         path: '/manage/alias', name: 'alias', component: () => import('./views/managers/alias.vue'),
       },
-      { path: '/manage/commands/', redirect: '/manage/commands/list' },
       {
-        path: '/manage/commands/list', name: 'CommandsManagerList', component: () => import('./views/managers/commands.vue'),
-      },
-      {
-        path: '/manage/commands/edit/:id?', name: 'CommandsManagerEdit', component: () => import('./views/managers/commands.vue'),
+        path: '/manage/commands', name: 'commands', component: () => import('./views/managers/commands.vue'),
       },
       { path: '/manage/cooldowns/', redirect: '/manage/cooldowns/list' },
       {
@@ -228,6 +224,7 @@ const main = async () => {
       navbar:           () => import('./components/navbar/navbar.vue'),
       changegamedialog: () => import('./components/dialog/changegamedialog.vue'),
       footerbar:        () => import('./components/footer.vue'),
+      snackbar:         () => import('./components/snackbar.vue'),
     },
     created() {
       // set proper dayjs locale
@@ -250,6 +247,7 @@ const main = async () => {
               position: $route.path !== '/' ? 'inherit' : 'absolute'
             }">
             <router-view/>
+            <snackbar/>
           </v-main>
           <footerbar/>
         </template>

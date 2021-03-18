@@ -51,9 +51,8 @@ import { getSocket } from 'src/panel/helpers/socket';
 import translate from 'src/panel/helpers/translate';
 
 export default Vue.extend({
-  props:      ['popout', 'nodrag'],
-  components: { loading: () => import('src/panel/components/loading.vue') },
-  data:       function () {
+  props: ['popout', 'nodrag'],
+  data:  function () {
     const data: {
       EventBus: any,
       items: Array<Record<string, any>>,

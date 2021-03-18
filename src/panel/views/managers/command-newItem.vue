@@ -4,16 +4,6 @@
     v-model="valid"
     lazy-validation
   >
-    <v-text-field
-      v-model="newItemAlias"
-      :label="translate('alias')"
-      :rules="rules.alias"
-      hide-details="auto"
-      :clearable="true"
-      required
-      counter
-    />
-
     <v-textarea
       v-model="newItemCommand"
       hide-details="auto"
@@ -49,45 +39,38 @@
 import { defineComponent, ref } from '@vue/composition-api';
 import { v4 as uuid } from 'uuid';
 
-import { AliasInterface } from 'src/bot/database/entity/alias';
-import { defaultPermissions } from 'src/bot/helpers/permissions/defaultPermissions';
+import { CommandsInterface } from 'src/bot/database/entity/commands';
 import { getSocket } from 'src/panel/helpers/socket';
 import translate from 'src/panel/helpers/translate';
 import {
-  minLength,required, startsWithExclamation, startsWithExclamationOrCustomVariable, 
+  minLength,required, startsWithExclamation, 
 } from 'src/panel/helpers/validators';
 
-const socket = { alias: getSocket('/systems/alias') } as const;
+const socket = { command: getSocket('/systems/customcommands') } as const;
 
 export default defineComponent({
   setup(props, ctx) {
-    const newItemAlias = ref('');
     const newItemCommand = ref('');
     const newItemSaving = ref(false);
     const valid = ref(true);
 
     const form = ref(null);
 
-    const rules = {
-      alias:   [startsWithExclamation, required],
-      command: [startsWithExclamationOrCustomVariable, minLength(2)],
-    };
+    const rules = { command: [startsWithExclamation, minLength(2)] };
 
     const newItem = async () => {
       newItemSaving.value = true;
       if ((form.value as unknown as HTMLFormElement).validate()) {
         await new Promise((resolve) => {
-          const item: AliasInterface = {
-            id:         uuid(),
-            alias:      newItemAlias.value,
-            command:    newItemCommand.value,
-            enabled:    true,
-            visible:    true,
-            permission: defaultPermissions.VIEWERS,
-            group:      null,
+          const item: CommandsInterface = {
+            id:        uuid(),
+            command:   newItemCommand.value,
+            responses: [],
+            enabled:   true,
+            visible:   true,
           };
           console.log('Saving', { item });
-          socket.alias.emit('generic::setById', { id: item.id, item }, () => {
+          socket.command.emit('generic::setById', { id: item.id, item }, () => {
             resolve(true);
             ctx.emit('save');
           });
@@ -105,7 +88,6 @@ export default defineComponent({
       translate,
       required,
       startsWithExclamation,
-      newItemAlias,
       newItemCommand,
       newItemSaving,
       newItem,

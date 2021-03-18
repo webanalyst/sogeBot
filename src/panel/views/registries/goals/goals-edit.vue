@@ -555,10 +555,9 @@ import translate from 'src/panel/helpers/translate';
 
 export default Vue.extend({
   components: {
-    panel:      () => import('../../../components/panel.vue'),
-    holdButton: () => import('../../../components/holdButton.vue'),
-    font:       () => import('../../../components/font.vue'),
-    datetime:   VueFlatPickr,
+    panel:    () => import('../../../components/panel.vue'),
+    font:     () => import('../../../components/font.vue'),
+    datetime: VueFlatPickr,
     codemirror,
   },
   data: function () {

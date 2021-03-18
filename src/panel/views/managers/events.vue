@@ -206,10 +206,7 @@ import translate from 'src/panel/helpers/translate';
 const socket = getSocket('/core/events');
 
 export default defineComponent({
-  components: {
-    loading:    () => import('src/panel/components/loading.vue'),
-    eventsEdit: () => import('./events-edit.vue'),
-  },
+  components: { eventsEdit: () => import('./events-edit.vue') },
   setup(props, ctx) {
     const instance = getCurrentInstance()?.proxy;
     const isSidebarVisible = ref(false);

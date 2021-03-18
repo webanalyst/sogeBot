@@ -104,19 +104,19 @@
                 v-bind="attrs"
                 v-on="on"
               >
-                New Alias
+                New item
               </v-btn>
             </template>
 
             <v-card>
               <v-card-title>
-                <span class="headline">New alias</span>
+                <span class="headline">New item</span>
               </v-card-title>
 
               <v-card-text :key="timestamp">
                 <alias-new-item
                   @close="newDialog = false"
-                  @save="newAliasSaved"
+                  @save="saveSuccess"
                 />
               </v-card-text>
             </v-card>
@@ -257,24 +257,6 @@
         />
       </template>
     </v-data-table>
-
-    <v-snackbar
-      v-model="snack"
-      :timeout="3000"
-      :color="snackColor"
-    >
-      {{ snackText }}
-
-      <template #action="{ attrs }">
-        <v-btn
-          v-bind="attrs"
-          text
-          @click="snack = false"
-        >
-          Close
-        </v-btn>
-      </template>
-    </v-snackbar>
   </v-container>
 </template>
 
@@ -290,9 +272,13 @@ import { AliasInterface } from 'src/bot/database/entity/alias';
 import { PermissionsInterface } from 'src/bot/database/entity/permissions';
 import { ButtonStates } from 'src/panel/helpers/buttonStates';
 import { error } from 'src/panel/helpers/error';
+import { EventBus } from 'src/panel/helpers/event-bus';
 import { getPermissionName } from 'src/panel/helpers/getPermissionName';
 import { getSocket } from 'src/panel/helpers/socket';
 import translate from 'src/panel/helpers/translate';
+import {
+  minLength, required, startsWithExclamation, startsWithExclamationOrCustomVariable,
+} from 'src/panel/helpers/validators';
 
 const socket = {
   permission: getSocket('/core/permissions'),
@@ -306,15 +292,6 @@ const aliasNewItem = defineAsyncComponent({ loader: () => import('./alias-newIte
 export default defineComponent({
   components: { aliasNewItem },
   setup(props, ctx) {
-    const required = (v?: string) => (typeof v === 'string' && v.length > 0) || 'This value is required';
-    const minLength2 = (v?: string) => (typeof v === 'string' && v.length > 2) || 'Min length of this value is 2';
-    const startsWithExclamation = (v?: string) => (typeof v === 'string' && v.length > 0 && v[0] === '!') || 'Must start with !';
-    const startsWithExclamationOrCustomVariable = (v?: string) => (typeof v === 'string' && v.length > 0 && (v[0] === '!' || v[0] === '$')) || 'Must start with ! or should be custom variable';
-
-    const snack = ref(false);
-    const snackColor = ref('');
-    const snackText = ref('');
-
     const timestamp = ref(Date.now());
 
     const selected = ref([] as AliasInterfaceUI[]);
@@ -326,7 +303,7 @@ export default defineComponent({
 
     const rules = {
       alias:   [startsWithExclamation, required],
-      command: [startsWithExclamationOrCustomVariable, minLength2],
+      command: [startsWithExclamationOrCustomVariable, minLength(2)],
     };
 
     const search = ref('');
@@ -342,11 +319,9 @@ export default defineComponent({
       timestamp.value = Date.now();
     });
 
-    const newAliasSaved = () => {
+    const saveSuccess = () => {
       refresh();
-      snack.value = true;
-      snackColor.value = 'success';
-      snackText.value = 'Data updated.';
+      EventBus.$emit('snack', 'success', 'Data updated.');
       newDialog.value = false;
     };
 
@@ -458,9 +433,8 @@ export default defineComponent({
           if (ruleStatus === true) {
             continue;
           } else {
-            snack.value = true;
-            snackColor.value = 'red';
-            snackText.value = ruleStatus;
+
+            EventBus.$emit('snack', 'red', ruleStatus);
             refresh();
             return;
           }
@@ -483,9 +457,7 @@ export default defineComponent({
         }),
       );
       refresh();
-      snack.value = true;
-      snackColor.value = 'success';
-      snackText.value = 'Data updated.';
+      EventBus.$emit('snack', 'success', 'Data updated.');
     };
 
     const deleteSelected = async () => {
@@ -504,9 +476,7 @@ export default defineComponent({
       );
       refresh();
 
-      snack.value = true;
-      snackColor.value = 'success';
-      snackText.value = 'Data removed.';
+      EventBus.$emit('snack', 'success', 'Data removed.');
       selected.value = [];
     };
 
@@ -524,11 +494,6 @@ export default defineComponent({
       translate,
       getPermissionName,
 
-      required,
-      startsWithExclamation,
-      snack,
-      snackColor,
-      snackText,
       selected,
       deleteDialog,
       newDialog,
@@ -539,7 +504,7 @@ export default defineComponent({
       toggleGroupSelection,
 
       timestamp,
-      newAliasSaved,
+      saveSuccess,
     };
   },
 });
