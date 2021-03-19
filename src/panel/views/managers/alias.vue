@@ -265,6 +265,7 @@ import {
   computed, defineAsyncComponent, defineComponent, onMounted, ref, watch,
 } from '@vue/composition-api';
 import {
+  capitalize,
   escapeRegExp, isNil, orderBy,
 } from 'lodash-es';
 
@@ -387,7 +388,7 @@ export default defineComponent({
         value: 'enabled', text: translate('enabled'), width: '6rem',
       },
       {
-        value: 'visible', text: translate('visible'), width: '6rem',
+        value: 'visible', text: capitalize(translate('visible')), width: '6rem',
       },
       { value: 'command', text: translate('command') },
     ];

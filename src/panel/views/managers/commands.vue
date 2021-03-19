@@ -309,7 +309,7 @@
                         <v-textarea
                           v-model="item.responses[i].filter"
                           hide-details="auto"
-                          :label="translate('systems.customcommands.filter.name')"
+                          :label="capitalize(translate('systems.customcommands.filter.name'))"
                           :rows="1"
                           counter
                           auto-grow
@@ -350,7 +350,9 @@
 import {
   computed, defineAsyncComponent, defineComponent, onMounted, ref, watch,
 } from '@vue/composition-api';
-import { isNil, orderBy } from 'lodash-es';
+import {
+  capitalize, isNil, orderBy, 
+} from 'lodash-es';
 import draggable from 'vuedraggable';
 import { required } from 'vuelidate/lib/validators';
 
@@ -431,10 +433,10 @@ export default defineComponent({
         value: 'enabled', text: translate('enabled'), width: '6rem',
       },
       {
-        value: 'visible', text: translate('visible'), width: '6rem',
+        value: 'visible', text: capitalize(translate('visible')), width: '6rem',
       },
       {
-        value: 'count', text: translate('count'), width: '6rem',
+        value: 'count', text: capitalize(translate('count')), width: '6rem',
       },
       {
         value: 'response', text: translate('response'), sortable: false,
@@ -576,6 +578,7 @@ export default defineComponent({
       deleteSelected,
       update,
       refresh,
+      capitalize,
     };
   },
 });
