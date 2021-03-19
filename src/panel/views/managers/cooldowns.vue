@@ -240,7 +240,7 @@ import { EventBus } from 'src/panel/helpers/event-bus';
 import { getSocket } from 'src/panel/helpers/socket';
 import translate from 'src/panel/helpers/translate';
 import {
-  minLength, minValue, required, 
+  minLength, minValue, required,
 } from 'src/panel/helpers/validators';
 
 const socket = getSocket('/systems/cooldown');
@@ -248,7 +248,7 @@ const socket = getSocket('/systems/cooldown');
 type CooldownInterfaceUI = CooldownInterface & { count: number };
 
 export default defineComponent({
-  components: { 'new-item': defineAsyncComponent({ loader: () => import('./cooldowns-newItem.vue') }) },
+  components: { 'new-item': defineAsyncComponent({ loader: () => import('./components/new-item/cooldowns-newItem.vue') }) },
   setup(props, ctx) {
     const rules = { name: [required, minLength(2)], count: [required, minValue(30)] };
 

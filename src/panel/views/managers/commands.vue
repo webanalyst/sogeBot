@@ -66,7 +66,7 @@
                   <v-data-table
                     dense
                     :items="selected"
-                    :headers="headersWithoutPerm"
+                    :headers="headersDelete"
                     hide-default-header
                     hide-default-footer
                   />
@@ -112,7 +112,7 @@
               </v-card-title>
 
               <v-card-text :key="timestamp">
-                <command-new-item
+                <new-item
                   @close="newDialog = false"
                   @save="saveSuccess"
                 />
@@ -348,13 +348,10 @@
 
 <script lang="ts">
 import {
-  computed, defineAsyncComponent, defineComponent, onMounted, ref, watch,
+  defineAsyncComponent, defineComponent, onMounted, ref, watch,
 } from '@vue/composition-api';
-import {
-  capitalize, isNil, orderBy, 
-} from 'lodash-es';
+import { capitalize, orderBy } from 'lodash-es';
 import draggable from 'vuedraggable';
-import { required } from 'vuelidate/lib/validators';
 
 import type { CommandsInterface } from 'src/bot/database/entity/commands';
 import type { PermissionsInterface } from 'src/bot/database/entity/permissions';
@@ -362,7 +359,9 @@ import { ButtonStates } from 'src/panel/helpers/buttonStates';
 import { error } from 'src/panel/helpers/error';
 import { EventBus } from 'src/panel/helpers/event-bus';
 import translate from 'src/panel/helpers/translate';
-import { minLength, startsWithExclamation } from 'src/panel/helpers/validators';
+import {
+  minLength, required, startsWithExclamation, 
+} from 'src/panel/helpers/validators';
 
 import { getPermissionName } from '../../helpers/getPermissionName';
 import { getSocket } from '../../helpers/socket';
@@ -380,7 +379,7 @@ type CommandsInterfaceUI = CommandsInterface & { count: number };
 export default defineComponent({
   components: {
     draggable,
-    commandNewItem:      defineAsyncComponent({ loader: () => import('./command-newItem.vue') }),
+    'new-item':          defineAsyncComponent({ loader: () => import('./components/new-item/command-newItem.vue') }),
     'input-variables':   defineAsyncComponent({ loader: () => import('../../components/inputVariables.vue') }),
     'input-permissions': defineAsyncComponent({ loader: () => import('../../components/inputPermissions.vue') }),
     'text-with-tags':    defineAsyncComponent({ loader: () => import('../../components/textWithTags.vue') }),
@@ -402,29 +401,14 @@ export default defineComponent({
       loadingPrm: ButtonStates.progress,
       loading:    ButtonStates.progress,
       save:       ButtonStates.idle,
-      pending:    false,
     } as {
       loadingPrm: number;
       loading: number;
       save: number;
-      pending: boolean;
     });
 
     watch(newDialog, () => {
       timestamp.value = Date.now();
-    });
-
-    const itemsFiltered = computed(() => {
-      if (search.value.length === 0) {
-        return items.value;
-      }
-      return items.value.filter((o) => {
-        const isSearchInCommand = !isNil(o.command.match(new RegExp(search.value, 'ig')));
-        const isSearchInResponse = o.responses.filter(o2 => {
-          return !isNil(o2.response.match(new RegExp(search.value, 'ig')));
-        }).length > 0;
-        return isSearchInCommand || isSearchInResponse;
-      });
     });
 
     const headers = [
@@ -443,7 +427,7 @@ export default defineComponent({
       },
     ];
 
-    const headersWithoutPerm = [
+    const headersDelete = [
       { value: 'command', text: translate('command') },
     ];
 
@@ -563,7 +547,6 @@ export default defineComponent({
       headers,
       search,
       items,
-      itemsFiltered,
       state,
       permissions,
       getPermissionName,
@@ -572,7 +555,7 @@ export default defineComponent({
       translate,
       timestamp,
       rules,
-      headersWithoutPerm,
+      headersDelete,
       newDialog,
       saveSuccess,
       deleteSelected,

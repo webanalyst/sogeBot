@@ -68,7 +68,7 @@
                   <v-data-table
                     dense
                     :items="selected"
-                    :headers="headersWithoutPerm"
+                    :headers="headersDelete"
                     hide-default-header
                     hide-default-footer
                   />
@@ -114,7 +114,7 @@
               </v-card-title>
 
               <v-card-text :key="timestamp">
-                <alias-new-item
+                <new-item
                   @close="newDialog = false"
                   @save="saveSuccess"
                 />
@@ -288,10 +288,8 @@ const socket = {
 
 type AliasInterfaceUI = AliasInterface & { groupToBeShownInTable: null | string };
 
-const aliasNewItem = defineAsyncComponent({ loader: () => import('./alias-newItem.vue') });
-
 export default defineComponent({
-  components: { aliasNewItem },
+  components: { 'new-item': defineAsyncComponent({ loader: () => import('./components/new-item/alias-newItem.vue') }) },
   setup(props, ctx) {
     const timestamp = ref(Date.now());
 
@@ -393,7 +391,7 @@ export default defineComponent({
       { value: 'command', text: translate('command') },
     ];
 
-    const headersWithoutPerm = [
+    const headersDelete = [
       { value: 'alias', text: translate('alias') },
       { value: 'command', text: translate('command') },
     ];
@@ -486,7 +484,7 @@ export default defineComponent({
       search,
       state,
       headers,
-      headersWithoutPerm,
+      headersDelete,
       groupItems,
       fItems,
       update,

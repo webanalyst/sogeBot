@@ -1,535 +1,395 @@
 <template>
-  <b-container
-    ref="window"
+  <v-container
     fluid
+    :class="{ 'pa-4': !$vuetify.breakpoint.mobile }"
   >
-    <b-row>
-      <b-col>
-        <span class="title text-default mb-2">
-          {{ translate('menu.manage') }}
-          <small><fa icon="angle-right" /></small>
-          {{ translate('menu.keywords') }}
-        </span>
-      </b-col>
-      <b-col
-        v-if="!$systems.find(o => o.name === 'keywords').enabled"
-        style=" text-align: right;"
-      >
-        <b-alert
-          show
-          variant="danger"
-          style="padding: .5rem; margin: 0; display: inline-block;"
-        >
-          <fa
-            icon="exclamation-circle"
-            fixed-width
-          /> {{ translate('this-system-is-disabled') }}
-        </b-alert>
-      </b-col>
-    </b-row>
-
-    <panel
-      search
-      @search="search = $event"
-      @showAs="showAs = $event"
+    <v-alert
+      v-if="!$systems.find(o => o.name === 'keywords').enabled"
+      dismissible
+      prominent
+      dense
     >
-      <template #left>
-        <button-with-icon
-          class="btn-primary btn-reverse"
-          icon="plus"
-          @click="newItem"
+      <div class="text-caption">
+        {{ translate('this-system-is-disabled') }}
+      </div>
+    </v-alert>
+
+    <h2 v-if="!$vuetify.breakpoint.mobile">
+      {{ translate('menu.keywords') }}
+    </h2>
+
+    <v-data-table
+      v-model="selected"
+      calculate-widths
+      show-select
+      :search="search"
+      :loading="state.loading !== $state.success && state.loadingPrm !== $state.success"
+      :headers="headers"
+      :items-per-page="-1"
+      :items="items"
+    >
+      <template #top>
+        <v-toolbar
+          flat
         >
-          {{ translate('systems.keywords.new') }}
-        </button-with-icon>
-      </template>
-    </panel>
+          <v-text-field
+            v-model="search"
+            append-icon="mdi-magnify"
+            label="Search"
+            single-line
+            hide-details
+            class="pr-2"
+          />
 
-    <loading v-if="state.loadedCmd === 1 || state.loadedPerm === 1" />
-    <template v-else>
-      <b-sidebar
-        :visible="isSidebarVisible"
-        :no-slide="!sidebarSlideEnabled"
-        width="1200px"
-        no-close-on-route-change
-        shadow
-        no-header
-        right
-        backdrop
-        @change="isSidebarVisibleChange"
-      >
-        <template #footer="{ hide }">
-          <div
-            class="d-flex bg-opaque align-items-center px-3 py-2 border-top border-gray"
-            style="justify-content: flex-end"
-          >
-            <b-button
-              class="mx-2"
-              variant="link"
-              @click="hide"
+          <template v-if="selected.length > 0">
+            <v-dialog
+              v-model="deleteDialog"
+              max-width="500px"
             >
-              {{ translate('dialog.buttons.close') }}
-            </b-button>
-            <state-button
-              text="saveChanges"
-              :state="state.save"
-              :invalid="!!$v.$invalid && !!$v.$dirty"
-              @click="save()"
-            />
-          </div>
-        </template>
-        <div class="px-3 py-2">
-          <b-form>
-            <b-form-group>
-              <label-inside>{{ translate('systems.keywords.keyword.name') }}</label-inside>
-              <template v-if="editationItem">
-                <b-input-group>
-                  <b-form-input
-                    id="name"
-                    v-model="editationItem.keyword"
-                    type="text"
-                    :placeholder="translate('systems.keywords.keyword.placeholder')"
-                    :state="$v.editationItem.keyword.$invalid && $v.editationItem.keyword.$dirty ? false : null"
-                    @input="$v.editationItem.keyword.$touch()"
+              <template #activator="{ on, attrs }">
+                <v-btn
+                  color="red"
+                  class="mb-2 mr-1"
+                  v-bind="attrs"
+                  v-on="on"
+                >
+                  Delete {{ selected.length }} Item(s)
+                </v-btn>
+              </template>
+
+              <v-card>
+                <v-card-title>
+                  <span class="headline">Delete {{ selected.length }} Item(s)?</span>
+                </v-card-title>
+
+                <v-card-text>
+                  <v-data-table
+                    dense
+                    :items="selected"
+                    :headers="headersDelete"
+                    hide-default-header
+                    hide-default-footer
                   />
-                </b-input-group>
-                <b-form-invalid-feedback :state="!($v.editationItem.keyword.$invalid && $v.editationItem.keyword.$dirty)">
-                  <template v-if="!$v.editationItem.keyword.isValidRegex">
-                    {{ translate('errors.invalid_regexp_format') }}
-                  </template>
-                  <template v-else>
-                    {{ translate('dialog.errors.required') }}
-                  </template>
-                </b-form-invalid-feedback>
-              </template>
-              <b-skeleton
-                v-else
-                type="input"
-                class="w-100"
-              />
-            </b-form-group>
-
-            <b-form-group>
-              <template v-if="editationItem">
-                <b-alert
-                  v-if="editationItem.responses.length === 0"
-                  show
-                >
-                  {{ translate('systems.customcommands.no-responses-set') }}
-                </b-alert>
-                <b-row
-                  v-for="(response, i) of orderBy(editationItem.responses, 'order', 'asc')"
-                  :key="updatedAt + '' + i"
-                  no-gutters
-                  :class="[i !== 0 ? 'pt-2' : '']"
-                >
-                  <b-col>
-                    <title-divider>{{ translate('systems.keywords.response.name') }} {{ i+1 }}</title-divider>
-                  </b-col>
-                  <b-col
-                    md="auto"
-                    sm="12"
-                    align-self="end"
-                    class="text-right"
+                </v-card-text>
+                <v-card-actions>
+                  <v-spacer />
+                  <v-btn
+                    text
+                    @click="deleteDialog = false"
                   >
-                    <div
-                      class="h-auto w-auto"
-                      style="flex-shrink: 0;"
-                    >
-                      <b-dropdown
-                        variant="outline-dark"
-                        toggle-class="border-0 h-auto w-auto"
-                        class="h-100"
-                      >
-                        <template #button-content>
-                          <fa
-                            class="mr-1"
-                            icon="key"
-                          />
-                          <span
-                            v-if="getPermissionName(response.permission, permissions)"
-                          >{{ getPermissionName(response.permission, permissions) }}</span>
-                          <span
-                            v-else
-                            class="text-danger"
-                          >
-                            <fa icon="exclamation-triangle" />Permission not found
-                          </span>
-                        </template>
-                        <b-dropdown-item
-                          v-for="p of permissions"
-                          :key="p.id"
-                          @click="response.permission = p.id; state.pending = true;"
-                        >
-                          {{ getPermissionName(p.id, permissions) | capitalize }}
-                        </b-dropdown-item>
-                      </b-dropdown>
-                      <b-dropdown
-                        variant="outline-dark"
-                        toggle-class="border-0 h-auto w-auto"
-                        class="h-100"
-                      >
-                        <template #button-content>
-                          <fa
-                            class="mr-1"
-                            :icon="response.stopIfExecuted ? 'stop' : 'play'"
-                          />
-                          {{ translate(response.stopIfExecuted ? 'commons.stop-if-executed' : 'commons.continue-if-executed') | capitalize }}
-                        </template>
-                        <b-dropdown-item
-                          @click="response.stopIfExecuted = true; state.pending = true"
-                        >
-                          {{ translate('commons.stop-if-executed') | capitalize }}
-                        </b-dropdown-item>
-                        <b-dropdown-item
-                          @click="response.stopIfExecuted = false; state.pending = true"
-                        >
-                          {{ translate('commons.continue-if-executed') | capitalize }}
-                        </b-dropdown-item>
-                      </b-dropdown>
-                      <b-dropdown
-                        variant="outline-dark"
-                        toggle-class="border-0 h-auto w-auto"
-                        class="h-100"
-                        no-caret
-                      >
-                        <template #button-content>
-                          <fa icon="ellipsis-v" />
-                        </template>
-                        <b-dropdown-item
-                          v-if="i !== 0"
-                          @click="moveUpResponse(response.order)"
-                        >
-                          <fa
-                            icon="sort-up"
-                            fixed-width
-                          />
-                          {{ translate('commons.moveUp') | capitalize }}
-                        </b-dropdown-item>
-                        <b-dropdown-item
-                          v-if="i !== editationItem.responses.length - 1"
-                          @click="moveDownResponse(response.order)"
-                        >
-                          <fa
-                            icon="sort-down"
-                            fixed-width
-                          />
-                          {{ translate('commons.moveDown') | capitalize }}
-                        </b-dropdown-item>
-                        <b-dropdown-item @click="deleteResponse(response.order)">
-                          <fa
-                            icon="trash-alt"
-                            fixed-width
-                          />
-                          {{ translate('delete') }}
-                        </b-dropdown-item>
-                      </b-dropdown>
-                    </div>
-                  </b-col>
-
-                  <b-col
-                    cols="12"
-                    sm="8"
-                    md="9"
+                    Cancel
+                  </v-btn>
+                  <v-btn
+                    color="red"
+                    text
+                    @click="deleteSelected"
                   >
-                    <label-inside>{{ translate('systems.keywords.response.name') }}</label-inside>
-                    <textarea-with-tags
-                      :value.sync="response.response"
-                      :placeholder="translate('systems.keywords.response.placeholder')"
-                      :filters="['global', 'sender', 'param', '!param', 'touser']"
-                      :state="true"
-                      @update="response.response = $event"
-                    />
-                  </b-col>
-                  <b-col
-                    cols="12"
-                    sm="4"
-                    md="3"
-                  >
-                    <label-inside>{{ translate('systems.keywords.filter.name') }}</label-inside>
-                    <textarea-with-tags
-                      :value.sync="response.filter"
-                      :placeholder="translate('systems.keywords.filter.placeholder')"
-                      :filters="['sender', 'source', 'param', 'haveParam', 'is.moderator', 'is.subscriber', 'is.vip', 'is.follower', 'is.broadcaster', 'is.bot', 'is.owner', 'rank', 'game', 'language', 'title', 'views', 'followers', 'subscribers', 'isBotSubscriber']"
-                      :state="true"
-                      @update="response.filter = $event"
-                    />
-                  </b-col>
-                </b-row>
-                <button
-                  class="btn btn-primary btn-block mt-2"
-                  type="button"
-                  @click="editationItem.responses.push({ filter: '', order: editationItem.responses.length, response: '', stopIfExecuted: false, permission: orderBy(permissions, 'order', 'asc').pop().id })"
-                >
-                  {{ translate('systems.keywords.addResponse') }}
-                </button>
-              </template>
-              <b-skeleton
-                v-else
-                type="input"
-                class="w-100"
-                style="height: 600px !important"
-              />
-            </b-form-group>
-          </b-form>
-        </div>
-      </b-sidebar>
-      <b-alert
-        v-if="keywordsFiltered.length === 0 && search.length > 0"
-        show
-        variant="danger"
-      >
-        <fa icon="search" /> <span v-html="translate('systems.keywords.emptyAfterSearch').replace('$search', search)" />
-      </b-alert>
-      <b-alert
-        v-else-if="keywords.length === 0"
-        show
-      >
-        {{ translate('systems.keywords.empty') }}
-      </b-alert>
-      <b-table
-        v-else
-        striped
-        small
-        :items="keywordsFiltered"
-        :fields="fields"
-        responsive
-        :sort-by="'keyword'"
-      >
-        <template #cell(response)="data">
-          <span
-            v-if="data.item.responses.length === 0"
-            class="text-muted"
-          >{{ translate('systems.keywords.no-responses-set') }}</span>
-          <template v-for="(r, i) of orderBy(data.item.responses, 'order', 'asc')">
-            <div
-              :key="i"
-              :style="{ 'margin-top': i !== 0 ? '15px' : 'inherit' }"
-              style="margin: 0; font-size: 11px; font-weight: 400; text-transform: uppercase; letter-spacing: 1px; margin-bottom: -3px;"
-            >
-              <span style="display: inline-block">
-                {{ translate('response') }}#{{ i + 1 }}
-              </span>
+                    Delete
+                  </v-btn>
+                </v-card-actions>
+              </v-card>
+            </v-dialog>
+          </template>
 
-              <span style="display: inline-block">
-                <b-dropdown
-                  variant="outline-dark"
-                  toggle-class="border-0"
-                  size="sm"
-                >
-                  <template #button-content>
-                    <fa
-                      class="mr-1"
-                      icon="key"
-                    />
-                    <span v-if="getPermissionName(r.permission, permissions)">{{ getPermissionName(r.permission, permissions) }}</span>
-                    <span
-                      v-else
-                      class="text-danger"
-                    ><fa icon="exclamation-triangle" /> Permission not found</span>
-                  </template>
-                  <b-dropdown-item
-                    v-for="p of permissions"
-                    :key="p.id"
-                    @click="updatePermission(data.item.id, r.id, p.id)"
-                  >
-                    {{ getPermissionName(p.id, permissions) | capitalize }}
-                  </b-dropdown-item>
-                </b-dropdown>
-              </span>
+          <v-dialog
+            v-model="newDialog"
+            max-width="500px"
+          >
+            <template #activator="{ on, attrs }">
+              <v-btn
+                color="primary"
+                class="mb-2"
+                v-bind="attrs"
+                v-on="on"
+              >
+                New Item
+              </v-btn>
+            </template>
 
-              <span style="display: inline-block">
-                <b-dropdown
-                  variant="outline-dark"
-                  toggle-class="border-0"
-                  size="sm"
-                >
-                  <template #button-content>
-                    <fa
-                      class="mr-1"
-                      :icon="r.stopIfExecuted ? 'stop' : 'play'"
-                    />
-                    {{ translate(r.stopIfExecuted ? 'commons.stop-if-executed' : 'commons.continue-if-executed') | capitalize }}
-                  </template>
-                  <b-dropdown-item @click="updateStopIfExecuted(data.item.id, r.id, true)">
-                    {{ translate('commons.stop-if-executed') | capitalize }}
-                  </b-dropdown-item>
-                  <b-dropdown-item @click="updateStopIfExecuted(data.item.id, r.id, false)">
-                    {{ translate('commons.continue-if-executed') | capitalize }}
-                  </b-dropdown-item>
-                </b-dropdown>
-              </span>
-            </div>
-            <text-with-tags
-              v-if="r.filter"
-              :key="10 + i"
-              :value="r.filter"
-              style="font-size: .8rem;border: 1px dashed #eee; display: inline-block;padding: 0.1rem; padding-left: 0.3rem; padding-right: 0.3rem;"
-            />
-            <text-with-tags
-              :key="100 + i"
-              :value="r.response"
-              style="display: inline-block"
+            <v-card>
+              <v-card-title>
+                <span class="headline">New item</span>
+              </v-card-title>
+
+              <v-card-text :key="timestamp">
+                <command-new-item
+                  @close="newDialog = false"
+                  @save="saveSuccess"
+                />
+              </v-card-text>
+            </v-card>
+          </v-dialog>
+        </v-toolbar>
+      </template>
+
+      <template #[`item.keyword`]="{ item }">
+        <v-edit-dialog
+          persistent
+          large
+          :return-value.sync="item.keyword"
+          @save="update(item, false, 'keyword')"
+        >
+          {{ item.keyword }}
+          <template #input>
+            <v-text-field
+              v-model="item.keyword"
+              :rules="rules.keyword"
+              single-line
+              counter
             />
           </template>
-        </template>
-        <template #cell(buttons)="data">
-          <div
-            class="float-right"
-            style="width: max-content !important;"
-          >
-            <button-with-icon
-              :class="[ data.item.enabled ? 'btn-success' : 'btn-danger' ]"
-              class="btn-only-icon btn-reverse"
-              icon="power-off"
-              @click="data.item.enabled = !data.item.enabled; sendUpdate(data.item.id)"
+        </v-edit-dialog>
+      </template>
+
+      <template #[`item.enabled`]="{ item }">
+        <v-simple-checkbox
+          v-model="item.enabled"
+          @click="update(item, true, 'enabled')"
+        />
+      </template>
+
+      <template #[`item.response`]="{ item }">
+        <v-edit-dialog
+          persistent
+          large
+          :return-value.sync="item.responses"
+          @cancel="refresh"
+          @save="update(item, false, 'responses')"
+        >
+          <span
+            v-if="item.responses.length === 0"
+            class="text--lighten-1  red--text"
+          >{{ translate('systems.customcommands.no-responses-set') }}</span>
+          <template v-for="(r, i) of orderBy(item.responses)">
+            <div
+              :key="i"
             >
-              {{ translate('dialog.buttons.' + (data.item.enabled? 'enabled' : 'disabled')) }}
-            </button-with-icon>
-            <button-with-icon
-              class="btn-only-icon btn-primary btn-reverse"
-              icon="edit"
-              :href="'#/manage/keywords/edit/' + data.item.id"
+              <v-divider
+                v-if="i > 0"
+                class="ma-2"
+              />
+              <v-row>
+                <v-col
+                  cols="auto"
+                  class="caption"
+                  style="line-height: 2.5rem;"
+                >
+                  {{ translate('response') }}#{{ i + 1 }}
+                </v-col>
+                <v-col
+                  cols="auto"
+                  class="caption"
+                  style="line-height: 2.5rem;"
+                >
+                  <v-icon>mdi-key</v-icon>
+                  {{ getPermissionName(r.permission, permissions) }}
+                </v-col>
+                <v-col
+                  cols="auto"
+                  class="caption"
+                  style="line-height: 2.5rem;"
+                >
+                  <v-icon v-if="r.stopIfExecuted">
+                    mdi-pause
+                  </v-icon>
+                  <v-icon v-else>
+                    mdi-play
+                  </v-icon>
+                  {{ r.stopIfExecuted ? translate('commons.stop-if-executed') : translate('commons.continue-if-executed') }}
+                </v-col>
+                <v-col
+                  v-if="r.filter.length > 0"
+                  cols="auto"
+                  class="caption"
+                  style="line-height: 2.5rem;"
+                >
+                  <v-icon>
+                    mdi-filter
+                  </v-icon>
+                  <text-with-tags
+                    class="d-inline-block"
+                    :value="r.filter"
+                  />
+                </v-col>
+              </v-row>
+              <text-with-tags :value="r.response" />
+            </div>
+          </template>
+
+          <template #input>
+            <draggable
+              v-model="item.responses"
+              draggable=".item"
+              handle=".handle"
             >
-              {{ translate('dialog.buttons.edit') }}
-            </button-with-icon>
-            <button-with-icon
-              class="btn-only-icon btn-danger btn-reverse"
-              icon="trash"
-              @click="del(data.item.id)"
-            >
-              {{ translate('dialog.buttons.delete') }}
-            </button-with-icon>
-          </div>
-        </template>
-      </b-table>
-    </template>
-  </b-container>
+              <v-list-item
+                v-for="(r, i) of item.responses"
+                :key="item.id + '-response' + i"
+                class="item"
+              >
+                <v-list-item-content>
+                  <v-row>
+                    <v-col
+                      cols="12"
+                      md="8"
+                    >
+                      <v-lazy>
+                        <v-textarea
+                          v-model="item.responses[i].response"
+                          hide-details="auto"
+                          :label="translate('response') + '#' + (i + 1)"
+                          :rows="1"
+                          counter
+                          auto-grow
+                          :autofocus="i === 0"
+                          @keydown.enter.prevent
+                        >
+                          <template #prepend>
+                            <v-icon class="handle">
+                              mdi-drag
+                            </v-icon>
+                          </template>
+                          <template #append>
+                            <input-variables
+                              :filters="['sender', 'param', '!param', 'touser']"
+                              @input="item.responses[i].response = item.responses[i].response + $event"
+                            />
+                          </template>
+                          <template #append-outer>
+                            <input-permissions
+                              :permissions="permissions"
+                              :permission="item.responses[i].permission"
+                              @input="item.responses[i].permission = $event"
+                            />
+                            <v-btn
+                              small
+                              plain
+                              @click="item.responses[i].stopIfExecuted = !item.responses[i].stopIfExecuted"
+                            >
+                              {{ item.responses[i].stopIfExecuted ? translate('commons.stop-if-executed') : translate('commons.continue-if-executed') }}
+                            </v-btn>
+                          </template>
+                        </v-textarea>
+                      </v-lazy>
+                    </v-col>
+                    <v-col
+                      cols="12"
+                      md="4"
+                    >
+                      <v-lazy>
+                        <v-textarea
+                          v-model="item.responses[i].filter"
+                          hide-details="auto"
+                          :label="capitalize(translate('systems.customcommands.filter.name'))"
+                          :rows="1"
+                          counter
+                          auto-grow
+                          @keydown.enter.prevent
+                        >
+                          <template #append>
+                            <input-variables
+                              :filters="['sender', 'source', 'param', 'haveParam', 'is.moderator', 'is.subscriber', 'is.vip', 'is.follower', 'is.broadcaster', 'is.bot', 'is.owner', 'rank', 'game', 'language', 'title', 'views', 'followers', 'subscribers', 'isBotSubscriber']"
+                              @input="item.responses[i].filter = item.responses[i].filter + $event"
+                            />
+                          </template>
+                          <template #append-outer>
+                            <v-btn
+                              icon
+                              @click:append-outer="item.responses.splice(i, 1)"
+                            >
+                              <v-icon>mdi-trash-can</v-icon>
+                            </v-btn>
+                          </template>
+                        </v-textarea>
+                      </v-lazy>
+                    </v-col>
+                  </v-row>
+                </v-list-item-content>
+              </v-list-item>
+            </draggable>
+            <v-btn @click="item.responses.push({ filter: '', order: item.responses.length, response: '', stopIfExecuted: false, permission: orderBy(permissions, 'order', 'asc').pop().id })">
+              {{ translate('systems.customcommands.addResponse') }}
+            </v-btn>
+          </template>
+        </v-edit-dialog>
+      </template>
+    </v-data-table>
+  </v-container>
 </template>
 
 <script lang="ts">
-
-import { library } from '@fortawesome/fontawesome-svg-core';
 import {
-  faExclamationTriangle, faEye, faEyeSlash, faKey, faPlay, faStop,
-} from '@fortawesome/free-solid-svg-icons';
-import {
-  computed, defineComponent, getCurrentInstance, onMounted, ref, watch,
+  defineAsyncComponent, defineComponent, onMounted, ref,
 } from '@vue/composition-api';
-import { isNil, orderBy } from 'lodash-es';
-import { v4 as uuid } from 'uuid';
-import { validationMixin } from 'vuelidate';
-import { minLength, required } from 'vuelidate/lib/validators';
-import XRegExp from 'xregexp';
+import { orderBy } from 'lodash-es';
+import { capitalize } from 'lodash-es';
+import draggable from 'vuedraggable';
 
 import type { KeywordInterface } from 'src/bot/database/entity/keyword';
 import type { PermissionsInterface } from 'src/bot/database/entity/permissions';
 import { ButtonStates } from 'src/panel/helpers/buttonStates';
 import { error } from 'src/panel/helpers/error';
+import { EventBus } from 'src/panel/helpers/event-bus';
 import translate from 'src/panel/helpers/translate';
+import {
+  isValidRegex, minLength, required,
+} from 'src/panel/helpers/validators';
 
 import { getPermissionName } from '../../helpers/getPermissionName';
 import { getSocket } from '../../helpers/socket';
-
-library.add(faEye, faEyeSlash, faExclamationTriangle, faPlay, faKey, faStop);
 
 const socket = {
   permission: getSocket('/core/permissions'),
   keyword:    getSocket('/systems/keywords'),
 } as const;
-const isValidRegex = (val: string) => {
-  try {
-    XRegExp(val);
-    return true;
-  } catch (e) {
-    error(e);
-    return false;
-  }
-};
 
 export default defineComponent({
   components: {
-    loading:          () => import('../../components/loading.vue'),
-    'text-with-tags': () => import('../../components/textWithTags.vue'),
-    'title-divider':  () => import('src/panel/components/title-divider.vue'),
-    'label-inside':   () => import('src/panel/components/label-inside.vue'),
-  },
-  filters: {
-    capitalize (value: string) {
-      if (!value) {
-        return '';
-      }
-      value = value.toString();
-      return value.charAt(0).toUpperCase() + value.slice(1);
-    },
-  },
-  mixins:      [ validationMixin ],
-  validations: {
-    editationItem: {
-      keyword: {
-        required,
-        minLength: minLength(2),
-        isValidRegex,
-      },
-    },
+    draggable,
+    commandNewItem:      defineAsyncComponent({ loader: () => import('./components/new-item/keyword-newItem.vue') }),
+    'input-variables':   defineAsyncComponent({ loader: () => import('../../components/inputVariables.vue') }),
+    'input-permissions': defineAsyncComponent({ loader: () => import('../../components/inputPermissions.vue') }),
+    'text-with-tags':    defineAsyncComponent({ loader: () => import('../../components/textWithTags.vue') }),
   },
   setup(props, ctx) {
-    const instance = getCurrentInstance()?.proxy;
-    const isSidebarVisible = ref(false);
-    const sidebarSlideEnabled = ref(true);
-
     const search = ref('');
-    const keywords = ref([] as Required<KeywordInterface>[]);
+    const items = ref([] as Required<KeywordInterface>[]);
     const permissions = ref([] as Required<PermissionsInterface>[]);
-    const editationItem = ref(null as KeywordInterface | null);
-    const isDataChanged = ref(false);
-    const updatedAt = ref(Date.now());
+
+    const timestamp = ref(Date.now());
+    const selected = ref([] as KeywordInterface[]);
+    const deleteDialog = ref(false);
+    const newDialog = ref(false);
+
+    const rules = {
+      keyword: [
+        minLength(2), required, isValidRegex,
+      ],
+    };
+
     const state = ref({
-      loadedPerm: ButtonStates.progress,
-      loadedCmd:  ButtonStates.progress,
+      loadingPrm: ButtonStates.progress,
+      loading:    ButtonStates.progress,
       save:       ButtonStates.idle,
-      pending:    false,
     } as {
-      loadedPerm: number;
-      loadedCmd: number;
+      loadingPrm: number;
+      loading: number;
       save: number;
-      pending: boolean;
     });
 
-    const keywordsFiltered = computed(() => {
-      if (search.value.length === 0) {
-        return keywords.value;
-      }
-      return keywords.value.filter((o) => {
-        const isSearchInKeyword = !isNil(o.keyword.match(new RegExp(search.value, 'ig')));
-        const isSearchInResponse = o.responses.filter(o2 => {
-          return !isNil(o2.response.match(new RegExp(search.value, 'ig')));
-        }).length > 0;
-        return isSearchInKeyword || isSearchInResponse;
-      });
-    });
-
-    const fields = [
+    const headers = [
+      { value: 'keyword', text: translate('keyword') },
       {
-        key: 'keyword', label: translate('keyword'), sortable: true,
+        value: 'enabled', text: translate('enabled'), width: '6rem',
       },
-      { key: 'response', label: translate('response') },
-      { key: 'buttons', label: '' },
+      {
+        value: 'response', text: translate('response'), sortable: false,
+      },
     ];
 
-    watch(() => ctx.root.$route.params.id, (val) => {
-      const $v = instance?.$v;
-      $v?.$reset();
-      if (val) {
-        isSidebarVisible.value = true;
-      } else {
-        state.value.pending = false;
-      }
-    });
-    watch(editationItem, (val, oldVal) => {
-      if (val !== null && oldVal !== null) {
-        state.value.pending = true;
-      }
-    }, { deep: true });
+    const headersDelete = [
+      { value: 'keyword', text: translate('keyword') },
+    ];
 
     const refresh = () => {
       socket.permission.emit('permissions', (err: string | null, data: Readonly<Required<PermissionsInterface>>[]) => {
@@ -537,206 +397,126 @@ export default defineComponent({
           return error(err);
         }
         permissions.value = data;
-        state.value.loadedPerm = ButtonStates.success;
+        state.value.loadingPrm = ButtonStates.success;
       });
       socket.keyword.emit('generic::getAll', (err: string | null, keywordsGetAll: Required<KeywordInterface>[] ) => {
         if (err) {
           return error(err);
         }
-        console.debug({ keywords });
-        keywords.value = keywordsGetAll;
-        state.value.loadedCmd = ButtonStates.success;
+        console.debug({ keywordsGetAll });
+        items.value.length = 0;
+        for (const keyword of keywordsGetAll) {
+          items.value.push({
+            ...keyword,
+            responses: orderBy(keyword.responses, 'order', 'asc'),
+          });
+        }
+
+        // we also need to reset selection values
+        if (selected.value.length > 0) {
+          selected.value.forEach((selectedItem, index) => {
+            selectedItem = items.value.find(o => o.id === selectedItem.id) || selectedItem;
+            selected.value[index] = selectedItem;
+          });
+        }
+
+        state.value.loading = ButtonStates.success;
       });
     };
 
     onMounted(() => {
       refresh();
-      loadEditationItem();
-      if (ctx.root.$route.params.id) {
-        isSidebarVisible.value = true;
-      }
     });
 
-    const updatePermission = (cid: string, rid: string, permission: string) => {
-      const keyword = keywords.value.filter((o) => o.id === cid)[0];
-      const response = keyword.responses.filter((o) => o.id === rid)[0];
-      response.permission = permission;
-      socket.keyword.emit('generic::setById', { id: cid, item: keyword }, () => {
-        return;
-      });
-      ctx.root.$forceUpdate();
-    };
-    const updateStopIfExecuted = (cid: string, rid: string, stopIfExecuted: boolean) => {
-      const keyword = keywords.value.filter((o) => o.id === cid)[0];
-      const response = keyword.responses.filter((o) => o.id === rid)[0];
-      response.stopIfExecuted = stopIfExecuted;
-      socket.keyword.emit('generic::setById', { id: cid, item: keyword }, () => {
-        return;
-      });
-      ctx.root.$forceUpdate();
-    };
-    const newItem = () => {
-      ctx.root.$router.push({ name: 'KeywordsManagerEdit', params: { id: uuid() } }).catch(() => {
-        return;
-      });
-    };
-    const sendUpdate = (id: string) => {
-      socket.keyword.emit('generic::setById', { id, item: keywords.value.find((o) => o.id === id) }, (err: string | null) => {
-        if (err) {
-          return error(err);
-        }
-      });
-    };
-    const isSidebarVisibleChange = (isVisible: boolean, ev: any) => {
-      if (!isVisible) {
-        if (state.value.pending) {
-          const isOK = confirm('You will lose your pending changes. Do you want to continue?');
-          if (!isOK) {
-            sidebarSlideEnabled.value = false;
-            isSidebarVisible.value = false;
-            ctx.root.$nextTick(() => {
-              isSidebarVisible.value = true;
-              setTimeout(() => {
-                sidebarSlideEnabled.value = true;
-              }, 300);
+    const deleteSelected = async () => {
+      deleteDialog.value = false;
+      await Promise.all(
+        selected.value.map(async (item) => {
+          return new Promise((resolve, reject) => {
+            socket.keyword.emit('generic::deleteById', item.id, (err: string | null) => {
+              if (err) {
+                reject(error(err));
+              }
+              resolve(true);
             });
-            return;
-          }
-        }
-        isSidebarVisible.value = isVisible;
-        ctx.root.$router.push({ name: 'KeywordsManagerList' }).catch(() => {
-          return;
-        });
-      } else {
-        state.value.save = ButtonStates.idle;
-        if (sidebarSlideEnabled.value) {
-          editationItem.value = null;
-          loadEditationItem();
-        }
-      }
-    };
-    const loadEditationItem = () => {
-      if (ctx.root.$route.params.id) {
-        socket.keyword.emit('generic::getOne', ctx.root.$route.params.id, (err: string | null, data: KeywordInterface) => {
-          if (err) {
-            return error(err);
-          }
-          console.debug({ data });
-          if (data === null) {
-            // we are creating new item
-            editationItem.value = {
-              id:        ctx.root.$route.params.id,
-              keyword:   '',
-              enabled:   true,
-              responses: [],
-            };
-          } else {
-            editationItem.value = data;
-          }
-        });
-      } else {
-        editationItem.value = null;
-      }
-    };
-    const save = async () => {
-      const $v = instance?.$v;
-      $v?.$touch();
-      if (!$v?.$invalid) {
-        state.value.save = ButtonStates.progress;
-        await new Promise<void>((resolve, reject) => {
-          console.debug('Saving keyword', editationItem.value);
-          socket.keyword.emit('generic::setById', { id: editationItem.value?.id, item: editationItem.value }, (err: string | null) => {
-            if (err) {
-              state.value.save = ButtonStates.fail;
-              reject(error(err));
-            }
-            resolve();
           });
-        });
+        }),
+      );
+      refresh();
 
-        state.value.save = ButtonStates.success;
-        ctx.root.$nextTick(() => {
-          refresh();
-          state.value.pending = false;
-          ctx.root.$router.push({ name: 'KeywordsManagerEdit', params: { id: editationItem.value?.id || '' } }).catch(err => {
+      EventBus.$emit('snack', 'success', 'Data removed.');
+      selected.value = [];
+    };
+
+    const update = async (item: typeof items.value[number], multi = false, attr: keyof typeof items.value[number]) => {
+      // check validity
+      for (const key of Object.keys(rules)) {
+        for (const rule of (rules as any)[key]) {
+          const ruleStatus = rule((item as any)[key]);
+          if (ruleStatus === true) {
+            continue;
+          } else {
+            EventBus.$emit('snack', 'red', `[${key}] - ${ruleStatus}`);
+            refresh();
             return;
+          }
+        }
+      }
+
+      await Promise.all(
+        [item, ...(multi ? selected.value : [])].map(async (itemToUpdate) => {
+          return new Promise((resolve) => {
+            console.log('Updating', { itemToUpdate }, { attr, value: item[attr] });
+
+            if (attr === 'responses' && itemToUpdate.responses) {
+              // reorder by array
+              for (let i = 0; i < itemToUpdate.responses.length; i++) {
+                console.log(itemToUpdate.responses[i].response + ' --- ' + itemToUpdate.responses[i].order + ' => ' + i);
+                itemToUpdate.responses[i].order = i;
+              }
+            }
+
+            socket.keyword.emit('generic::setById', {
+              id:   itemToUpdate.id, item: {
+                ...itemToUpdate,
+                [attr]: item[attr], // save new value for all selected items
+              },
+            }, () => {
+              resolve(true);
+            });
           });
-        });
-      }
-      setTimeout(() => {
-        state.value.save = ButtonStates.idle;
-      }, 1000);
+        }),
+      );
+      refresh();
+      EventBus.$emit('snack', 'success', 'Data updated.');
     };
-    const del = (id: string) => {
-      if (confirm('Do you want to delete custom keyword ' + keywords.value.find(o => o.id === id)?.keyword + '?')) {
-        socket.keyword.emit('generic::deleteById', id, (err: string | null) => {
-          if (err) {
-            return error(err);
-          }
-          refresh();
-        });
-      }
-    };
-    const deleteResponse = (order: number) => {
-      if (editationItem.value?.responses) {
-        editationItem.value.responses.splice(editationItem.value.responses.findIndex(o => o.order === order), 1);
-        orderBy(editationItem.value.responses, 'order', 'asc').map((o, i) => {
-          o.order = i;
-          return o;
-        });
-        updatedAt.value = Date.now();
-      }
-    };
-    const moveUpResponse = (order: number) => {
-      if (editationItem.value) {
-        editationItem.value.responses?.forEach(o => {
-          if (o.order === order - 1) {
-            o.order++;
-          } else if (o.order === order) {
-            o.order--;
-          }
-        });
-      }
-      updatedAt.value = Date.now();
-    };
-    const moveDownResponse = (order: number) => {
-      if (editationItem.value) {
-        editationItem.value.responses?.forEach(o => {
-          if (o.order === order + 1) {
-            o.order--;
-          } else if (o.order === order) {
-            o.order++;
-          }
-        });
-      }
-      updatedAt.value = Date.now();
+
+    const saveSuccess = () => {
+      refresh();
+      EventBus.$emit('snack', 'success', 'Data updated.');
+      newDialog.value = false;
     };
 
     return {
       orderBy,
       search,
-      keywords,
+      headers,
+      items,
       state,
-      updatedAt,
-      isDataChanged,
       permissions,
-      keywordsFiltered,
-      fields,
-      sendUpdate,
-      updatePermission,
-      updateStopIfExecuted,
       getPermissionName,
-      editationItem,
-      sidebarSlideEnabled,
-      isSidebarVisibleChange,
-      isSidebarVisible,
-      save,
-      newItem,
-      del,
-      deleteResponse,
-      moveUpResponse,
-      moveDownResponse,
       translate,
+      newDialog,
+      deleteDialog,
+      timestamp,
+      deleteSelected,
+      update,
+      selected,
+      saveSuccess,
+      capitalize,
+      rules,
+      refresh,
+      headersDelete,
     };
   },
 });
