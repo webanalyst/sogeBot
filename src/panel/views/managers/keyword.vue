@@ -112,7 +112,7 @@
               </v-card-title>
 
               <v-card-text :key="timestamp">
-                <command-new-item
+                <new-item
                   @close="newDialog = false"
                   @save="saveSuccess"
                 />
@@ -149,169 +149,12 @@
       </template>
 
       <template #[`item.response`]="{ item }">
-        <v-edit-dialog
-          persistent
-          large
-          :return-value.sync="item.responses"
-          @cancel="refresh"
-          @save="update(item, false, 'responses')"
-        >
-          <span
-            v-if="item.responses.length === 0"
-            class="text--lighten-1  red--text"
-          >{{ translate('systems.customcommands.no-responses-set') }}</span>
-          <template v-for="(r, i) of orderBy(item.responses)">
-            <div
-              :key="i"
-            >
-              <v-divider
-                v-if="i > 0"
-                class="ma-2"
-              />
-              <v-row>
-                <v-col
-                  cols="auto"
-                  class="caption"
-                  style="line-height: 2.5rem;"
-                >
-                  {{ translate('response') }}#{{ i + 1 }}
-                </v-col>
-                <v-col
-                  cols="auto"
-                  class="caption"
-                  style="line-height: 2.5rem;"
-                >
-                  <v-icon>mdi-key</v-icon>
-                  {{ getPermissionName(r.permission, permissions) }}
-                </v-col>
-                <v-col
-                  cols="auto"
-                  class="caption"
-                  style="line-height: 2.5rem;"
-                >
-                  <v-icon v-if="r.stopIfExecuted">
-                    mdi-pause
-                  </v-icon>
-                  <v-icon v-else>
-                    mdi-play
-                  </v-icon>
-                  {{ r.stopIfExecuted ? translate('commons.stop-if-executed') : translate('commons.continue-if-executed') }}
-                </v-col>
-                <v-col
-                  v-if="r.filter.length > 0"
-                  cols="auto"
-                  class="caption"
-                  style="line-height: 2.5rem;"
-                >
-                  <v-icon>
-                    mdi-filter
-                  </v-icon>
-                  <text-with-tags
-                    class="d-inline-block"
-                    :value="r.filter"
-                  />
-                </v-col>
-              </v-row>
-              <text-with-tags :value="r.response" />
-            </div>
-          </template>
-
-          <template #input>
-            <draggable
-              v-model="item.responses"
-              draggable=".item"
-              handle=".handle"
-            >
-              <v-list-item
-                v-for="(r, i) of item.responses"
-                :key="item.id + '-response' + i"
-                class="item"
-              >
-                <v-list-item-content>
-                  <v-row>
-                    <v-col
-                      cols="12"
-                      md="8"
-                    >
-                      <v-lazy>
-                        <v-textarea
-                          v-model="item.responses[i].response"
-                          hide-details="auto"
-                          :label="translate('response') + '#' + (i + 1)"
-                          :rows="1"
-                          counter
-                          auto-grow
-                          :autofocus="i === 0"
-                          @keydown.enter.prevent
-                        >
-                          <template #prepend>
-                            <v-icon class="handle">
-                              mdi-drag
-                            </v-icon>
-                          </template>
-                          <template #append>
-                            <input-variables
-                              :filters="['sender', 'param', '!param', 'touser']"
-                              @input="item.responses[i].response = item.responses[i].response + $event"
-                            />
-                          </template>
-                          <template #append-outer>
-                            <input-permissions
-                              :permissions="permissions"
-                              :permission="item.responses[i].permission"
-                              @input="item.responses[i].permission = $event"
-                            />
-                            <v-btn
-                              small
-                              plain
-                              @click="item.responses[i].stopIfExecuted = !item.responses[i].stopIfExecuted"
-                            >
-                              {{ item.responses[i].stopIfExecuted ? translate('commons.stop-if-executed') : translate('commons.continue-if-executed') }}
-                            </v-btn>
-                          </template>
-                        </v-textarea>
-                      </v-lazy>
-                    </v-col>
-                    <v-col
-                      cols="12"
-                      md="4"
-                    >
-                      <v-lazy>
-                        <v-textarea
-                          v-model="item.responses[i].filter"
-                          hide-details="auto"
-                          :label="capitalize(translate('systems.customcommands.filter.name'))"
-                          :rows="1"
-                          counter
-                          auto-grow
-                          @keydown.enter.prevent
-                        >
-                          <template #append>
-                            <input-variables
-                              :filters="['sender', 'source', 'param', 'haveParam', 'is.moderator', 'is.subscriber', 'is.vip', 'is.follower', 'is.broadcaster', 'is.bot', 'is.owner', 'rank', 'game', 'language', 'title', 'views', 'followers', 'subscribers', 'isBotSubscriber']"
-                              @input="item.responses[i].filter = item.responses[i].filter + $event"
-                            />
-                          </template>
-                          <template #append-outer>
-                            <v-btn
-                              icon
-                              @click:append-outer="item.responses.splice(i, 1)"
-                            >
-                              <v-icon>mdi-trash-can</v-icon>
-                            </v-btn>
-                          </template>
-                        </v-textarea>
-                      </v-lazy>
-                    </v-col>
-                  </v-row>
-                </v-list-item-content>
-              </v-list-item>
-            </draggable>
-            <v-btn @click="item.responses.push({ filter: '', order: item.responses.length, response: '', stopIfExecuted: false, permission: orderBy(permissions, 'order', 'asc').pop().id })">
-              {{ translate('systems.customcommands.addResponse') }}
-            </v-btn>
-          </template>
-        </v-edit-dialog>
+        <responses
+          :permissions="permissions"
+          :responses="item.responses"
+          :name="item.keyword"
+          @save="item.responses = $event; update(item, false, 'responses')"
+        />
       </template>
     </v-data-table>
   </v-container>
@@ -323,7 +166,6 @@ import {
 } from '@vue/composition-api';
 import { orderBy } from 'lodash-es';
 import { capitalize } from 'lodash-es';
-import draggable from 'vuedraggable';
 
 import type { KeywordInterface } from 'src/bot/database/entity/keyword';
 import type { PermissionsInterface } from 'src/bot/database/entity/permissions';
@@ -345,11 +187,8 @@ const socket = {
 
 export default defineComponent({
   components: {
-    draggable,
-    commandNewItem:      defineAsyncComponent({ loader: () => import('./components/new-item/keyword-newItem.vue') }),
-    'input-variables':   defineAsyncComponent({ loader: () => import('../../components/inputVariables.vue') }),
-    'input-permissions': defineAsyncComponent({ loader: () => import('../../components/inputPermissions.vue') }),
-    'text-with-tags':    defineAsyncComponent({ loader: () => import('../../components/textWithTags.vue') }),
+    newItem:   defineAsyncComponent({ loader: () => import('./components/new-item/keyword-newItem.vue') }),
+    responses: defineAsyncComponent({ loader: () => import('./components/responses.vue') }),
   },
   setup(props, ctx) {
     const search = ref('');
@@ -403,7 +242,6 @@ export default defineComponent({
         if (err) {
           return error(err);
         }
-        console.debug({ keywordsGetAll });
         items.value.length = 0;
         for (const keyword of keywordsGetAll) {
           items.value.push({
@@ -411,6 +249,7 @@ export default defineComponent({
             responses: orderBy(keyword.responses, 'order', 'asc'),
           });
         }
+        console.debug({ keywordsGetAll, items: items.value });
 
         // we also need to reset selection values
         if (selected.value.length > 0) {
@@ -421,6 +260,7 @@ export default defineComponent({
         }
 
         state.value.loading = ButtonStates.success;
+        timestamp.value = Date.now();
       });
     };
 
