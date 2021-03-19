@@ -6,7 +6,6 @@
     >
       <template #activator="{ on, attrs }">
         <v-btn
-          dark
           v-bind="attrs"
           icon
           v-on="on"

@@ -414,7 +414,7 @@ export default defineComponent({
         // we also need to reset selection values
         if (selected.value.length > 0) {
           selected.value.forEach((selectedItem, index) => {
-            selectedItem = itemsGetAll.find(o => o.id === selectedItem.id) || selectedItem;
+            selectedItem = items.value.find(o => o.id === selectedItem.id) || selectedItem;
             selected.value[index] = selectedItem;
           });
         }
@@ -433,8 +433,7 @@ export default defineComponent({
           if (ruleStatus === true) {
             continue;
           } else {
-
-            EventBus.$emit('snack', 'red', ruleStatus);
+            EventBus.$emit('snack', 'red', `[${key}] - ${ruleStatus}`);
             refresh();
             return;
           }

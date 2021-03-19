@@ -78,14 +78,10 @@ const main = async () => {
         path: '/manage/alias', name: 'alias', component: () => import('./views/managers/alias.vue'),
       },
       {
-        path: '/manage/commands', name: 'commands', component: () => import('./views/managers/commands.vue'),
-      },
-      { path: '/manage/cooldowns/', redirect: '/manage/cooldowns/list' },
-      {
-        path: '/manage/cooldowns/list', name: 'cooldownsManager', component: () => import('./views/managers/cooldowns.vue'),
+        path: '/manage/commands', name: 'customcommands', component: () => import('./views/managers/commands.vue'),
       },
       {
-        path: '/manage/cooldowns/edit/:id?', name: 'cooldownsManagerEdit', component: () => import('./views/managers/cooldowns.vue'),
+        path: '/manage/cooldowns', name: 'cooldown', component: () => import('./views/managers/cooldowns.vue'),
       },
       {
         path: '/manage/highlights', name: 'HighlightsManager', component: () => import('./views/managers/highlights.vue'),

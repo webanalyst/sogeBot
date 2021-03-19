@@ -6,7 +6,6 @@
     >
       <template #activator="{ on, attrs }">
         <v-btn
-          dark
           small
           plain
           v-bind="attrs"
@@ -67,7 +66,7 @@ export default defineComponent({
 
 <style>
 /* workaround for transparent menu */
-.theme--dark .v-menu__content {
+.theme-- .v-menu__content {
   background-color: rgb(30, 30, 30);
 }
 .theme--light .v-menu__content {

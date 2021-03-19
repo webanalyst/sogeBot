@@ -15,7 +15,7 @@
     </v-alert>
 
     <h2 v-if="!$vuetify.breakpoint.mobile">
-      {{ translate('menu.commands') }}
+      {{ translate('menu.customcommands') }}
     </h2>
 
     <v-data-table
@@ -291,7 +291,6 @@
                               @input="item.responses[i].permission = $event"
                             />
                             <v-btn
-                              dark
                               small
                               plain
                               @click="item.responses[i].stopIfExecuted = !item.responses[i].stopIfExecuted"
@@ -324,7 +323,6 @@
                           </template>
                           <template #append-outer>
                             <v-btn
-                              dark
                               icon
                               @click:append-outer="item.responses.splice(i, 1)"
                             >
@@ -445,7 +443,6 @@ export default defineComponent({
 
     const headersWithoutPerm = [
       { value: 'command', text: translate('command') },
-      { value: 'response', text: translate('response') },
     ];
 
     const refresh = () => {
@@ -468,6 +465,13 @@ export default defineComponent({
             ...command,
             responses: orderBy(command.responses, 'order', 'asc'),
             count:     count.find(o => o.command === command.command)?.count || 0,
+          });
+        }
+        // we also need to reset selection values
+        if (selected.value.length > 0) {
+          selected.value.forEach((selectedItem, index) => {
+            selectedItem = items.value.find(o => o.id === selectedItem.id) || selectedItem;
+            selected.value[index] = selectedItem;
           });
         }
         state.value.loading = ButtonStates.success;
@@ -511,8 +515,7 @@ export default defineComponent({
           if (ruleStatus === true) {
             continue;
           } else {
-
-            EventBus.$emit('snack', 'red', ruleStatus);
+            EventBus.$emit('snack', 'red', `[${key}] - ${ruleStatus}`);
             refresh();
             return;
           }
