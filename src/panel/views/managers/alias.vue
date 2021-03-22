@@ -264,10 +264,7 @@
 import {
   computed, defineAsyncComponent, defineComponent, onMounted, ref, watch,
 } from '@vue/composition-api';
-import {
-  capitalize,
-  escapeRegExp, isNil, orderBy,
-} from 'lodash-es';
+import { capitalize, orderBy } from 'lodash-es';
 
 import { AliasInterface } from 'src/bot/database/entity/alias';
 import { PermissionsInterface } from 'src/bot/database/entity/permissions';
@@ -343,16 +340,6 @@ export default defineComponent({
       refresh();
     });
 
-    const fItems = computed(() => {
-      if (search.value.length === 0) {
-        return items.value;
-      }
-      return items.value.filter((o) => {
-        const isSearchInAlias = !isNil(o.alias.match(new RegExp(escapeRegExp(search.value), 'ig')));
-        const isSearchInCommand = !isNil(o.command.match(new RegExp(escapeRegExp(search.value), 'ig')));
-        return isSearchInAlias || isSearchInCommand;
-      });
-    });
     const isGroupSelected = (group: string) => {
       for (const item of items.value.filter(o => o.group === group)) {
         if (!selected.value.find(o => o.id === item.id)) {
@@ -486,7 +473,6 @@ export default defineComponent({
       headers,
       headersDelete,
       groupItems,
-      fItems,
       update,
       deleteSelected,
       translate,

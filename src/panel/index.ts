@@ -102,12 +102,8 @@ const main = async () => {
       {
         path: '/manage/keywords', name: 'keywords', component: () => import('./views/managers/keyword.vue'),
       },
-      { path: '/manage/price/', redirect: '/manage/price/list' },
       {
-        path: '/manage/price/list', name: 'PriceManager', component: () => import('./views/managers/price.vue'),
-      },
-      {
-        path: '/manage/price/edit/:id?', name: 'PriceManagerEdit', component: () => import('./views/managers/price.vue'),
+        path: '/manage/price', name: 'price', component: () => import('./views/managers/price.vue'),
       },
       { path: '/manage/quotes/', redirect: '/manage/quotes/list' },
       {
