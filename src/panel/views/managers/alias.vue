@@ -177,7 +177,7 @@
           large
           @save="update(item, false, 'command')"
         >
-          {{ item.command }}
+          {{ truncate(item.command, truncateLength) }}
           <template #input>
             <v-lazy>
               <v-textarea
@@ -274,6 +274,7 @@ import { EventBus } from 'src/panel/helpers/event-bus';
 import { getPermissionName } from 'src/panel/helpers/getPermissionName';
 import { getSocket } from 'src/panel/helpers/socket';
 import translate from 'src/panel/helpers/translate';
+import { truncate } from 'src/panel/helpers/truncate';
 import {
   minLength, required, startsWithExclamation, startsWithExclamationOrCustomVariable,
 } from 'src/panel/helpers/validators';
@@ -320,6 +321,16 @@ export default defineComponent({
       EventBus.$emit('snack', 'success', 'Data updated.');
       newDialog.value = false;
     };
+
+    const truncateLength = computed(() => {
+      const breakpoint = ctx.root.$vuetify.breakpoint;
+      console.log({ breakpoint });
+      if (breakpoint.mobile) {
+        return 50;
+      } else {
+        return 500;
+      }
+    });
 
     const permissionItems = computed(() => {
       return permissions.value.map((item) => ({
@@ -409,7 +420,6 @@ export default defineComponent({
     };
     const update = async (item: typeof items.value[number], multi = false, attr: keyof typeof items.value[number]) => {
       if (attr === 'group') {
-        console.log(item.groupToBeShownInTable);
         item.group = item.groupToBeShownInTable;
       }
       // check validity
@@ -477,6 +487,8 @@ export default defineComponent({
       deleteSelected,
       translate,
       getPermissionName,
+      truncate,
+      truncateLength,
 
       selected,
       deleteDialog,
@@ -497,5 +509,8 @@ export default defineComponent({
 <style>
 tr:nth-of-type(odd) {
   background-color: rgba(0, 0, 0, .05);
+}
+v-small-dialog__activator__content {
+    word-break: break-word;
 }
 </style>

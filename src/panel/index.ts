@@ -81,6 +81,9 @@ const main = async () => {
         path: '/manage/commands', name: 'customcommands', component: () => import('./views/managers/commands.vue'),
       },
       {
+        path: '/manage/botcommands', name: 'botcommands', component: () => import('./views/managers/botcommands.vue'),
+      },
+      {
         path: '/manage/cooldowns', name: 'cooldown', component: () => import('./views/managers/cooldowns.vue'),
       },
       {

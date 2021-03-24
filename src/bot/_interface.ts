@@ -13,7 +13,7 @@ import {
   commandsToRegister, loadingInProgress, permissions as permissionsList,
 } from './decorators';
 import { getFunctionList } from './decorators/on';
-import { invalidateParserCache, refreshCachedCommandPermissions } from './helpers/cache';
+import { invalidateParserCache } from './helpers/cache';
 import { isBotStarted } from './helpers/database';
 import { flatten, unflatten } from './helpers/flatten';
 import { enabled } from './helpers/interface/enabled';
@@ -244,7 +244,7 @@ class Module {
         return command.m.type === this._name
           && command.m.name === this.__moduleName__.toLowerCase();
       })) {
-        const opts = typeof options === 'string' ? { name: options } : options;
+        const opts = typeof options === 'string' ? { name: options, id: uuid() } : { ...options, id: uuid() };
         opts.fnc = m.fnc; // force function to decorated function
         const c = this.prepareCommand(opts);
 
@@ -356,30 +356,8 @@ class Module {
             if (key === 'enabled' && this._enabled === null) {
               // ignore enabled if we don't want to enable/disable at will
               continue;
-            } else if (key === '_permissions') {
-              for (const [command, currentValue] of Object.entries(value as any)) {
-                const c = this._commands.find((o) => o.name === command);
-                if (c) {
-                  if (currentValue === c.permission) {
-                    await getRepository(PermissionCommands).delete({ name: c.name });
-                  } else {
-                    await getRepository(PermissionCommands).save({
-                      ...(await getRepository(PermissionCommands).findOne({ name: c.name })),
-                      name:       c.name,
-                      permission: currentValue as string,
-                    });
-                  }
-                }
-              }
-              refreshCachedCommandPermissions();
             } else if (key === 'enabled') {
               this.status({ state: value });
-            } else if (key === 'commands') {
-              for (const [defaultValue, currentValue] of Object.entries(value as any)) {
-                if (this._commands) {
-                  this.setCommand(defaultValue, currentValue as string);
-                }
-              }
             } else if (key === '__permission_based__') {
               for (const vKey of Object.keys(value as any)) {
                 (this as any)['__permission_based__' + vKey] = (value as any)[vKey];
@@ -760,7 +738,7 @@ class Module {
   /**
    *
    */
-  protected async setCommand(command: string, updated: string): Promise<void> {
+  async setCommand(command: string, updated: string): Promise<void> {
     invalidateParserCache();
     const c = this._commands.find((o) => o.name === command);
     if (c) {

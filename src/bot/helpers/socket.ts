@@ -130,6 +130,7 @@ function adminEndpoint (nsp: string, on: 'set.playlist.tag', callback: (tag:stri
 function adminEndpoint (nsp: string, on: 'integration::obswebsocket::listScene', callback: (cb: (error: Error | string | null, data: ObsWebSocket.Scene[]) => void, socket: Socket) => void): void;
 function adminEndpoint (nsp: string, on: 'integration::obswebsocket::listSources', callback: (cb: (error: Error | string | null, scenes: any, types: any) => void, socket: Socket) => void): void;
 function adminEndpoint (nsp: string, on: 'integration::obswebsocket::test', callback: (item: OBSWebsocketInterface['simpleModeTasks'] | string, cb: (error: Error | string | null) => void, socket: Socket) => void): void;
+function adminEndpoint (nsp: string, on: 'generic::setCoreCommand', callback: (commands: any, cb: (error: Error | string | null) => void, socket: Socket) => void): void;
 
 // generic functions
 function adminEndpoint (nsp: string, on: string, callback: (opts: { [x: string]: any }, cb?: (error: Error | string | null, ...response: any) => void) => void, socket?: Socket): void;
