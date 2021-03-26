@@ -1,360 +1,262 @@
 <template>
-  <b-container fluid>
-    <b-row>
-      <b-col>
-        <span class="title text-default mb-2">
-          {{ translate('menu.manage') }}
-          <small><fa icon="angle-right" /></small>
-          {{ translate('menu.playlist') }}
-        </span>
-      </b-col>
-      <b-col
-        v-if="!$systems.find(o => o.name === 'songs').enabled"
-        style=" text-align: right;"
-      >
-        <b-alert
-          show
-          variant="danger"
-          style="padding: .5rem; margin: 0; display: inline-block;"
-        >
-          <fa
-            icon="exclamation-circle"
-            fixed-width
-          /> {{ translate('this-system-is-disabled') }}
-        </b-alert>
-      </b-col>
-    </b-row>
-
-    <panel
-      search
-      @search="search = $event"
+  <v-container
+    fluid
+    :class="{ 'pa-4': !$vuetify.breakpoint.mobile }"
+  >
+    <v-alert
+      v-if="!$systems.find(o => o.name === 'songs').enabled"
+      dismissible
+      prominent
+      dense
     >
-      <template #right>
-        <b-select
-          v-model="showTag"
-          class="mr-2"
+      <div class="text-caption">
+        {{ translate('this-system-is-disabled') }}
+      </div>
+    </v-alert>
+
+    <h2 v-if="!$vuetify.breakpoint.mobile">
+      {{ translate('menu.playlist') }}
+    </h2>
+
+    <v-data-table
+      v-model="selected"
+      :expanded.sync="expanded"
+      calculate-widths
+      hide-default-header
+      show-select
+      :loading="state.loading !== $state.success"
+      :headers="headers"
+      :items-per-page.sync="perPage"
+      :items="fItems"
+      :single-expand="true"
+      show-expand
+      item-key="videoId"
+      :page.sync="currentPage"
+      :server-items-length.sync="count"
+    >
+      <template #top>
+        <v-toolbar
+          flat
         >
-          <b-form-select-option :value="null">
-            All playlists
-          </b-form-select-option>
-          <b-form-select-option
-            v-for="tag of tags"
+          <v-text-field
+            v-model="search"
+            append-icon="mdi-magnify"
+            label="Search or add by link/id"
+            single-line
+            hide-details
+            class="pr-2"
+          />
+
+          <template v-if="selected.length > 0">
+            <v-dialog
+              v-model="deleteDialog"
+              max-width="500px"
+            >
+              <template #activator="{ on, attrs }">
+                <v-btn
+                  color="red"
+                  class="mb-2 mr-1"
+                  v-bind="attrs"
+                  v-on="on"
+                >
+                  Delete {{ selected.length }} Item(s)
+                </v-btn>
+              </template>
+
+              <v-card>
+                <v-card-title>
+                  <span class="headline">Delete {{ selected.length }} Item(s)?</span>
+                </v-card-title>
+
+                <v-card-text>
+                  <v-data-table
+                    dense
+                    :items="selected"
+                    :headers="headersDelete"
+                    hide-default-header
+                    hide-default-footer
+                  />
+                </v-card-text>
+                <v-card-actions>
+                  <v-spacer />
+                  <v-btn
+                    text
+                    @click="deleteDialog = false"
+                  >
+                    Cancel
+                  </v-btn>
+                  <v-btn
+                    color="red"
+                    text
+                    @click="deleteSelected"
+                  >
+                    Delete
+                  </v-btn>
+                </v-card-actions>
+              </v-card>
+            </v-dialog>
+          </template>
+
+          <v-btn
+            color="primary"
+            class="mb-2 mr-2"
+            :disabled="search.length === 0"
+            :loading="state.import === 1"
+            @click="addSongOrPlaylist"
+          >
+            New Item
+          </v-btn>
+        </v-toolbar>
+      </template>
+
+      <template #[`body.prepend`]="{}">
+        <tr>
+          <td colspan="4" />
+          <td>
+            <v-select
+              v-model="showTag"
+              :items="tagsItems"
+              clearable
+            />
+          </td>
+          <td colspan="2" />
+        </tr>
+      </template>
+
+      <template #[`item.title`]="{ item }">
+        <div>
+          {{ item.title }}
+        </div>
+        <div>
+          <v-icon>mdi-clock-outline</v-icon> {{ item.length | formatTime }}
+          <v-icon>mdi-volume-high</v-icon> {{ Number(item.volume).toFixed(1) }}%
+          <v-icon>mdi-skip-previous</v-icon> {{ item.startTime | formatTime }} - {{ item.endTime | formatTime }} <v-icon>mdi-skip-next</v-icon>
+          <v-icon>mdi-music</v-icon> {{ new Date(item.lastPlayedAt).toLocaleString() }}
+        </div>
+      </template>
+
+      <template #[`item.tags`]="{ item }">
+        <v-chip-group class="d-inline-block">
+          <v-chip
+            v-for="tag of item.tags"
             :key="tag"
-            :value="tag"
+            x-small
+            @click="showTag=tag"
           >
             {{ tag }}
-            <template v-if="currentTag === tag">
-              (current)
-            </template>
-          </b-form-select-option>
-        </b-select>
+          </v-chip>
+        </v-chip-group>
+      </template>
 
-        <b-pagination
-          v-model="currentPage"
-          class="m-0"
-          :total-rows="count"
-          :per-page="perPage"
-          aria-controls="my-table"
+      <template #[`item.thumbnail`]="{ item }">
+        <v-img
+          :aspect-ratio="16/9"
+          :width="100"
+          :src="generateThumbnail(item.videoId)"
         />
       </template>
-      <template #left>
-        <b-form
-          inline
-          @submit="addSongOrPlaylist"
+      <template #[`item.actions`]="{ item }">
+        <v-btn
+          plain
+          :href="'http://youtu.be/' + item.videoId"
+          target="_blank"
         >
-          <b-input-group>
-            <b-input
-              v-model="toAdd"
-              input
-              type="text"
-              class="form-control w-auto col-6"
-              placeholder="Paste your youtube link, id or playlist link"
-            />
-            <b-input-group-append>
-              <b-button
-                v-if="state.import == 0"
-                type="submit"
-                variant="primary"
-                class="btn mr-2"
-                @click="addSongOrPlaylist()"
-              >
-                <fa icon="plus" /> {{ translate('systems.songs.add_or_import') }}
-              </b-button>
-              <b-button-group v-else-if="state.import == 1">
-                <b-button
-                  class="btn"
-                  variant="info"
-                  disabled="disabled"
-                >
-                  <fa
-                    icon="circle-notch"
-                    spin
-                    fixed-width
-                  /> {{ translate('systems.songs.importing') }}
-                </b-button>
-                <b-button
-                  variant="danger"
-                  @click="stopImport()"
-                >
-                  <fa
-                    icon="stop"
-                    fixed-width
-                  />
-                </b-button>
-              </b-button-group>
-              <b-button
-                v-else-if="state.import == 2"
-                class="btn mr-2"
-                variant="success"
-                disabled="disabled"
-              >
-                <fa icon="check" /> {{ translate('systems.songs.importing_done') }}
-              </b-button>
-              <b-button
-                v-else
-                class="btn mr-2"
-                variant="danger"
-                disabled="disabled"
-              >
-                <fa icon="times" /> {{ translate('dialog.buttons.something-went-wrong') }}
-              </b-button>
-            </b-input-group-append>
-          </b-input-group>
-          <div class="text-info">
-            {{ importInfo }}
-          </div>
-        </b-form>
+          <v-icon>
+            mdi-link
+          </v-icon>
+        </v-btn>
       </template>
-    </panel>
 
-    <loading v-if="state.loading !== ButtonStates.success" />
-    <template v-else>
-      <b-alert
-        v-if="fItems.length === 0 && search.length > 0"
-        show
-        variant="danger"
-      >
-        <fa icon="search" /> <span v-html="translate('systems.songs.emptyAfterSearch').replace('$search', search)" />
-      </b-alert>
-      <b-alert
-        v-else-if="items.length === 0"
-        show
-      >
-        {{ translate('systems.songs.empty') }}
-      </b-alert>
-      <b-table
-        v-else
-        striped
-        small
-        :items="fItems"
-        :fields="fields"
-        class="table-p-0"
-      >
-        <template #cell(thumbnail)="data">
-          <img
-            class="float-left pr-3"
-            :src="generateThumbnail(data.item.videoId)"
-          >
-        </template>
-        <template #cell(title)="data">
-          <div>
-            {{ data.item.title }}
-            <b-badge
-              v-for="tag of data.item.tags"
-              :key="tag"
-              class="mr-1"
-              :variant="getVariant(tag)"
-            >
-              {{ tag }}
-            </b-badge>
-          </div>
-          <small class="d-block">
-            <fa :icon="[ 'far', 'clock' ]" /> {{ data.item.length | formatTime }}
-            <fa
-              class="ml-3"
-              :icon="['fas', 'volume-up']"
-            /> {{ Number(data.item.volume).toFixed(1) }}%
-            <fa
-              class="ml-3"
-              :icon="['fas', 'step-backward']"
-            />
-            {{ data.item.startTime | formatTime }} - {{ data.item.endTime | formatTime }}
-            <fa icon="step-forward" />
-            <fa
-              class="ml-3"
-              :icon="['fas', 'music']"
-            /> {{ new Date(data.item.lastPlayedAt).toLocaleString() }}
-          </small>
-        </template>
-        <template #cell(buttons)="data">
-          <div
-            class="float-right pr-2"
-            style="width: max-content !important;"
-          >
-            <button-with-icon
-              class="btn-only-icon btn-secondary btn-reverse"
-              icon="link"
-              :href="'http://youtu.be/' + data.item.videoId"
-            />
-            <button-with-icon
-              class="btn-only-icon btn-primary btn-reverse"
-              icon="edit"
-              @click="data.toggleDetails"
-            >
-              {{ translate('dialog.buttons.edit') }}
-            </button-with-icon>
-            <button-with-icon
-              class="btn-only-icon btn-danger btn-reverse"
-              icon="trash"
-              @click="deleteItem(data.item.videoId)"
-            >
-              {{ translate('dialog.buttons.delete') }}
-            </button-with-icon>
-          </div>
-        </template>
-        <template #row-details="data">
-          <b-card>
-            <b-row class="form-group">
-              <b-col cols="12">
-                <label>{{ translate('systems.songs.settings.volume') }}</label>
-                <div class="input-group">
-                  <button
-                    class="btn"
-                    :class="[!data.item.forceVolume ? ' btn-success' : 'btn-secondary']"
-                    @click="data.item.forceVolume = false"
-                  >
-                    {{ translate('systems.songs.calculated') }}
-                  </button>
-                  <button
-                    class="btn"
-                    :class="[data.item.forceVolume ? ' btn-success' : 'btn-secondary']"
-                    @click="data.item.forceVolume = true"
-                  >
-                    {{ translate('systems.songs.set_manually') }}
-                  </button>
-                  <input
-                    v-model="data.item.volume"
-                    type="number"
-                    class="form-control"
-                    min="1"
-                    max="100"
-                    :disabled="!data.item.forceVolume"
-                  >
-                  <div class="input-group-append">
-                    <div class="input-group-text">
-                      %
-                    </div>
-                  </div>
-                  <div class="invalid-feedback">
-                    {{ translate('systems.songs.error.isEmpty') }}
-                  </div>
-                </div>
-              </b-col>
-            </b-row>
-            <b-row class="form-group">
-              <b-col cols="6">
-                <label>{{ translate('systems.songs.startTime') }}</label>
-                <div class="input-group">
-                  <input
-                    v-model="data.item.startTime"
-                    type="number"
-                    class="form-control"
-                    min="1"
-                    :max="Number(data.item.endTime) - 1"
-                  >
-                  <div class="input-group-append">
-                    <div class="input-group-text">
-                      {{ translate('systems.songs.seconds') }}
-                    </div>
-                  </div>
-                  <div class="invalid-feedback">
-                    {{ translate('systems.songs.error.isEmpty') }}
-                  </div>
-                </div>
-              </b-col>
-              <b-col cols="6">
-                <label>{{ translate('systems.songs.endTime') }}</label>
-                <div class="input-group">
-                  <input
-                    v-model="data.item.endTime"
-                    type="number"
-                    class="form-control"
-                    :min="Number(data.item.startTime) + 1"
-                    :max="data.item.length"
-                  >
-                  <div class="input-group-append">
-                    <div class="input-group-text">
-                      {{ translate('systems.songs.seconds') }}
-                    </div>
-                  </div>
-                  <div class="invalid-feedback">
-                    {{ translate('systems.songs.error.isEmpty') }}
-                  </div>
-                </div>
-              </b-col>
-            </b-row>
-            <b-row class="form-group">
-              <b-col cols="12">
-                <label>{{ translate('tags') }}</label>
-                <div class="input-group">
-                  <tags
-                    v-model="data.item.tags"
-                    if-empty-tag="general"
-                    class="w-100"
-                  />
-                </div>
-              </b-col>
-            </b-row>
-            <div class="form-group text-right col-md-12">
-              <button
-                type="button"
-                class="btn btn-secondary"
-                @click="data.toggleDetails"
+      <template #expanded-item="{ headers, item }">
+        <td
+          :colspan="headers.length"
+          class="pa-2"
+        >
+          <v-row>
+            <v-col cols="auto">
+              <v-btn-toggle
+                v-model="item.forceVolume"
               >
-                {{ translate('events.dialog.close') }}
-              </button>
+                <v-btn :value="false">
+                  {{ translate('systems.songs.calculated') }}
+                </v-btn>
+                <v-btn :value="true">
+                  {{ translate('systems.songs.set_manually') }}
+                </v-btn>
+              </v-btn-toggle>
+            </v-col>
+            <v-col>
+              <v-text-field
+                v-model.number="item.volume"
+                :label="translate('systems.songs.settings.volume')"
+                min="0"
+                max="100"
+                type="number"
+                :rules="rules.volume"
+                :disabled="!item.forceVolume"
+              />
+            </v-col>
+          </v-row>
+          <v-row>
+            <v-col>
+              <v-text-field
+                v-model.number="item.startTime"
+                :label="translate('systems.songs.startTime')"
+                min="0"
+                :max="Number(item.endTime) - 1"
+                type="number"
+                :rules="rules.time"
+              >
+                <template #append>
+                  {{ translate('systems.songs.seconds') }}
+                </template>
+              </v-text-field>
+            </v-col>
+            <v-col>
+              <v-text-field
+                v-model.number="item.endTime"
+                :label="translate('systems.songs.endTime')"
+                :min="Number(item.startTime) + 1"
+                :max="item.length"
+                type="number"
+                :rules="rules.time"
+              >
+                <template #append>
+                  {{ translate('systems.songs.seconds') }}
+                </template>
+              </v-text-field>
+            </v-col>
+          </v-row>
+          <v-row>
+            <v-col>
+              <v-combobox
+                v-model="item.tags"
+                :label="translate('tags')"
+                multiple
+                :return-object="false"
+                :items="tagsItemsWithoutNull"
+                @input="ensureGeneralTag(item)"
+              >
+                <template #no-data>
+                  <v-list-item>
+                    <span class="subheading">Add new tag</span>
+                  </v-list-item>
+                </template>
+              </v-combobox>
+            </v-col>
+          </v-row>
 
-              <button
-                v-if="state.save === 0"
-                type="button"
-                class="btn btn-primary"
-                @click="updateItem(data.item.videoId)"
-              >
-                {{ translate('dialog.buttons.saveChanges.idle') }}
-              </button>
-              <button
-                v-if="state.save === 1"
-                disabled="disabled"
-                type="button"
-                class="btn btn-primary"
-              >
-                <fa
-                  icon="circle-notch"
-                  spin
-                /> {{ translate('dialog.buttons.saveChanges.progress') }}
-              </button>
-              <button
-                v-if="state.save === 2"
-                disabled="disabled"
-                type="button"
-                class="btn btn-success"
-              >
-                <fa icon="check" /> {{ translate('dialog.buttons.saveChanges.done') }}
-              </button>
-              <button
-                v-if="state.save === 3"
-                disabled="disabled"
-                type="button"
-                class="btn btn-danger"
-              >
-                <fa icon="exclamation" /> {{ translate('dialog.buttons.something-went-wrong') }}
-              </button>
-            </div>
-          </b-card>
-        </template>
-      </b-table>
-    </template>
-  </b-container>
+          <v-btn
+            color="primary"
+            :loading="state.save !== 0"
+            @click="updateItem(item.videoId)"
+          >
+            Save
+          </v-btn>
+        </td>
+      </template>
+    </v-data-table>
+  </v-container>
 </template>
 
 <script lang="ts">
@@ -368,18 +270,18 @@ import {
 import { SongPlaylistInterface } from 'src/bot/database/entity/song';
 import { ButtonStates } from 'src/panel/helpers/buttonStates';
 import { error } from 'src/panel/helpers/error';
+import { EventBus } from 'src/panel/helpers/event-bus';
 import { getSocket } from 'src/panel/helpers/socket';
 import translate from 'src/panel/helpers/translate';
+import {
+  maxValue, minValue, required, 
+} from 'src/panel/helpers/validators';
 
 library.add(faStepBackward, faStepForward);
-
-let lastVariant = -1;
-const labelToVariant = new Map<string, string>();
 const socket = getSocket('/systems/songs');
 
 export default defineComponent({
-  components: { tags: () => import('../../../components/tags.vue') },
-  filters:    {
+  filters: {
     formatTime(seconds: number) {
       const h = Math.floor(seconds / 3600);
       const m = Math.floor((seconds % 3600) / 60);
@@ -394,8 +296,10 @@ export default defineComponent({
   setup() {
     const items = ref([] as SongPlaylistInterface[]);
     const search = ref('');
-    const toAdd = ref('');
-    const importInfo = ref('');
+
+    const deleteDialog = ref(false);
+    const selected = ref([] as SongPlaylistInterface[]);
+    const expanded = ref([] as SongPlaylistInterface[]);
 
     const state = ref({
       loading: ButtonStates.progress,
@@ -409,35 +313,60 @@ export default defineComponent({
     const showTag = ref(null as string | null); // null === all
     const currentTag = ref('general');
     const tags = ref([] as string[]);
+    const tagsItems = computed(() => {
+      return [{ text: 'All playlists', value: null }, ...tags.value.map((item) => ({
+        text:     currentTag.value === item ? `${item} (current)` : item,
+        value:    item,
+        disabled: false,
+      }))];
+    });
+    const tagsItemsWithoutNull = computed(() => {
+      const [, ...rest] = tagsItems.value;
+      return rest;
+    });
 
-    const fields = [
+    const rules = {
+      time:   [required],
+      volume: [required, minValue(0), maxValue(100)],
+    };
+
+    const headers = [
       {
-        key: 'thumbnail', label: '', tdClass: 'fitThumbnail',
+        value: 'thumbnail', text: '', align: 'left',
       },
-      { key: 'title', label: '' },
-      { key: 'buttons', label: '' },
+      { value: 'videoId', text: '' },
+      { value: 'title', text: '' },
+      { value: 'tags', text: '' },
+      {
+        text: 'Actions', value: 'actions', sortable: false, align: 'end', 
+      },
+      { text: '', value: 'data-table-expand' },
+    ];
+
+    const headersDelete = [
+      { value: 'videoId', text: '' },
+      { value: 'title', text: '' },
     ];
 
     const currentPage = ref(1);
-    const perPage = ref(25);
     const count = ref(0);
-
+    const perPage = ref(15);
     const fItems = computed(() => items.value);
 
     onMounted(() => {
-      refreshPlaylist();
+      refresh();
     });
 
     watch(showTag, () => {
       currentPage.value = 1;
-      refreshPlaylist();
+      refresh();
     });
 
-    watch([currentPage, search], () => {
-      refreshPlaylist();
+    watch([currentPage, search, perPage], () => {
+      refresh();
     });
 
-    const refreshPlaylist = async () => {
+    const refresh = async () => {
       await Promise.all([
         new Promise<void>((resolve, reject) => {
           socket.emit('current.playlist.tag', (err: string | null, tag: string) => {
@@ -461,7 +390,7 @@ export default defineComponent({
         }),
         new Promise<void>((resolve, reject) => {
           socket.emit('find.playlist', {
-            page: (currentPage.value - 1), search: search.value, tag: showTag.value,
+            page: (currentPage.value - 1), search: search.value, tag: showTag.value, perPage: perPage.value,
           }, (err: string | null, _items: SongPlaylistInterface[], _count: number) => {
             if (err) {
               error(err);
@@ -487,57 +416,25 @@ export default defineComponent({
       return `https://img.youtube.com/vi/${videoId}/1.jpg`;
     };
 
-    const stopImport = () => {
-      if (state.value.import === 1) {
-        state.value.import = 0;
-        socket.emit('stop.import', () => {
-          refreshPlaylist();
-        });
-      }
-    };
-
-    const addSongOrPlaylist = (evt: Event) => {
-      if (evt) {
-        evt.preventDefault();
+    const addSongOrPlaylist = () => {
+      if (search.value === '') {
+        EventBus.$emit('snack', 'red', 'Cannot add empty song to ban list.');
+        return;
       }
       if (state.value.import === 0) {
         state.value.import = 1;
-        socket.emit(toAdd.value.includes('playlist') ? 'import.playlist' : 'import.video', { playlist: toAdd.value, forcedTag: showTag.value }, (err: string | null, info: (CommandResponse)[]) => {
+        socket.emit(search.value.includes('playlist') ? 'import.playlist' : 'import.video', { playlist: search.value, forcedTag: showTag.value }, (err: string | null, info: (CommandResponse)[]) => {
           if (err) {
-            state.value.import = 3;
-            setTimeout(() => {
-              importInfo.value = '';
-              state.value.import = 0;
-            }, 2000);
+            search.value = '';
+            state.value.import = 0;
+            return error(err);
           } else {
-            state.value.import = 2;
-            refreshPlaylist();
-            toAdd.value = '';
-            showImportInfo();
+            state.value.import = 0;
+            refresh();
+            search.value = '';
+            EventBus.$emit('snack', 'success', 'Song added to playlist.');
           }
         });
-      }
-    };
-
-    const showImportInfo = async () => {
-      importInfo.value = 'OK';
-      setTimeout(() => {
-        importInfo.value = '';
-        state.value.import = 0;
-      }, 2000);
-    };
-
-    const getVariant = (type: string) => {
-      const variants = [ 'primary', 'secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark' ];
-      if (labelToVariant.has(type)) {
-        return labelToVariant.get(type);
-      } else {
-        if (lastVariant === -1 || lastVariant === variants.length - 1) {
-          lastVariant = 0;
-        }
-        labelToVariant.set(type, variants[lastVariant]);
-        lastVariant++;
-        return labelToVariant.get(type);
       }
     };
 
@@ -555,7 +452,7 @@ export default defineComponent({
             return state.value.save = 3;
           }
           state.value.save = 2;
-          refreshPlaylist();
+          refresh();
           setTimeout(() => {
             state.value.save = 0;
           }, 1000);
@@ -563,38 +460,61 @@ export default defineComponent({
       }
     };
 
-    const deleteItem = (id: string) => {
-      if (confirm('Do you want to delete song ' + items.value.find(o => o.videoId === id)?.title + '?')) {
-        socket.emit('delete.playlist', id, () => {
-          items.value = items.value.filter((o) => o.videoId !== id);
-        });
+    const deleteSelected = async () => {
+      deleteDialog.value = false;
+      await Promise.all(
+        selected.value.map(async (item) => {
+          return new Promise((resolve, reject) => {
+            socket.emit('delete.playlist', item.videoId, (err: string | null) => {
+              if (err) {
+                reject(error(err));
+              }
+              resolve(true);
+            });
+          });
+        }),
+      );
+      refresh();
+
+      EventBus.$emit('snack', 'success', 'Data removed.');
+      selected.value = [];
+    };
+
+    const ensureGeneralTag = (item: SongPlaylistInterface) => {
+      if (item.tags.length === 0) {
+        item.tags = ['general'];
       }
     };
 
     return {
       items,
       fItems,
+      headers,
+      headersDelete,
       search,
-      toAdd,
-      importInfo,
       state,
       showTag,
       currentTag,
+      tagsItems,
+      tagsItemsWithoutNull,
       tags,
-      fields,
-      currentPage,
       perPage,
+      currentPage,
       count,
 
       generateThumbnail,
-      stopImport,
       addSongOrPlaylist,
-      getVariant,
       updateItem,
-      deleteItem,
 
       ButtonStates,
       translate,
+
+      deleteDialog,
+      deleteSelected,
+      selected,
+      expanded,
+      rules,
+      ensureGeneralTag,
     };
   },
 });

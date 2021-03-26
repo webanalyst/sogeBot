@@ -23,7 +23,7 @@
       calculate-widths
       show-select
       :search="search"
-      :loading="state.loading !== $state.success && state.loadingPrm !== $state.success"
+      :loading="state.loading !== $state.success || state.loadingPrm !== $state.success"
       :headers="headers"
       :items-per-page="-1"
       :items="items"

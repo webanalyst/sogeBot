@@ -125,7 +125,6 @@
 
       <template #[`item.command`]="{ item }">
         <v-edit-dialog
-          class="d-inline-block"
           persistent
           large
           :return-value.sync="item.command"
@@ -146,7 +145,6 @@
       <template #[`item.price`]="{ item }">
         <v-edit-dialog
           persistent
-          class="d-inline-block"
           large
           @save="update(item, false, 'price');"
         >

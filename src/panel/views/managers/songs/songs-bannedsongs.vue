@@ -1,90 +1,154 @@
 <template>
-  <b-container fluid>
-    <b-row>
-      <b-col>
-        <span class="title text-default mb-2">
-          {{ translate('menu.manage') }}
-          <small><fa icon="angle-right"/></small>
-          {{ translate('menu.bannedsongs') }}
-        </span>
-      </b-col>
-      <b-col v-if="!$systems.find(o => o.name === 'songs').enabled" style=" text-align: right;">
-        <b-alert show variant="danger" style="padding: .5rem; margin: 0; display: inline-block;">
-          <fa icon="exclamation-circle" fixed-width/> {{ translate('this-system-is-disabled') }}
-        </b-alert>
-      </b-col>
-    </b-row>
+  <v-container
+    fluid
+    :class="{ 'pa-4': !$vuetify.breakpoint.mobile }"
+  >
+    <v-alert
+      v-if="!$systems.find(o => o.name === 'songs').enabled"
+      dismissible
+      prominent
+      dense
+    >
+      <div class="text-caption">
+        {{ translate('this-system-is-disabled') }}
+      </div>
+    </v-alert>
 
-    <panel search @search="search = $event">
-      <template v-slot:left>
-        <b-form inline @submit="addSong">
-          <b-input-group>
-            <b-input input type="text" class="form-control w-auto col-6" v-model="toAdd" placeholder="Paste your youtube link, id" />
-            <b-input-group-append>
-              <b-button type="submit" v-if="state.import == 0" variant="primary" class="btn mr-2" v-on:click="addSong()">
-                <fa icon="plus"></fa> {{ translate('systems.songs.add_song') }}</b-button>
-              <b-button v-else-if="state.import == 1" class="btn mr-2" variant="info" disabled="disabled">
-                <fa icon="circle-notch" spin></fa> {{ translate('systems.songs.importing') }}</b-button>
-              <b-button v-else class="btn mr-2" variant="success" disabled="disabled">
-                <fa icon="check"></fa> {{ translate('systems.songs.importing_done') }}</b-button>
-            </b-input-group-append>
-          </b-input-group>
-          <div class="text-info">{{ importInfo }}</div>
-        </b-form>
+    <h2 v-if="!$vuetify.breakpoint.mobile">
+      {{ translate('menu.bannedsongs') }}
+    </h2>
+
+    <v-data-table
+      v-model="selected"
+      calculate-widths
+      hide-default-header
+      show-select
+      :loading="state.loading !== $state.success"
+      :headers="headers"
+      :items-per-page="-1"
+      item-key="videoId"
+      :items="fItems"
+    >
+      <template #top>
+        <v-toolbar
+          flat
+        >
+          <v-text-field
+            v-model="search"
+            append-icon="mdi-magnify"
+            label="Search or add by link/id"
+            single-line
+            hide-details
+            class="pr-2"
+          />
+
+          <template v-if="selected.length > 0">
+            <v-dialog
+              v-model="deleteDialog"
+              max-width="500px"
+            >
+              <template #activator="{ on, attrs }">
+                <v-btn
+                  color="red"
+                  class="mb-2 mr-1"
+                  v-bind="attrs"
+                  v-on="on"
+                >
+                  Delete {{ selected.length }} Item(s)
+                </v-btn>
+              </template>
+
+              <v-card>
+                <v-card-title>
+                  <span class="headline">Delete {{ selected.length }} Item(s)?</span>
+                </v-card-title>
+
+                <v-card-text>
+                  <v-data-table
+                    dense
+                    :items="selected"
+                    :headers="headersDelete"
+                    hide-default-header
+                    hide-default-footer
+                  />
+                </v-card-text>
+                <v-card-actions>
+                  <v-spacer />
+                  <v-btn
+                    text
+                    @click="deleteDialog = false"
+                  >
+                    Cancel
+                  </v-btn>
+                  <v-btn
+                    color="red"
+                    text
+                    @click="deleteSelected"
+                  >
+                    Delete
+                  </v-btn>
+                </v-card-actions>
+              </v-card>
+            </v-dialog>
+          </template>
+
+          <v-btn
+            color="primary"
+            class="mb-2"
+            :disabled="search.length === 0"
+            :loading="state.import === 1"
+            @click="addSong"
+          >
+            New Item
+          </v-btn>
+        </v-toolbar>
       </template>
-    </panel>
 
-    <loading v-if="state.loading !== ButtonStates.success"/>
-    <template v-else>
-      <b-alert show variant="danger" v-if="fItems.length === 0 && search.length > 0">
-        <fa icon="search"/> <span v-html="translate('systems.songs.bannedSongsEmptyAfterSearch').replace('$search', search)"/>
-      </b-alert>
-      <b-alert show v-else-if="items.length === 0">
-        {{translate('systems.songs.bannedSongsEmpty')}}
-      </b-alert>
-      <b-table v-else striped small :items="fItems" :fields="fields" class="table-p-0">
-        <template v-slot:cell(thumbnail)="data">
-          <img class="float-left pr-3" v-bind:src="generateThumbnail(data.item.videoId)">
-        </template>
-        <template v-slot:cell(title)="data">
-          {{ data.item.title }}
-        </template>
-        <template v-slot:cell(buttons)="data">
-          <div class="float-right pr-2" style="width: max-content !important;">
-            <button-with-icon class="btn-only-icon btn-secondary btn-reverse" icon="link" :href="'http://youtu.be/' + data.item.videoId">
-            </button-with-icon>
-            <button-with-icon class="btn-only-icon btn-danger btn-reverse" icon="trash" @click="deleteItem(data.item.videoId)">
-              {{ translate('dialog.buttons.delete') }}
-            </button-with-icon>
-          </div>
-        </template>
-      </b-table>
-    </template>
-  </b-container>
+      <template #[`item.thumbnail`]="{ item }">
+        <v-img
+          :aspect-ratio="16/9"
+          :width="100"
+          :src="generateThumbnail(item.videoId)"
+        />
+      </template>
+      <template #[`item.actions`]="{ item }">
+        <v-btn
+          plain
+          :href="'http://youtu.be/' + item.videoId"
+          target="_blank"
+        >
+          <v-icon>
+            mdi-link
+          </v-icon>
+        </v-btn>
+      </template>
+    </v-data-table>
+  </v-container>
 </template>
 
 <script lang="ts">
 
 import {
-  computed, defineComponent, onMounted, ref, 
+  computed, defineComponent, onMounted, ref,
 } from '@vue/composition-api';
 import { escapeRegExp, isNil } from 'lodash-es';
 
 import { SongBanInterface } from 'src/bot/database/entity/song';
 import { ButtonStates } from 'src/panel/helpers/buttonStates';
 import { error } from 'src/panel/helpers/error';
+import { EventBus } from 'src/panel/helpers/event-bus';
 import { getSocket } from 'src/panel/helpers/socket';
 import translate from 'src/panel/helpers/translate';
 
 const socket = getSocket('/systems/songs');
 
 export default defineComponent({
-  components: { 'loading': () => import('src/panel/components/loading.vue') },
   setup() {
     const items = ref([] as SongBanInterface[]);
     const search = ref('');
-    const toAdd = ref('');
-    const importInfo = ref('');
+
+    const deleteDialog = ref(false);
+    const selected = ref([] as SongBanInterface[]);
 
     const state = ref({
       loading: ButtonStates.progress,
@@ -94,12 +158,20 @@ export default defineComponent({
       import: number;
     });
 
-    const fields = [
+    const headers = [
       {
-        key: 'thumbnail', label: '', tdClass: 'fitThumbnail', 
+        value: 'thumbnail', text: '', align: 'left',
       },
-      { key: 'title', label: '' },
-      { key: 'buttons', label: '' },
+      { value: 'videoId', text: '' },
+      { value: 'title', text: '' },
+      {
+        text: 'Actions', value: 'actions', sortable: false, align: 'end', 
+      },
+    ];
+
+    const headersDelete = [
+      { value: 'videoId', text: '' },
+      { value: 'title', text: '' },
     ];
 
     const fItems = computed(() => {
@@ -108,15 +180,16 @@ export default defineComponent({
       }
       return items.value.filter((o) => {
         const isSearchInTitle = !isNil(o.title.match(new RegExp(escapeRegExp(search.value), 'ig')));
-        return isSearchInTitle;
+        const isSearchInVideoId = !isNil(o.videoId.match(new RegExp(escapeRegExp(search.value), 'ig')));
+        return isSearchInTitle || isSearchInVideoId;
       });
     });
 
     onMounted(() => {
-      refreshBanlist();
+      refresh();
     });
 
-    const refreshBanlist = () => {
+    const refresh = () => {
       socket.emit('songs::getAllBanned', {}, (err: string | null, getAllBanned: SongBanInterface[]) => {
         items.value = getAllBanned;
         state.value.loading = ButtonStates.success;
@@ -127,75 +200,74 @@ export default defineComponent({
       return `https://img.youtube.com/vi/${videoId}/1.jpg`;
     };
 
-    const deleteItem = (id: string) => {
-      if (confirm('Do you want to delete banned song ' + items.value.find(o => o.videoId === id)?.title + '?')) {
-        socket.emit('delete.ban', id, () => {
-          items.value = items.value.filter((o) => o.videoId !== id);
-        });
-      }
-    };
-
-    const showImportInfo = async () => {
-      importInfo.value = 'BANNED!';
-      setTimeout(() => {
-        importInfo.value = '';
-        state.value.import = 0;
-      }, 5000);
-    };
-
-    const addSong = (evt: Event) => {
-      if (evt) {
-        evt.preventDefault();
+    const addSong = () => {
+      if (search.value === '') {
+        EventBus.$emit('snack', 'red', 'Cannot add empty song to ban list.');
+        return;
       }
       if (state.value.import === 0) {
         state.value.import = 1;
-        socket.emit('import.ban', toAdd.value, (err: string | null, info: CommandResponse[]) => {
+        socket.emit('import.ban', search.value, (err: string | null, info: CommandResponse[]) => {
           if (err) {
-            toAdd.value = '';
-            importInfo.value = '';
+            search.value = '';
             state.value.import = 0;
             return error(err);
           }
-          state.value.import = 2;
-          refreshBanlist();
-          toAdd.value = '';
-          showImportInfo();
+          state.value.import = 0;
+          EventBus.$emit('snack', 'success', 'Song added to ban list.');
+          refresh();
+          search.value = '';
         });
       }
     };
 
-    const linkTo = (item: SongBanInterface) => {
-      console.debug('Clicked', item.videoId);
-      window.location.href = `http://youtu.be/${item.videoId}`;
+    const deleteSelected = async () => {
+      deleteDialog.value = false;
+      await Promise.all(
+        selected.value.map(async (item) => {
+          return new Promise((resolve, reject) => {
+            socket.emit('delete.ban', item.videoId, (err: string | null) => {
+              if (err) {
+                reject(error(err));
+              }
+              resolve(true);
+            });
+          });
+        }),
+      );
+      refresh();
+
+      EventBus.$emit('snack', 'success', 'Data removed.');
+      selected.value = [];
     };
 
     return {
       items,
       fItems,
-      fields,
+      headers,
+      headersDelete,
       state,
       search,
-      importInfo,
-      toAdd,
 
       generateThumbnail,
-      deleteItem,
-      showImportInfo,
       addSong,
-      linkTo,
 
       translate,
       ButtonStates,
+
+      deleteDialog,
+      deleteSelected,
+      selected,
     };
   },
 });
 </script>
 
 <style>
-.table-p-0 td {
-  padding: 0 !important;
+tr:nth-of-type(odd) {
+  background-color: rgba(0, 0, 0, .05);
 }
-.fitThumbnail {
-  width: 100px;
+v-small-dialog__activator__content {
+    word-break: break-word;
 }
 </style>

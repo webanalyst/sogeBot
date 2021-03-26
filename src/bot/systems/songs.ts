@@ -128,6 +128,10 @@ class Songs extends System {
       const connection = await getConnection();
       opts.page = opts.page ?? 0;
       opts.perPage = opts.perPage ?? 25;
+
+      if (opts.perPage === -1) {
+        opts.perPage === Number.MAX_SAFE_INTEGER;
+      }
       const query = getRepository(SongPlaylist).createQueryBuilder('playlist')
         .offset(opts.page * opts.perPage)
         .limit(opts.perPage);

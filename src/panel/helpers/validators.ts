@@ -7,6 +7,9 @@ const minLength = (length: number) => {
 const minValue = (value: number) => {
   return (v?: string) => Number(v) >= value || 'Min value of this value is ' + value;
 };
+const maxValue = (value: number) => {
+  return (v?: string) => Number(v) <= value || 'Max value of this value is ' + value;
+};
 
 const startsWithExclamation = (v?: string) => (typeof v === 'string' && v.length > 0 && v[0] === '!') || 'Must start with !';
 const startsWithExclamationOrCustomVariable = (v?: string) => (typeof v === 'string' && v.length > 0 && (v[0] === '!' || v[0] === '$')) || 'Must start with ! or should be custom variable';
@@ -21,5 +24,5 @@ const isValidRegex = (val: string) => {
 };
 
 export {
-  isValidRegex, required, minLength, startsWithExclamation, startsWithExclamationOrCustomVariable, minValue,
+  isValidRegex, required, minLength, maxValue, startsWithExclamation, startsWithExclamationOrCustomVariable, minValue,
 };

@@ -23,7 +23,7 @@
       calculate-widths
       show-select
       :search="search"
-      :loading="state.loading !== $state.success && state.loadingPrm !== $state.success"
+      :loading="state.loading !== $state.success || state.loadingPrm !== $state.success"
       :headers="headers"
       :items-per-page="-1"
       :items="items"
@@ -66,7 +66,7 @@
                   <v-data-table
                     dense
                     :items="selected"
-                    :headers="headersWithoutPerm"
+                    :headers="headersDelete"
                     hide-default-header
                     hide-default-footer
                   />
@@ -314,7 +314,7 @@ export default defineComponent({
       },
     ];
 
-    const headersWithoutPerm = [
+    const headersDelete = [
       { value: 'name', text: '' },
     ];
 
@@ -418,7 +418,7 @@ export default defineComponent({
       search,
       state,
       headers,
-      headersWithoutPerm,
+      headersDelete,
       selected,
       deleteSelected,
       update,

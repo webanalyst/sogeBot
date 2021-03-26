@@ -24,7 +24,7 @@
       group-by="group"
       show-select
       :search="search"
-      :loading="state.loadingAls !== $state.success && state.loadingPrm !== $state.success"
+      :loading="state.loadingAls !== $state.success || state.loadingPrm !== $state.success"
       :headers="headers"
       :items-per-page="-1"
       :items="items"

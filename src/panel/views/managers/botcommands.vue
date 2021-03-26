@@ -10,7 +10,7 @@
     <v-data-table
       v-model="selected"
       show-select
-      :loading="state.loading !== $state.success && state.loadingPrm !== $state.success"
+      :loading="state.loading !== $state.success || state.loadingPrm !== $state.success"
       :headers="headers"
       :items-per-page="-1"
       :items="fItems"

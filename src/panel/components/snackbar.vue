@@ -1,10 +1,10 @@
 <template>
   <v-snackbar
     v-model="snack"
-    :timeout="3000"
+    :timeout="5000"
     :color="snackColor"
   >
-    {{ snackText }}
+    <div v-html="snackText" />
 
     <template #action="{ attrs }">
       <v-btn
