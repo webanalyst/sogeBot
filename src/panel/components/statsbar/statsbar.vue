@@ -1,20 +1,6 @@
 <template>
   <div>
     <v-alert
-      v-for="error of errors"
-      :key="error.name + error.message + error.date"
-      :type="getErrorType(error.type)"
-      dismissible
-      prominent
-      dense
-    >
-      <h5>{{ error.name }}</h5>
-      <div
-        class="text-caption"
-        v-html="error.message"
-      />
-    </v-alert>
-    <v-alert
       v-if="!$store.state.configuration.isChannelSet"
       type="danger"
       dismissible
@@ -1003,16 +989,6 @@ export default defineComponent({
       cachedTitle.value = raw;
       return raw;
     };
-    const getErrorType = (type: string) => {
-      switch (type) {
-        case 'error':
-          return 'danger';
-        case 'success':
-          return 'success';
-        default:
-          return 'info';
-      }
-    };
     const saveHighlight = () => highlightsSocket.emit('highlight');
     const filterTags = (is_auto: boolean) => {
       return tags.value.filter(o => !!o.is_auto === is_auto).map((o) => {
@@ -1097,28 +1073,14 @@ export default defineComponent({
           }
           for (const error of data.errors) {
             console.error(`UIError: ${error.name} ¦ ${error.message}`);
-            errors.value.push({
-              ...error, date: Date.now(), type: 'error',
-            });
+            EventBus.$emit('snack', 'red', `<h4>${error.name}</h4><div>${error.message}</div>`);
           }
           for (const error of data.warns) {
             console.info(`UIWarn: ${error.name} ¦ ${error.message}`);
-            errors.value.push({
-              ...error, date: Date.now(), type: 'warn',
-            });
+            EventBus.$emit('snack', 'orange', `<h4>${error.name}</h4><div>${error.message}</div>`);
           }
         });
       }, 5000);
-      EventBus.$on('error', (err: UIError) => {
-        errors.value.push({
-          ...err, date: Date.now(), type: 'error',
-        });
-      });
-      EventBus.$on('success', (err: UIError) => {
-        errors.value.push({
-          ...err, date: Date.now(), type: 'success',
-        });
-      });
 
       getLatestStats();
 
@@ -1157,7 +1119,6 @@ export default defineComponent({
 
     return {
       isTrending,
-      errors,
       averageStats,
       currentStats,
       hideStats,

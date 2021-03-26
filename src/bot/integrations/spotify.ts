@@ -365,7 +365,7 @@ class Spotify extends Integration {
         const response = await this.client.getTrack(id);
 
         ioServer?.emit('api.stats', {
-          method: 'GET', data: response.body, timestamp: Date.now(), call: 'spotify::addBan', api: 'other', endpoint: response.headers.url, code: response.statusCode,
+          method: 'GET', data: response.body, timestamp: Date.now(), call: 'spotify::addBan', api: 'other', endpoint: 'n/a', code: 200,
         });
 
         const track = response.body;
@@ -374,11 +374,17 @@ class Spotify extends Integration {
         });
       } catch (e) {
         if (e.message !== 'client') {
+          if (cb) {
+            cb(e, null);
+          }
           addUIError({ name: 'Spotify Ban Import', message: 'Something went wrong with banning song. Check your spotifyURI.' });
         }
         ioServer?.emit('api.stats', {
-          method: 'GET', data: e.response, timestamp: Date.now(), call: 'spotify::addBan', api: 'other', endpoint: e.response.headers.url, code: e.response?.status ?? 'n/a',
+          method: 'GET', data: e.response, timestamp: Date.now(), call: 'spotify::addBan', api: 'other', endpoint: 'n/a', code: 'n/a',
         });
+        if (cb) {
+          cb(e, null);
+        }
       }
       if (cb) {
         cb(null, null);

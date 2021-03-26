@@ -1,133 +1,114 @@
 <template>
-  <b-container fluid>
-    <b-row>
-      <b-col>
-        <span class="title text-default mb-2">
-          {{ translate('menu.manage') }}
-          <small><fa icon="angle-right" /></small>
-          {{ translate('menu.spotify') }}
-          {{ translate('menu.bannedsongs') }}
-        </span>
-      </b-col>
-      <b-col
-        v-if="!$integrations.find(o => o.name === 'spotify').enabled"
-        style=" text-align: right;"
-      >
-        <b-alert
-          show
-          variant="danger"
-          style="padding: .5rem; margin: 0; display: inline-block;"
-        >
-          <fa
-            icon="exclamation-circle"
-            fixed-width
-          /> {{ translate('this-system-is-disabled') }}
-        </b-alert>
-      </b-col>
-    </b-row>
-
-    <panel
-      search
-      @search="search = $event"
+  <v-container
+    fluid
+    :class="{ 'pa-4': !$vuetify.breakpoint.mobile }"
+  >
+    <v-alert
+      v-if="!$integrations.find(o => o.name === 'spotify').enabled"
+      dismissible
+      prominent
+      dense
     >
-      <template #left>
-        <b-form
-          inline
-          @submit="addSongOrPlaylist"
-        >
-          <b-input-group>
-            <b-input
-              v-model="toAdd"
-              input
-              type="text"
-              class="form-control w-auto col-6"
-              placeholder="Paste your spotifyUri"
-            />
-            <b-input-group-append>
-              <b-button
-                v-if="state.import == 0"
-                type="submit"
-                variant="primary"
-                class="btn mr-2"
-                @click="addSongOrPlaylist()"
-              >
-                <fa icon="plus" /> {{ translate('systems.songs.add_song') }}
-              </b-button>
-              <b-button
-                v-else-if="state.import == 1"
-                class="btn mr-2"
-                variant="info"
-                disabled="disabled"
-              >
-                <fa
-                  icon="circle-notch"
-                  spin
-                /> {{ translate('systems.songs.importing') }}
-              </b-button>
-              <b-button
-                v-else
-                class="btn mr-2"
-                variant="success"
-                disabled="disabled"
-              >
-                <fa icon="check" /> {{ translate('systems.songs.importing_done') }}
-              </b-button>
-            </b-input-group-append>
-          </b-input-group>
-        </b-form>
-      </template>
-    </panel>
+      <div class="text-caption">
+        {{ translate('this-system-is-disabled') }}
+      </div>
+    </v-alert>
 
-    <loading v-if="state.loading !== $state.success" />
-    <template v-else>
-      <b-alert
-        v-if="fItems.length === 0 && search.length > 0"
-        show
-        variant="danger"
-      >
-        <fa icon="search" /> <span v-html="translate('systems.songs.bannedSongsEmptyAfterSearch').replace('$search', search)" />
-      </b-alert>
-      <b-alert
-        v-else-if="items.length === 0"
-        show
-      >
-        {{ translate('systems.songs.bannedSongsEmpty') }}
-      </b-alert>
-      <b-table
-        v-else
-        striped
-        small
-        :items="fItems"
-        :fields="fields"
-        class="table-p-0"
-      >
-        <template #cell(title)="data">
-          {{ data.item.title }}
-        </template>
-        <template #cell(artists)="data">
-          {{ data.item.artists.join(', ') }}
-        </template>
-        <template #cell(buttons)="data">
-          <div
-            class="float-right pr-2"
-            style="width: max-content !important;"
-          >
-            <button-with-icon
-              class="btn-only-icon btn-danger btn-reverse"
-              icon="trash"
-              @click="deleteItem(data.item.spotifyUri)"
+    <h2 v-if="!$vuetify.breakpoint.mobile">
+      {{ translate('menu.spotify') }}
+      {{ translate('menu.bannedsongs') }}
+    </h2>
+
+    <v-data-table
+      v-model="selected"
+      calculate-widths
+      hide-default-header
+      show-select
+      :loading="state.loading !== $state.success"
+      :headers="headers"
+      item-key="spotifyUri"
+      :items-per-page="-1"
+      :items="fItems"
+    >
+      <template #top>
+        <v-toolbar
+          flat
+        >
+          <v-text-field
+            v-model="search"
+            append-icon="mdi-magnify"
+            label="Search or add by spotifyURI"
+            single-line
+            hide-details
+            class="pr-2"
+          />
+
+          <template v-if="selected.length > 0">
+            <v-dialog
+              v-model="deleteDialog"
+              max-width="500px"
             >
-              {{ translate('dialog.buttons.delete') }}
-            </button-with-icon>
-          </div>
-        </template>
-      </b-table>
-    </template>
-  </b-container>
+              <template #activator="{ on, attrs }">
+                <v-btn
+                  color="red"
+                  class="mb-2 mr-1"
+                  v-bind="attrs"
+                  v-on="on"
+                >
+                  Delete {{ selected.length }} Item(s)
+                </v-btn>
+              </template>
+
+              <v-card>
+                <v-card-title>
+                  <span class="headline">Delete {{ selected.length }} Item(s)?</span>
+                </v-card-title>
+
+                <v-card-text>
+                  <v-data-table
+                    dense
+                    :items="selected"
+                    :headers="headers"
+                    hide-default-header
+                    hide-default-footer
+                  />
+                </v-card-text>
+                <v-card-actions>
+                  <v-spacer />
+                  <v-btn
+                    text
+                    @click="deleteDialog = false"
+                  >
+                    Cancel
+                  </v-btn>
+                  <v-btn
+                    color="red"
+                    text
+                    @click="deleteSelected"
+                  >
+                    Delete
+                  </v-btn>
+                </v-card-actions>
+              </v-card>
+            </v-dialog>
+          </template>
+
+          <v-btn
+            color="primary"
+            class="mb-2"
+            :disabled="search.length === 0"
+            :loading="state.import === 1"
+            @click="addSong"
+          >
+            New Item
+          </v-btn>
+        </v-toolbar>
+      </template>
+    </v-data-table>
+  </v-container>
 </template>
 
 <script lang="ts">
-
 import {
   computed, defineComponent, onMounted, ref,
 } from '@vue/composition-api';
@@ -135,6 +116,7 @@ import { escapeRegExp, isNil } from 'lodash-es';
 
 import { SpotifySongBanInterface } from 'src/bot/database/entity/spotify';
 import { ButtonStates } from 'src/panel/helpers/buttonStates';
+import { EventBus } from 'src/panel/helpers/event-bus';
 import { getSocket } from 'src/panel/helpers/socket';
 import translate from 'src/panel/helpers/translate';
 
@@ -143,9 +125,11 @@ const socket = getSocket('/integrations/spotify');
 export default defineComponent({
   setup() {
     const items = ref([] as SpotifySongBanInterface[]);
-
     const search = ref('');
-    const toAdd = ref('');
+
+    const deleteDialog = ref(false);
+    const selected = ref([] as SpotifySongBanInterface[]);
+
     const state = ref({
       loading: ButtonStates.progress,
       import:  ButtonStates.idle,
@@ -154,27 +138,27 @@ export default defineComponent({
       import: number;
     });
 
-    const fields = [
-      { key: 'title', label: '' },
-      { key: 'artists', label: '' },
-      { key: 'buttons', label: '' },
+    const headers = [
+      { value: 'title', text: '' },
+      { value: 'artists', text: '' },
     ];
 
-    const fItems = computed (() => {
+    const fItems = computed(() => {
       if (search.value.length === 0) {
         return items.value;
       }
       return items.value.filter((o) => {
         const isSearchInTitle = !isNil(o.title.match(new RegExp(escapeRegExp(search.value), 'ig')));
-        return isSearchInTitle;
+        const inSpotifyUri = !isNil(o.spotifyUri.match(new RegExp(escapeRegExp(search.value), 'ig')));
+        return isSearchInTitle || inSpotifyUri;
       });
     });
 
     onMounted(() => {
-      refreshBanlist();
+      refresh();
     });
 
-    const refreshBanlist = () => {
+    const refresh = () => {
       state.value.loading = ButtonStates.progress;
       socket.emit('spotify::getAllBanned', {}, (err: string | null, _items: SpotifySongBanInterface[]) => {
         items.value = _items;
@@ -182,49 +166,71 @@ export default defineComponent({
       });
     };
 
-    const deleteItem = (id: string)  => {
-      if (confirm('Do you want to delete ' + items.value.find((o) => o.spotifyUri === id)?.title + '?')) {
-        socket.emit('spotify::deleteBan', { spotifyUri: id }, () => {
-          items.value = items.value.filter((o) => o.spotifyUri !== id);
+    const addSong = () => {
+      if (search.value === '') {
+        EventBus.$emit('snack', 'red', 'Cannot add empty song to ban list.');
+        return;
+      }
+      if (state.value.import === 0) {
+        state.value.import = 1;
+        socket.emit('spotify::addBan', search.value, (err: string | null) => {
+          if (err) {
+            setTimeout(() => {
+              search.value = '';
+              state.value.import = 0;
+            }, 1000);
+            return;
+          }
+          state.value.import = 0;
+          EventBus.$emit('snack', 'success', 'Song added to ban list.');
+          refresh();
+          search.value = '';
         });
       }
     };
 
-    const addSongOrPlaylist = (evt: Event) => {
-      if (evt) {
-        evt.preventDefault();
-      }
-      if (state.value.import === 0) {
-        state.value.import = 1;
-        socket.emit('spotify::addBan', toAdd.value, (err: string | null, info: { banned: number }) => {
-          state.value.import = 2;
-          refreshBanlist();
-          setTimeout(() => {
-            state.value.import = 0;
-          }, 5000);
-        });
-      }
+    const deleteSelected = async () => {
+      deleteDialog.value = false;
+      await Promise.all(
+        selected.value.map(async (item) => {
+          return new Promise((resolve, reject) => {
+            socket.emit('spotify::deleteBan', { spotifyUri: item.spotifyUri }, () => {
+              resolve(true);
+            });
+          });
+        }),
+      );
+      refresh();
+
+      EventBus.$emit('snack', 'success', 'Data removed.');
+      selected.value = [];
     };
 
     return {
       items,
-      search,
-      toAdd,
-      state,
-      fields,
       fItems,
-      deleteItem,
-      addSongOrPlaylist,
+      headers,
+      state,
+      search,
+
+      addSong,
 
       translate,
+      ButtonStates,
+
+      deleteDialog,
+      deleteSelected,
+      selected,
     };
   },
 });
 </script>
 
 <style>
-.table-p-0 td {
-  vertical-align: middle;
-  padding: 1rem 0;
+tr:nth-of-type(odd) {
+  background-color: rgba(0, 0, 0, .05);
+}
+v-small-dialog__activator__content {
+    word-break: break-word;
 }
 </style>

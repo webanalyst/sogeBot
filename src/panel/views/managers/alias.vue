@@ -324,7 +324,6 @@ export default defineComponent({
 
     const truncateLength = computed(() => {
       const breakpoint = ctx.root.$vuetify.breakpoint;
-      console.log({ breakpoint });
       if (breakpoint.mobile) {
         return 50;
       } else {

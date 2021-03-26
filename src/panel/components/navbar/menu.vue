@@ -6,7 +6,7 @@
     <v-list-item
       v-for="item of menu.filter(o => typeof o.category === 'undefined')"
       :key="item.name"
-      :disabled="!item.enabled"
+      color="red"
       :href="'#/' + item.id.replace(/\./g, '/')"
     >
       <v-list-item-icon>
@@ -27,7 +27,7 @@
       <v-list-item
         v-for="item of menu.filter(o => o.category === category)"
         :key="item.name"
-        :disabled="!item.enabled"
+        color="red"
         :href="'#/' + item.id.replace(/\./g, '/')"
       >
         <v-list-item-title>{{ translate('menu.' + item.name) }}</v-list-item-title>

@@ -129,7 +129,7 @@ const main = async () => {
         path: '/manage/songs/bannedsongs', name: 'bannedsongs', component: () => import('./views/managers/songs/songs-bannedsongs.vue'),
       },
       {
-        path: '/manage/spotify/bannedsongs', name: 'spotifyManagerBannedsongs', component: () => import('./views/managers/spotify/spotify-bannedsongs.vue'),
+        path: '/manage/spotify/bannedsongs', name: 'spotifybannedsongs', component: () => import('./views/managers/spotify/spotify-bannedsongs.vue'),
       },
       {
         path: '/manage/timers/list', name: 'TimersManagerList', component: () => import('./views/managers/timers/timers-list.vue'),
