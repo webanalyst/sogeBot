@@ -1147,7 +1147,6 @@ export default defineComponent({
       getTime,
       translate,
       numberReducer,
-      getErrorType,
     };
   },
 });

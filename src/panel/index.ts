@@ -87,7 +87,7 @@ const main = async () => {
         path: '/manage/cooldowns', name: 'cooldown', component: () => import('./views/managers/cooldowns.vue'),
       },
       {
-        path: '/manage/highlights', name: 'HighlightsManager', component: () => import('./views/managers/highlights.vue'),
+        path: '/manage/highlights', name: 'highlights', component: () => import('./views/managers/highlights.vue'),
       },
       {
         path: '/manage/hltb', name: 'HLTBManager', component: () => import('./views/managers/hltb.vue'),

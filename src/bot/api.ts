@@ -1390,6 +1390,54 @@ class API extends Core {
     return response;
   }
 
+  async getVideos(ids: string[]) {
+    const url = 'https://api.twitch.tv/helix/videos?';
+    const token = oauth.botAccessToken;
+
+    const chunkIds = chunk(ids, 5);
+    const videos: string[] = [];
+    for (const chunked of chunkIds) {
+      try {
+        if (token === '') {
+          throw Error('No bot access token');
+        }
+        const request = await axios.get(url + chunked.map(o => `id=${o}`).join('&'), {
+          headers: {
+            'Content-Type':  'application/json',
+            'Authorization': 'Bearer ' + token,
+            'Client-ID':     oauth.botClientId,
+          },
+          timeout: 20000,
+        });
+
+        // save remaining api calls
+        setRateLimit('bot', request.headers);
+
+        ioServer?.emit('api.stats', {
+          method: 'GET', data: request.data, timestamp: Date.now(), call: 'getVideos', api: 'helix', endpoint: url, code: request.status, remaining: calls.bot,
+        });
+        for (const item of request.data.data) {
+          videos.push(item.id);
+        }
+      } catch (e) {
+        if (e.isAxiosError) {
+          if (e.response?.status !== 404) {
+            error(`API: ${e.config.method.toUpperCase()} ${e.config.url} - ${e.response?.status ?? 0}\n${JSON.stringify(e.response?.data ?? '--nodata--', null, 4)}\n\n${e.stack}`);
+            ioServer?.emit('api.stats', {
+              method: e.config.method.toUpperCase(), timestamp: Date.now(), call: 'getVideos', api: 'helix', endpoint: e.config.url, code: e.response?.status ?? 'n/a', data: e.response?.data ?? 'n/a', remaining: calls.bot,
+            });
+          }
+        } else {
+          error(e.stack);
+          ioServer?.emit('api.stats', {
+            method: 'GET', timestamp: Date.now(), call: 'getVideos', api: 'helix', endpoint: 'n/a', code: e.response?.status ?? 'n/a', data: e.stack, remaining: calls.bot,
+          });
+        }
+      }
+    }
+    return videos;
+  }
+
   async getTopClips (opts: any) {
     let url = 'https://api.twitch.tv/helix/clips?broadcaster_id=' + channelId.value;
     const token = oauth.botAccessToken;
