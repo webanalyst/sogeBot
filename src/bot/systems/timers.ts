@@ -36,7 +36,7 @@ class Timers extends System {
     super();
 
     this.addMenu({
-      category: 'manage', name: 'timers', id: 'manage/timers/list', this: this,
+      category: 'manage', name: 'timers', id: 'manage/timers', this: this,
     });
     this.init();
   }

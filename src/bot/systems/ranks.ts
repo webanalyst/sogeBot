@@ -37,7 +37,7 @@ class Ranks extends System {
   constructor () {
     super();
     this.addMenu({
-      category: 'manage', name: 'ranks', id: 'manage/ranks/list', this: this,
+      category: 'manage', name: 'ranks', id: 'manage/ranks', this: this,
     });
   }
 

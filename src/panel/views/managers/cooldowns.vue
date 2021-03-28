@@ -230,11 +230,12 @@
 import {
   computed, defineAsyncComponent, defineComponent, onMounted, ref, watch,
 } from '@vue/composition-api';
-import { escapeRegExp, isNil } from 'lodash-es';
+import {
+  capitalize, escapeRegExp, isNil, 
+} from 'lodash-es';
 
 import { CooldownInterface } from 'src/bot/database/entity/cooldown';
 import { ButtonStates } from 'src/panel/helpers/buttonStates';
-import { capitalize } from 'src/panel/helpers/capitalize';
 import { error } from 'src/panel/helpers/error';
 import { EventBus } from 'src/panel/helpers/event-bus';
 import { getSocket } from 'src/panel/helpers/socket';

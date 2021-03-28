@@ -46,9 +46,9 @@
 import {
   defineComponent, onMounted, onUnmounted, ref, watch,
 } from '@vue/composition-api';
+import { capitalize } from 'loadsh-es';
 
 import type { BetsInterface, BetsParticipationsInterface } from 'src/bot/database/entity/bets';
-import { capitalize } from 'src/panel/helpers/capitalize';
 import { error } from 'src/panel/helpers/error';
 import { EventBus } from 'src/panel/helpers/event-bus';
 import { getSocket } from 'src/panel/helpers/socket';
@@ -62,10 +62,6 @@ type Props = {
 const socket = getSocket('/systems/bets');
 
 export default defineComponent({
-  props: {
-    popout: Boolean,
-    nodrag: Boolean,
-  },
   filters: {
     formatTime: (seconds: number) => {
       const h = Math.floor(seconds / 3600);
@@ -77,6 +73,10 @@ export default defineComponent({
         s > 9 ? s : '0' + s,
       ].filter(a => a).join(':');
     },
+  },
+  props: {
+    popout: Boolean,
+    nodrag: Boolean,
   },
   setup(props: Props, ctx) {
     const betPercentGain = ref(0);
@@ -90,7 +90,7 @@ export default defineComponent({
 
     watch(betPercentGain, (value, old) => {
       socket.emit('settings.update', { betPercentGain: Number(value) }, () => {
-        return; 
+        return;
       });
     });
 

@@ -250,7 +250,9 @@
 import {
   computed, defineComponent, getCurrentInstance, onMounted, onUnmounted, ref, watch,
 } from '@vue/composition-api';
-import { cloneDeep, get } from 'lodash-es';
+import {
+  capitalize, cloneDeep, get, 
+} from 'lodash-es';
 import { v4 as uuid } from 'uuid';
 import { validationMixin } from 'vuelidate';
 import {
@@ -259,7 +261,6 @@ import {
 
 import { EventInterface, EventOperationInterface } from 'src/bot/database/entity/event';
 import { ButtonStates } from 'src/panel/helpers/buttonStates';
-import { capitalize } from 'src/panel/helpers/capitalize';
 import { error } from 'src/panel/helpers/error';
 import { EventBus } from 'src/panel/helpers/event-bus';
 import { getSocket } from 'src/panel/helpers/socket';

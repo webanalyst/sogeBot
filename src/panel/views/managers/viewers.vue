@@ -1153,7 +1153,7 @@ import {
   defineComponent, getCurrentInstance, onMounted, ref, watch,
 } from '@vue/composition-api';
 import {
-  get, orderBy, xor,
+  capitalize, get, orderBy, xor,
 } from 'lodash-es';
 import VueFlatPickr from 'vue-flatpickr-component';
 import { validationMixin } from 'vuelidate';
@@ -1163,7 +1163,6 @@ import { EventListInterface } from 'src/bot/database/entity/eventList';
 import { UserInterface } from 'src/bot/database/entity/user';
 import { dayjs } from 'src/bot/helpers/dayjs';
 import { ButtonStates } from 'src/panel/helpers/buttonStates';
-import { capitalize } from 'src/panel/helpers/capitalize';
 import { error, success } from 'src/panel/helpers/error';
 import { getSocket } from 'src/panel/helpers/socket';
 import translate from 'src/panel/helpers/translate';

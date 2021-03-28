@@ -84,7 +84,7 @@
                       {{ timestampToString(item.timestamp) }}
                     </template>
                     <template #[`item.createdAt`]="{ item }">
-                      {{ new Date(item.createdAt).toLocaleString() }}
+                      {{ dayjs(item.createdAt).format('LL') }} {{ dayjs(item.createdAt).format('LTS') }}
                     </template>
                     <template #[`item.expired`]="{ item }">
                       <span
@@ -147,7 +147,7 @@
         {{ timestampToString(item.timestamp) }}
       </template>
       <template #[`item.createdAt`]="{ item }">
-        {{ new Date(item.createdAt).toLocaleString() }}
+        {{ dayjs(item.createdAt).format('LL') }} {{ dayjs(item.createdAt).format('LTS') }}
       </template>
     </v-data-table>
   </v-container>
@@ -160,6 +160,7 @@ import {
 } from '@vue/composition-api';
 import { escapeRegExp, isNil } from 'lodash-es';
 
+import { dayjs } from 'src/bot/helpers/dayjs';
 import { ButtonStates } from 'src/panel/helpers/buttonStates';
 import { error } from 'src/panel/helpers/error';
 import { EventBus } from 'src/panel/helpers/event-bus';
@@ -298,6 +299,8 @@ export default defineComponent({
       deleteSelected,
       deleteExpired,
       selected,
+
+      dayjs,
     };
   },
 });

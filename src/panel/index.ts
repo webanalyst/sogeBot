@@ -108,19 +108,11 @@ const main = async () => {
       {
         path: '/manage/price', name: 'price', component: () => import('./views/managers/price.vue'),
       },
-      { path: '/manage/quotes/', redirect: '/manage/quotes/list' },
       {
-        path: '/manage/quotes/list', name: 'QuotesManagerList', component: () => import('./views/managers/quotes.vue'),
+        path: '/manage/quotes', name: 'quotes', component: () => import('./views/managers/quotes.vue'),
       },
       {
-        path: '/manage/quotes/edit/:id?', name: 'QuotesManagerEdit', component: () => import('./views/managers/quotes.vue'),
-      },
-      { path: '/manage/ranks/', redirect: '/manage/ranks/list' },
-      {
-        path: '/manage/ranks/list', name: 'RanksManagerList', component: () => import('./views/managers/ranks.vue'),
-      },
-      {
-        path: '/manage/ranks/edit/:id?', name: 'RanksManagerEdit', component: () => import('./views/managers/ranks.vue'),
+        path: '/manage/ranks', name: 'ranks', component: () => import('./views/managers/ranks.vue'),
       },
       {
         path: '/manage/songs/playlist', name: 'songsManagerPlaylist', component: () => import('./views/managers/songs/songs-playlist.vue'),
@@ -132,10 +124,7 @@ const main = async () => {
         path: '/manage/spotify/bannedsongs', name: 'spotifybannedsongs', component: () => import('./views/managers/spotify/spotify-bannedsongs.vue'),
       },
       {
-        path: '/manage/timers/list', name: 'TimersManagerList', component: () => import('./views/managers/timers/timers-list.vue'),
-      },
-      {
-        path: '/manage/timers/edit/:id?', name: 'TimersManagerEdit', component: () => import('./views/managers/timers/timers-list.vue'),
+        path: '/manage/timers', name: 'timers', component: () => import('./views/managers/timers/timers-list.vue'),
       },
       { path: '/manage/viewers/', redirect: '/manage/viewers/list' },
       {

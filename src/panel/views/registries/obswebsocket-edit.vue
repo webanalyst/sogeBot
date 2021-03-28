@@ -288,7 +288,9 @@ import 'codemirror/mode/javascript/javascript.js';
 import 'codemirror/theme/base16-dark.css';
 import 'codemirror/theme/base16-light.css';
 import 'codemirror/lib/codemirror.css';
-import { cloneDeep, get } from 'lodash-es';
+import {
+  capitalize, cloneDeep, get, 
+} from 'lodash-es';
 import type ObsWebSocket from 'obs-websocket-js';
 import shortid from 'shortid';
 import { codemirror } from 'vue-codemirror';
@@ -300,7 +302,6 @@ import type { OBSWebsocketInterface } from 'src/bot/database/entity/obswebsocket
 import { availableActions } from 'src/bot/helpers/obswebsocket/actions';
 import type { Source, Type } from 'src/bot/helpers/obswebsocket/sources';
 import { ButtonStates } from 'src/panel/helpers/buttonStates';
-import { capitalize } from 'src/panel/helpers/capitalize';
 import { error } from 'src/panel/helpers/error';
 import { EventBus } from 'src/panel/helpers/event-bus';
 import { getSocket } from 'src/panel/helpers/socket';
