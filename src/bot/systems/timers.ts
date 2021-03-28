@@ -72,11 +72,12 @@ class Timers extends System {
         callback(e);
       }
     });
-    adminEndpoint(this.nsp, 'timers::save', async (data, callback) => {
+    adminEndpoint(this.nsp, 'generic::setById', async (opts, cb) => {
       try {
-        callback(null, await getRepository(Timer).save(data));
+        const item = await getRepository(Timer).save({ ...(await getRepository(Timer).findOne({ id: String(opts.id) })), ...opts.item });
+        cb(null, item);
       } catch (e) {
-        callback(e);
+        cb(e.stack, null);
       }
     });
   }

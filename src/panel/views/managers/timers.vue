@@ -4,7 +4,7 @@
     :class="{ 'pa-4': !$vuetify.breakpoint.mobile }"
   >
     <v-alert
-      v-if="!$systems.find(o => o.name === 'price').enabled"
+      v-if="!$systems.find(o => o.name === 'timers').enabled"
       dismissible
       prominent
       dense
@@ -15,16 +15,15 @@
     </v-alert>
 
     <h2 v-if="!$vuetify.breakpoint.mobile">
-      {{ translate('menu.price') }}
+      {{ translate('menu.timers') }}
     </h2>
 
     <v-data-table
       v-model="selected"
       calculate-widths
       show-select
-      sort-by="command"
       :search="search"
-      :loading="state.loading !== $state.success && state.loadingPrm !== $state.success"
+      :loading="state.loading !== $state.success"
       :headers="headers"
       :items-per-page="-1"
       :items="items"
@@ -124,75 +123,87 @@
         </v-toolbar>
       </template>
 
-      <template #[`item.command`]="{ item }">
+      <template #[`item.name`]="{ item }">
         <v-edit-dialog
           persistent
           large
-          :return-value.sync="item.command"
-          @save="update(item, false, 'command')"
+          :return-value.sync="item.name"
+          @save="update(item, false, 'name')"
         >
-          {{ item.command }}
+          {{ item.name }}
           <template #input>
             <v-text-field
-              v-model="item.command"
-              :rules="rules.command"
+              v-model="item.name"
+              :rules="rules.name"
               single-line
+              :clearable="true"
               counter
             />
           </template>
         </v-edit-dialog>
       </template>
 
-      <template #[`item.price`]="{ item }">
+      <template #[`item.triggerEveryMessage`]="{ item }">
         <v-edit-dialog
           persistent
           large
-          @save="update(item, false, 'price');"
+          :return-value.sync="item.triggerEveryMessage"
+          @save="update(item, false, 'triggerEveryMessage')"
         >
-          <div v-html="priceFormatter(item)" />
-
+          {{ item.triggerEveryMessage }}
           <template #input>
             <v-text-field
-              v-model.number="item.price"
-              class="d-inline-block"
+              v-model.number="item.triggerEveryMessage"
               type="number"
-              :rules="rules.price"
+              min="0"
+              :rules="rules.triggerEveryMessage"
               single-line
-              :error="!isAtLeastOneValueAboveZero(item)"
-            >
-              <template #append>
-                {{ getLocalizedName(2, $store.state.configuration.systems.Points.customization.name) }}
-              </template>
-            </v-text-field>
-            {{ translate('or') }}
-            <v-text-field
-              v-model.number="item.priceBits"
-              class="d-inline-block"
-              :error="!isAtLeastOneValueAboveZero(item)"
-              :error-messages="!isAtLeastOneValueAboveZero(item) ? ['Points or bits price needs to be set.'] : []"
-              type="number"
-              :rules="rules.priceBits"
-              single-line
-            >
-              <template #append>
-                {{ getLocalizedName(2, translate('bot.bits')) }}
-              </template>
-            </v-text-field>
+              :clearable="true"
+            />
           </template>
         </v-edit-dialog>
       </template>
 
-      <template #[`item.emitRedeemEvent`]="{ item }">
-        <v-simple-checkbox
-          v-model="item.emitRedeemEvent"
-          @click="update(item, true, 'emitRedeemEvent')"
+      <template #[`item.triggerEverySecond`]="{ item }">
+        <v-edit-dialog
+          persistent
+          large
+          :return-value.sync="item.triggerEverySecond"
+          @save="update(item, false, 'triggerEverySecond')"
+        >
+          {{ item.triggerEverySecond }}
+          <template #input>
+            <v-text-field
+              v-model.number="item.triggerEverySecond"
+              min="0"
+              type="number"
+              :rules="rules.triggerEverySecond"
+              single-line
+              :clearable="true"
+            />
+          </template>
+        </v-edit-dialog>
+      </template>
+
+      <template #[`item.messages`]="{ item }">
+        <responses
+          :responses="item.messages"
+          :name="item.name"
+          @save="item.messages = $event.map(item => ({...item, timestamp: item.order})); update(item, false, 'messages')"
         />
       </template>
 
-      <template #[`item.enabled`]="{ item }">
+      <template #[`item.isEnabled`]="{ item }">
         <v-simple-checkbox
-          v-model="item.enabled"
-          @click="update(item, true, 'enabled')"
+          v-model="item.isEnabled"
+          @click="update(item, true, 'isEnabled')"
+        />
+      </template>
+
+      <template #[`item.tickOffline`]="{ item }">
+        <v-simple-checkbox
+          v-model="item.tickOffline"
+          @click="update(item, true, 'tickOffline')"
         />
       </template>
     </v-data-table>
@@ -201,74 +212,74 @@
 
 <script lang="ts">
 import {
-  defineAsyncComponent,
-  defineComponent, onMounted, ref, watch,
+  defineAsyncComponent, defineComponent, onMounted, ref, watch,
 } from '@vue/composition-api';
-import { capitalize } from 'lodash-es';
+import { capitalize, orderBy } from 'lodash-es';
 
-import type { PriceInterface } from 'src/bot/database/entity/price';
-import { getLocalizedName } from 'src/bot/helpers/getLocalized';
+import { TimerInterface } from 'src/bot/database/entity/timer';
 import { ButtonStates } from 'src/panel/helpers/buttonStates';
 import { error } from 'src/panel/helpers/error';
 import { EventBus } from 'src/panel/helpers/event-bus';
-import { getSocket } from 'src/panel/helpers/socket';
 import translate from 'src/panel/helpers/translate';
 import {
-  minLength, minValue, required, startsWithExclamation,
+  minLength, minValue, mustBeCompliant, required,
 } from 'src/panel/helpers/validators';
 
-const socket = getSocket('/systems/price');
+import { getSocket } from '../../helpers/socket';
+
+const socket = { timers: getSocket('/systems/timers') } as const;
+
 export default defineComponent({
-  components: { 'new-item': defineAsyncComponent({ loader: () => import('./components/new-item/price-newItem.vue') }) },
+  components: {
+    'new-item':  defineAsyncComponent({ loader: () => import('./components/new-item/timers-newItem.vue') }),
+    'responses': defineAsyncComponent({ loader: () => import('./components/timers-responses.vue') }),
+  },
   setup(props, ctx) {
-    const timestamp = ref(Date.now());
+    const rules = {
+      name:                [required, minLength(2), mustBeCompliant('a-zA-Z0-9_')],
+      triggerEveryMessage: [required, minValue(0)],
+      triggerEverySecond:  [required, minValue(0)],
+    };
+
     const search = ref('');
-    const items = ref([] as PriceInterface[]);
-    const selected = ref([] as PriceInterface[]);
+    const items = ref([] as Required<TimerInterface>[]);
+    const selected = ref([] as TimerInterface[]);
     const deleteDialog = ref(false);
     const newDialog = ref(false);
+    const timestamp = ref(Date.now());
 
     const state = ref({ loading: ButtonStates.progress } as {
       loading: number;
     });
 
-    // add oneIsAboveZero validation
-    const rules = {
-      price:     [minValue(0), required],
-      priceBits: [minValue(0), required],
-      command:   [required, minLength(2), startsWithExclamation],
-    };
-
-    const headers = [
-      { value: 'command', text: translate('command') },
-      {
-        value: 'enabled', text: translate('enabled'), width: '6rem',
-      },
-      {
-        value: 'emitRedeemEvent', text: translate('systems.price.emitRedeemEvent'), width: '15rem',
-      },
-      { value: 'price', text: capitalize(translate('systems.price.price.name')) },
-    ];
-    const headersDelete = [
-      { value: 'command', text: translate('command') },
-    ];
-
     watch(newDialog, () => {
       timestamp.value = Date.now();
     });
 
-    onMounted(() => {
-      refresh();
-    });
+    const headers = [
+      { value: 'name', text: translate('timers.dialog.name') },
+      { value: 'tickOffline', text: translate('timers.dialog.tickOffline') },
+      { value: 'isEnabled', text: translate('enabled') },
+      // virtual attributes
+      { value: 'triggerEveryMessage', text: translate('messages') },
+      { value: 'triggerEverySecond', text: capitalize(translate('seconds')) },
+      { value: 'messages', text: translate('timers.dialog.responses') },
+    ];
+
+    const headersDelete = [
+      { value: 'name', text: translate('timers.dialog.name') },
+    ];
 
     const refresh = () => {
-      socket.emit('generic::getAll', (err: string | null, itemsGetAll: PriceInterface[]) => {
-        if (err) {
-          return error(err);
+      socket.timers.emit('generic::getAll', (err: string | null, _items: Required<TimerInterface>[]) => {
+        items.value.length = 0;
+        for (const item of _items) {
+          items.value.push({
+            ...item,
+            messages: orderBy(item.messages, 'timestamp', 'asc'),
+          });
         }
-        items.value = itemsGetAll;
-        console.debug({ items: itemsGetAll });
-
+        state.value.loading = ButtonStates.success;
         // we also need to reset selection values
         if (selected.value.length > 0) {
           selected.value.forEach((selectedItem, index) => {
@@ -276,9 +287,38 @@ export default defineComponent({
             selected.value[index] = selectedItem;
           });
         }
-
         state.value.loading = ButtonStates.success;
       });
+    };
+
+    onMounted(() => {
+      refresh();
+    });
+
+    const saveSuccess = () => {
+      refresh();
+      EventBus.$emit('snack', 'success', 'Data updated.');
+      newDialog.value = false;
+    };
+
+    const deleteSelected = async () => {
+      deleteDialog.value = false;
+      await Promise.all(
+        selected.value.map(async (item) => {
+          return new Promise((resolve, reject) => {
+            socket.timers.emit('generic::deleteById', item.id, (err: string | null) => {
+              if (err) {
+                reject(error(err));
+              }
+              resolve(true);
+            });
+          });
+        }),
+      );
+      refresh();
+
+      EventBus.$emit('snack', 'success', 'Data removed.');
+      selected.value = [];
     };
     const update = async (item: typeof items.value[number], multi = false, attr: keyof typeof items.value[number]) => {
       // check validity
@@ -294,19 +334,21 @@ export default defineComponent({
           }
         }
       }
-      if (!isAtLeastOneValueAboveZero(item)) {
-        EventBus.$emit('snack', 'red', `[price] - Points or bits price needs to be set.`);
-        refresh();
-        return;
-      }
 
       await Promise.all(
         [item, ...(multi ? selected.value : [])].map(async (itemToUpdate) => {
           return new Promise((resolve) => {
+            if (attr === 'messages') {
+              for (let i = 0; i < item[attr].length; i++) {
+                item[attr][i].timestamp = i;
+              }
+            }
             console.log('Updating', { itemToUpdate }, { attr, value: item[attr] });
-            socket.emit('price::save', {
-              ...itemToUpdate,
-              [attr]: item[attr], // save new value for all selected items
+            socket.timers.emit('generic::setById', {
+              id:   itemToUpdate.id, item: {
+                ...itemToUpdate,
+                [attr]: item[attr], // save new value for all selected items
+              },
             }, () => {
               resolve(true);
             });
@@ -317,67 +359,34 @@ export default defineComponent({
       EventBus.$emit('snack', 'success', 'Data updated.');
     };
 
-    const saveSuccess = () => {
-      refresh();
-      EventBus.$emit('snack', 'success', 'Data updated.');
-      newDialog.value = false;
-    };
-
-    const deleteSelected = async () => {
-      deleteDialog.value = false;
-      await Promise.all(
-        selected.value.map(async (item) => {
-          return new Promise((resolve, reject) => {
-            socket.emit('generic::deleteById', item.id, (err: string | null) => {
-              if (err) {
-                reject(error(err));
-              }
-              resolve(true);
-            });
-          });
-        }),
-      );
-      refresh();
-
-      EventBus.$emit('snack', 'success', 'Data removed.');
-      selected.value = [];
-    };
-
-    const isAtLeastOneValueAboveZero = (item: PriceInterface) => {
-      return item.price > 0 || item.priceBits > 0;
-    };
-
-    const priceFormatter = (item: PriceInterface) => {
-      const output = [];
-      if (item.price !== 0) {
-        output.push(`${item.price} ${getLocalizedName(item.price, ctx.root.$store.state.configuration.systems.Points.customization.name)}`);
-      }
-      if (item.priceBits !== 0) {
-        output.push(`${item.priceBits} ${getLocalizedName(item.priceBits, translate('bot.bits'))}`);
-      }
-      return output.join(` ${translate('or')} `);
-    };
-
     return {
+      orderBy,
+      headers,
       search,
       items,
       state,
-      headers,
-      headersDelete,
-      update,
-      getLocalizedName,
-      translate,
-      isAtLeastOneValueAboveZero,
-      priceFormatter,
-
-      selected,
       deleteDialog,
-      newDialog,
-      saveSuccess,
+      selected,
+      translate,
       timestamp,
       rules,
+      headersDelete,
+      newDialog,
+      saveSuccess,
       deleteSelected,
+      update,
+      refresh,
+      capitalize,
     };
   },
 });
 </script>
+
+<style>
+tr:nth-of-type(odd) {
+  background-color: rgba(0, 0, 0, .05);
+}
+v-small-dialog__activator__content {
+    word-break: break-word;
+}
+</style>

@@ -42,13 +42,11 @@ import { v4 as uuid } from 'uuid';
 import { CommandsInterface } from 'src/bot/database/entity/commands';
 import { getSocket } from 'src/panel/helpers/socket';
 import translate from 'src/panel/helpers/translate';
-import {
-  minLength,required, startsWithExclamation, 
-} from 'src/panel/helpers/validators';
 
 const socket = { command: getSocket('/systems/customcommands') } as const;
 
 export default defineComponent({
+  props: { rules: Object },
   setup(props, ctx) {
     const newItemCommand = ref('');
     const newItemSaving = ref(false);
@@ -56,11 +54,9 @@ export default defineComponent({
 
     const form = ref(null);
 
-    const rules = { command: [startsWithExclamation, minLength(2)] };
-
     const newItem = async () => {
-      newItemSaving.value = true;
       if ((form.value as unknown as HTMLFormElement).validate()) {
+        newItemSaving.value = true;
         await new Promise((resolve) => {
           const item: CommandsInterface = {
             id:        uuid(),
@@ -73,11 +69,11 @@ export default defineComponent({
           socket.command.emit('generic::setById', { id: item.id, item }, () => {
             resolve(true);
             ctx.emit('save');
+            newItemSaving.value = false;
           });
         });
       }
 
-      newItemSaving.value = false;
     };
 
     const closeDlg = () => {
@@ -86,13 +82,10 @@ export default defineComponent({
 
     return {
       translate,
-      required,
-      startsWithExclamation,
       newItemCommand,
       newItemSaving,
       newItem,
       valid,
-      rules,
       closeDlg,
       form,
     };

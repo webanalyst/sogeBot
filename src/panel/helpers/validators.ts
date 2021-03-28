@@ -23,6 +23,11 @@ const isValidRegex = (val: string) => {
   }
 };
 
+const mustBeCompliant = (acceptedChars: string) => {
+  const regexp = new RegExp(`^[${acceptedChars}]+$`, 'g');
+  return (v?: string) => typeof v === 'string' && !!v.match(regexp) || 'This value can contain only ' + acceptedChars;
+};
+
 export {
-  isValidRegex, required, minLength, maxValue, startsWithExclamation, startsWithExclamationOrCustomVariable, minValue,
+  mustBeCompliant, isValidRegex, required, minLength, maxValue, startsWithExclamation, startsWithExclamationOrCustomVariable, minValue,
 };

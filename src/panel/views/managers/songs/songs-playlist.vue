@@ -54,7 +54,7 @@
             >
               <template #activator="{ on, attrs }">
                 <v-btn
-                  color="red"
+                  color="error"
                   class="mb-2 mr-1"
                   v-bind="attrs"
                   v-on="on"
@@ -86,7 +86,7 @@
                     Cancel
                   </v-btn>
                   <v-btn
-                    color="red"
+                    color="error"
                     text
                     @click="deleteSelected"
                   >
@@ -274,7 +274,7 @@ import { EventBus } from 'src/panel/helpers/event-bus';
 import { getSocket } from 'src/panel/helpers/socket';
 import translate from 'src/panel/helpers/translate';
 import {
-  maxValue, minValue, required, 
+  maxValue, minValue, required,
 } from 'src/panel/helpers/validators';
 
 library.add(faStepBackward, faStepForward);
@@ -338,7 +338,7 @@ export default defineComponent({
       { value: 'title', text: '' },
       { value: 'tags', text: '' },
       {
-        text: 'Actions', value: 'actions', sortable: false, align: 'end', 
+        text: 'Actions', value: 'actions', sortable: false, align: 'end',
       },
       { text: '', value: 'data-table-expand' },
     ];

@@ -15,7 +15,7 @@
           v-if="responsesUpdated.length === 0"
           class="text--lighten-1  red--text"
         >{{ translate('systems.customcommands.no-responses-set') }}</span>
-        <template v-for="(r, i) of orderBy(responsesUpdated)">
+        <template v-for="(r, i) of responsesUpdated">
           <div
             :key="i"
           >
@@ -214,7 +214,7 @@ export default defineComponent({
     'text-with-tags':    defineAsyncComponent({ loader: () => import('src/panel/components/textWithTags.vue') }),
   },
   props: {
-    responses: Array, name: String , permissions: Array, 
+    responses: Array, name: String , permissions: Array,
   },
   setup(props, ctx) {
     let responsesBackup: any[] = [];

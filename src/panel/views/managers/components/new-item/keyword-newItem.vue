@@ -9,7 +9,7 @@
       hide-details="auto"
       :label="translate('keyword')"
       :rows="1"
-      :rules="rule"
+      :rules="rules.command"
       counter
       :clearable="true"
       auto-grow
@@ -42,13 +42,11 @@ import { v4 as uuid } from 'uuid';
 import type { KeywordInterface } from 'src/bot/database/entity/keyword';
 import { getSocket } from 'src/panel/helpers/socket';
 import translate from 'src/panel/helpers/translate';
-import {
-  isValidRegex, minLength, required, 
-} from 'src/panel/helpers/validators';
 
 const socket = { keyword: getSocket('/systems/keywords') } as const;
 
 export default defineComponent({
+  props: { rules: Object },
   setup(props, ctx) {
     const newItemCommand = ref('');
     const newItemSaving = ref(false);
@@ -56,13 +54,9 @@ export default defineComponent({
 
     const form = ref(null);
 
-    const rule = [
-      minLength(2), required, isValidRegex,
-    ];
-
     const newItem = async () => {
-      newItemSaving.value = true;
       if ((form.value as unknown as HTMLFormElement).validate()) {
+        newItemSaving.value = true;
         await new Promise((resolve) => {
           const item: KeywordInterface = {
             id:        uuid(),
@@ -74,11 +68,11 @@ export default defineComponent({
           socket.keyword.emit('generic::setById', { id: item.id, item }, () => {
             resolve(true);
             ctx.emit('save');
+            newItemSaving.value = false;
           });
         });
       }
 
-      newItemSaving.value = false;
     };
 
     const closeDlg = () => {
@@ -87,12 +81,10 @@ export default defineComponent({
 
     return {
       translate,
-      required,
       newItemCommand,
       newItemSaving,
       newItem,
       valid,
-      rule,
       closeDlg,
       form,
     };

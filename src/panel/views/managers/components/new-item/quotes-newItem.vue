@@ -70,12 +70,11 @@ import { QuotesInterface } from 'src/bot/database/entity/quotes';
 import { getSocket } from 'src/panel/helpers/socket';
 import translate from 'src/panel/helpers/translate';
 import { getUsernameById } from 'src/panel/helpers/userById';
-import { required } from 'src/panel/helpers/validators';
 
 const socket = { quote: getSocket('/systems/quotes') } as const;
 
 export default defineComponent({
-  props: { tags: Array },
+  props: { tags: Array, rules: Object },
   setup(props, ctx) {
     const quote = ref('');
     const tagsInput = ref([] as string[]);
@@ -90,11 +89,9 @@ export default defineComponent({
 
     const form = ref(null);
 
-    const rules = { quote: [ required] };
-
     const newItem = async () => {
-      newItemSaving.value = true;
       if ((form.value as unknown as HTMLFormElement).validate()) {
+        newItemSaving.value = true;
         await new Promise((resolve) => {
           const item: QuotesInterface = {
             id:        undefined,
@@ -107,11 +104,11 @@ export default defineComponent({
           socket.quote.emit('generic::setById', { id: item.id, item }, () => {
             resolve(true);
             ctx.emit('save');
+            newItemSaving.value = false;
           });
         });
       }
 
-      newItemSaving.value = false;
     };
 
     const closeDlg = () => {
@@ -120,14 +117,12 @@ export default defineComponent({
 
     return {
       translate,
-      required,
       tagsSearch,
       quote,
       tagsInput,
       newItemSaving,
       newItem,
       valid,
-      rules,
       closeDlg,
       form,
       capitalize,

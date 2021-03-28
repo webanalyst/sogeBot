@@ -132,11 +132,9 @@ export default defineComponent({
     const state = ref({
       loadingPrm: ButtonStates.progress,
       loading:    ButtonStates.progress,
-      save:       ButtonStates.idle,
     } as {
       loadingPrm: number;
       loading: number;
-      save: number;
     });
 
     const fItems = computed(() => {

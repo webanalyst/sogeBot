@@ -49,7 +49,7 @@
             >
               <template #activator="{ on, attrs }">
                 <v-btn
-                  color="red"
+                  color="error"
                   class="mb-2 mr-1"
                   v-bind="attrs"
                   v-on="on"
@@ -81,7 +81,7 @@
                     Cancel
                   </v-btn>
                   <v-btn
-                    color="red"
+                    color="error"
                     text
                     @click="deleteSelected"
                   >
@@ -114,6 +114,7 @@
 
               <v-card-text :key="timestamp">
                 <new-item
+                  :rules="rules"
                   :tags="tagsItemsWithoutNull"
                   @close="newDialog = false"
                   @save="saveSuccess"
@@ -299,12 +300,8 @@ export default defineComponent({
       },
     ];
 
-    const state = ref({
-      loading: ButtonStates.progress,
-      save:    ButtonStates.idle,
-    } as {
+    const state = ref({ loading: ButtonStates.progress } as {
       loading: number,
-      save: number,
     });
 
     onMounted(() => {

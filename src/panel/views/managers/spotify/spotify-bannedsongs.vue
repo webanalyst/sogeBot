@@ -50,7 +50,7 @@
             >
               <template #activator="{ on, attrs }">
                 <v-btn
-                  color="red"
+                  color="error"
                   class="mb-2 mr-1"
                   v-bind="attrs"
                   v-on="on"
@@ -82,7 +82,7 @@
                     Cancel
                   </v-btn>
                   <v-btn
-                    color="red"
+                    color="error"
                     text
                     @click="deleteSelected"
                   >

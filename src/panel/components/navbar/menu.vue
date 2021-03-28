@@ -6,7 +6,6 @@
     <v-list-item
       v-for="item of menu.filter(o => typeof o.category === 'undefined')"
       :key="item.name"
-      color="red"
       :href="'#/' + item.id.replace(/\./g, '/')"
     >
       <v-list-item-icon>
@@ -27,10 +26,16 @@
       <v-list-item
         v-for="item of menu.filter(o => o.category === category)"
         :key="item.name"
-        color="red"
         :href="'#/' + item.id.replace(/\./g, '/')"
       >
-        <v-list-item-title>{{ translate('menu.' + item.name) }}</v-list-item-title>
+        <v-list-item-title
+          :class="{
+            'grey--text': !item.enabled,
+            'darken-3': !item.enabled,
+          }"
+        >
+          {{ translate('menu.' + item.name) }}
+        </v-list-item-title>
       </v-list-item>
     </v-list-group>
   </v-list>

@@ -5,26 +5,12 @@
     lazy-validation
   >
     <v-text-field
-      v-model="newItemAlias"
-      :label="translate('alias')"
-      :rules="rules.alias"
+      v-model="name"
+      :label="capitalize(translate('timers.dialog.name'))"
       hide-details="auto"
-      :clearable="true"
+      :rules="rules.name"
       required
       counter
-    />
-
-    <v-textarea
-      v-model="newItemCommand"
-      hide-details="auto"
-      :label="translate('command')"
-      :rows="1"
-      :rules="rules.command"
-      counter
-      :clearable="true"
-      auto-grow
-      required
-      @keydown.enter.prevent
     />
 
     <v-btn
@@ -47,20 +33,20 @@
 
 <script lang="ts">
 import { defineComponent, ref } from '@vue/composition-api';
+import { capitalize } from 'lodash-es';
 import { v4 as uuid } from 'uuid';
 
-import { AliasInterface } from 'src/bot/database/entity/alias';
-import { defaultPermissions } from 'src/bot/helpers/permissions/defaultPermissions';
+import { TimerInterface } from 'src/bot/database/entity/timer';
 import { getSocket } from 'src/panel/helpers/socket';
 import translate from 'src/panel/helpers/translate';
 
-const socket = { alias: getSocket('/systems/alias') } as const;
+const socket = { quote: getSocket('/systems/timers') } as const;
 
 export default defineComponent({
   props: { rules: Object },
   setup(props, ctx) {
-    const newItemAlias = ref('');
-    const newItemCommand = ref('');
+    const name = ref('');
+
     const newItemSaving = ref(false);
     const valid = ref(true);
 
@@ -70,24 +56,23 @@ export default defineComponent({
       if ((form.value as unknown as HTMLFormElement).validate()) {
         newItemSaving.value = true;
         await new Promise((resolve) => {
-          const item: AliasInterface = {
-            id:         uuid(),
-            alias:      newItemAlias.value,
-            command:    newItemCommand.value,
-            enabled:    true,
-            visible:    true,
-            permission: defaultPermissions.VIEWERS,
-            group:      null,
+          const item: TimerInterface = {
+            id:                  uuid(),
+            name:                name.value,
+            isEnabled:           true,
+            tickOffline:         false,
+            triggerEveryMessage: 10,
+            triggerEverySecond:  300,
+            messages:            [],
           };
           console.log('Saving', { item });
-          socket.alias.emit('generic::setById', { id: item.id, item }, () => {
+          socket.quote.emit('generic::setById', { id: item.id, item }, () => {
             resolve(true);
             ctx.emit('save');
             newItemSaving.value = false;
           });
         });
       }
-
     };
 
     const closeDlg = () => {
@@ -95,14 +80,14 @@ export default defineComponent({
     };
 
     return {
+      name,
       translate,
-      newItemAlias,
-      newItemCommand,
       newItemSaving,
       newItem,
       valid,
       closeDlg,
       form,
+      capitalize,
     };
   },
 });

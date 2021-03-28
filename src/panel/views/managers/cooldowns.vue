@@ -48,7 +48,7 @@
             >
               <template #activator="{ on, attrs }">
                 <v-btn
-                  color="red"
+                  color="error"
                   class="mb-2 mr-1"
                   v-bind="attrs"
                   v-on="on"
@@ -80,7 +80,7 @@
                     Cancel
                   </v-btn>
                   <v-btn
-                    color="red"
+                    color="error"
                     text
                     @click="deleteSelected"
                   >
@@ -113,6 +113,7 @@
 
               <v-card-text :key="timestamp">
                 <new-item
+                  :rules="rules"
                   @close="newDialog = false"
                   @save="saveSuccess"
                 />
@@ -231,7 +232,7 @@ import {
   computed, defineAsyncComponent, defineComponent, onMounted, ref, watch,
 } from '@vue/composition-api';
 import {
-  capitalize, escapeRegExp, isNil, 
+  capitalize, escapeRegExp, isNil,
 } from 'lodash-es';
 
 import { CooldownInterface } from 'src/bot/database/entity/cooldown';
@@ -277,14 +278,8 @@ export default defineComponent({
       timestamp.value = Date.now();
     });
 
-    const state = ref({
-      loading: ButtonStates.progress,
-      save:    ButtonStates.idle,
-      pending: false,
-    } as {
+    const state = ref({ loading: ButtonStates.progress } as {
       loading: number;
-      save: number;
-      pending: boolean;
     });
 
     const headers = [
