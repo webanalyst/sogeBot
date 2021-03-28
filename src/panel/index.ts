@@ -90,7 +90,7 @@ const main = async () => {
         path: '/manage/highlights', name: 'highlights', component: () => import('./views/managers/highlights.vue'),
       },
       {
-        path: '/manage/hltb', name: 'HLTBManager', component: () => import('./views/managers/hltb.vue'),
+        path: '/manage/hltb', name: 'howlongtobeat', component: () => import('./views/managers/hltb.vue'),
       },
       {
         path: '/manage/polls', name: 'PollsManager', component: () => import('./views/managers/polls.vue'),

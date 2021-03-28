@@ -1,207 +1,230 @@
 <template>
-  <div
-    ref="window"
-    class="container-fluid"
+  <v-container
+    fluid
+    :class="{ 'pa-4': !$vuetify.breakpoint.mobile }"
   >
-    <b-row>
-      <b-col>
-        <span class="title text-default mb-2">
-          {{ translate('menu.manage') }}
-          <small><fa icon="angle-right" /></small>
-          {{ translate('menu.howlongtobeat') }}
-        </span>
-      </b-col>
-      <b-col
-        v-if="!$systems.find(o => o.name === 'howlongtobeat').enabled"
-        style=" text-align: right;"
-      >
-        <b-alert
-          show
-          variant="danger"
-          style="padding: .5rem; margin: 0; display: inline-block;"
-        >
-          <fa
-            icon="exclamation-circle"
-            fixed-width
-          /> {{ translate('this-system-is-disabled') }}
-        </b-alert>
-      </b-col>
-    </b-row>
-
-    <panel
-      search
-      @search="search = $event"
+    <v-alert
+      v-if="!$systems.find(o => o.name === 'howlongtobeat').enabled"
+      dismissible
+      prominent
+      dense
     >
-      <template #left>
-        <div style="min-width: 300px">
-          <search
-            :placeholder="translate('systems.howlongtobeat.searchToAddNewGame')"
-            :options="searchForGameOpts"
-            :value="[gameToAdd]"
-            @search="searchForGame($event);"
-            @input="gameToAdd = $event"
-          />
-        </div>
-      </template>
-    </panel>
-    <loading v-if="state.loading !== $state.success" />
-    <template v-else>
-      <b-alert
-        v-if="fItems.length === 0 && search.length > 0"
-        show
-        variant="danger"
-      >
-        <fa icon="search" /> <span v-html="translate('systems.howlongtobeat.emptyAfterSearch').replace('$search', search)" />
-      </b-alert>
-      <b-alert
-        v-else-if="items.length === 0"
-        show
-      >
-        {{ translate('systems.howlongtobeat.empty') }}
-      </b-alert>
-      <b-table
-        v-else
-        striped
-        small
-        :items="fItems"
-        :fields="fields"
-      >
-        <template #row-details="data">
-          <b-card>
-            <template v-for="stream of streams.filter(o => o.hltb_id === data.item.id)">
-              <b-row :key="stream.id + '1'">
-                <b-col><b>{{ translate('systems.howlongtobeat.when') }}</b></b-col>
-                <b-col><b>{{ translate('systems.howlongtobeat.time') }}</b></b-col>
-                <b-col />
-                <b-col><b>{{ translate('systems.howlongtobeat.offset') }}</b></b-col>
-              </b-row>
-              <b-row :key="stream.id + '2'">
-                <b-col>{{ (new Date(stream.createdAt)).toLocaleString() }}</b-col>
-                <b-col>{{ timeToReadable(timestampToObject(stream.timestamp)) }}</b-col>
-                <b-col>
-                  <b-button
-                    :pressed.sync="stream.isMainCounted"
-                    variant="outline-success"
-                  >
-                    {{ translate('systems.howlongtobeat.main') }}
-                  </b-button>
-                  <b-button
-                    :pressed.sync="stream.isExtraCounted"
-                    variant="outline-success"
-                  >
-                    {{ translate('systems.howlongtobeat.extra') }}
-                  </b-button>
-                  <b-button
-                    :pressed.sync="stream.isCompletionistCounted"
-                    variant="outline-success"
-                  >
-                    {{ translate('systems.howlongtobeat.completionist') }}
-                  </b-button>
-                </b-col>
-                <b-col>
-                  <b-input-group>
-                    <b-form-spinbutton
-                      v-model="stream.offset"
-                      inline
-                      step="10000"
-                      :formatter-fn="minutesFormatter"
-                      :min="-stream.timestamp"
-                      :max="Number.MAX_SAFE_INTEGER"
-                      repeat-step-multiplier="50"
-                    />
-                    <b-button
-                      variant="dark"
-                      @click="stream.offset = 0"
-                    >
-                      <fa
-                        icon="redo"
-                        fixed-width
-                      />
-                    </b-button>
-                  </b-input-group>
-                </b-col>
-              </b-row>
-            </template>
-          </b-card>
-        </template>
-        <template #cell(thumbnail)="data">
-          <b-img
-            thumbnail
-            width="70"
-            height="70"
-            :src="'https://howlongtobeat.com' + data.item.imageUrl"
-            :alt="data.item.game + ' thumbnail'"
-          />
-        </template>
-        <template #cell(startedAt)="data">
-          {{ (new Date(data.item.startedAt)).toLocaleString() }}
-        </template>
-        <template #cell(main)="data">
-          {{ timeToReadable(timestampToObject(getStreamsTimestamp(data.item.id, 'main') + +data.item.offset + getStreamsOffset(data.item.id, 'main'))) }} <span v-if="data.item.gameplayMain">/ {{ timeToReadable(timestampToObject(data.item.gameplayMain * 3600000)) }}</span>
-        </template>
-        <template #cell(extra)="data">
-          {{ timeToReadable(timestampToObject(getStreamsTimestamp(data.item.id, 'extra') + +data.item.offset + getStreamsOffset(data.item.id, 'extra'))) }} <span v-if="data.item.gameplayMain">/ {{ timeToReadable(timestampToObject(data.item.gameplayMainExtra * 3600000)) }}</span>
-        </template>
-        <template #cell(completionist)="data">
-          {{ timeToReadable(timestampToObject(getStreamsTimestamp(data.item.id, 'completionist') + +data.item.offset + getStreamsOffset(data.item.id, 'completionist'))) }} <span v-if="data.item.gameplayMain">/ {{ timeToReadable(timestampToObject(data.item.gameplayCompletionist * 3600000)) }}</span>
-        </template>
-        <template #cell(offset)="data">
-          <b-input-group>
-            <b-form-spinbutton
-              v-model="data.item.offset"
-              inline
-              step="10000"
-              :formatter-fn="minutesFormatter"
-              :min="0"
-              :max="Number.MAX_SAFE_INTEGER"
-              repeat-step-multiplier="50"
-            />
-            <b-button
-              variant="dark"
-              @click="data.item.offset = 0"
-            >
-              <fa
-                icon="redo"
-                fixed-width
-              />
-            </b-button>
-          </b-input-group>
-        </template>
-        <template #cell(buttons)="data">
-          <div
-            class="float-right"
-            style="width: max-content !important;"
+      <div class="text-caption">
+        {{ translate('this-system-is-disabled') }}
+      </div>
+    </v-alert>
+
+    <h2 v-if="!$vuetify.breakpoint.mobile">
+      {{ translate('menu.howlongtobeat') }}
+    </h2>
+
+    <v-data-table
+      v-model="selected"
+      calculate-widths
+      show-select
+      :loading="state.loading !== $state.success"
+      :headers="headers"
+      sort-by="startedAt"
+      :single-expand="true"
+      show-expand
+      :sort-desc="true"
+      :items-per-page="-1"
+      :items="fItems"
+    >
+      <template #top>
+        <v-toolbar
+          flat
+        >
+          <v-combobox
+            v-model="gameToAdd"
+            :search-input.sync="search"
+            label="Search or add game"
+            append-outside-icon="mdi-magnify"
+            :items="searchForGameOpts"
+            :return-object="false"
+            class="pr-2 pt-5"
+            :loading="state.search !== $state.idle && search.length > 0"
+            clearable
           >
-            <b-button
-              :variant="data.detailsShowing ? 'primary' : 'outline-primary'"
-              @click="data.toggleDetails"
+            <template #no-data>
+              <v-list-item>
+                <span class="subheading">Add new game</span>
+              </v-list-item>
+            </template>
+          </v-combobox>
+
+          <template v-if="selected.length > 0">
+            <v-dialog
+              v-model="deleteDialog"
+              max-width="500px"
             >
-              {{
-                (data.detailsShowing
-                  ? translate('systems.howlongtobeat.hideHistory')
-                  : translate('systems.howlongtobeat.showHistory'))
-                  .replace('$count', streams.filter(o => o.hltb_id === data.item.id).length)
-              }}
-            </b-button>
-            <button-with-icon
-              class="btn-only-icon btn-danger btn-reverse"
-              icon="trash"
-              @click="del(data.item.id)"
+              <template #activator="{ on, attrs }">
+                <v-btn
+                  color="red"
+                  class="mb-2 mr-1"
+                  v-bind="attrs"
+                  v-on="on"
+                >
+                  Delete {{ selected.length }} Item(s)
+                </v-btn>
+              </template>
+
+              <v-card>
+                <v-card-title>
+                  <span class="headline">Delete {{ selected.length }} Item(s)?</span>
+                </v-card-title>
+
+                <v-card-text>
+                  <v-data-table
+                    dense
+                    :items="selected"
+                    :headers="headersDelete"
+                    hide-default-header
+                    hide-default-footer
+                  />
+                </v-card-text>
+                <v-card-actions>
+                  <v-spacer />
+                  <v-btn
+                    text
+                    @click="deleteDialog = false"
+                  >
+                    Cancel
+                  </v-btn>
+                  <v-btn
+                    color="red"
+                    text
+                    @click="deleteSelected"
+                  >
+                    Delete
+                  </v-btn>
+                </v-card-actions>
+              </v-card>
+            </v-dialog>
+          </template>
+
+          <v-btn
+            color="primary"
+            class="mb-2 mr-2"
+            :disabled="gameToAdd === null || gameToAdd.length === 0"
+            :loading="state.add === 1"
+            @click="addGame"
+          >
+            New Item
+          </v-btn>
+        </v-toolbar>
+      </template>
+      <template #[`item.main`]="{ item }">
+        {{ timeToReadable(timestampToObject(getStreamsTimestamp(item.id, 'main') + +item.offset + getStreamsOffset(item.id, 'main'))) }} <span v-if="item.gameplayMain">/ {{ timeToReadable(timestampToObject(item.gameplayMain * 3600000)) }}</span>
+      </template>
+      <template #[`item.extra`]="{ item }">
+        {{ timeToReadable(timestampToObject(getStreamsTimestamp(item.id, 'extra') + +item.offset + getStreamsOffset(item.id, 'extra'))) }} <span v-if="item.gameplayMain">/ {{ timeToReadable(timestampToObject(item.gameplayMainExtra * 3600000)) }}</span>
+      </template>
+      <template #[`item.completionist`]="{ item }">
+        {{ timeToReadable(timestampToObject(getStreamsTimestamp(item.id, 'completionist') + +item.offset + getStreamsOffset(item.id, 'completionist'))) }} <span v-if="item.gameplayMain">/ {{ timeToReadable(timestampToObject(item.gameplayCompletionist * 3600000)) }}</span>
+      </template>
+
+      <template #[`item.offset`]="{ item }">
+        <v-edit-dialog
+          persistent
+          large
+          :return-value.sync="item.offset"
+          @save="update(item, false, 'offset')"
+        >
+          {{ minutesFormatter(item.offset) }}
+          <template #input>
+            <timeInput v-model="item.offset" />
+          </template>
+        </v-edit-dialog>
+      </template>
+
+      <template #[`item.startedAt`]="{ item }">
+        {{ new Date(item.startedAt).toLocaleString() }}
+      </template>
+      <template #[`item.thumbnail`]="{ item }">
+        <v-img
+          :aspect-ratio="16/9"
+          :width="60"
+          :src="'https://howlongtobeat.com' + item.imageUrl"
+        />
+      </template>
+
+      <template #expanded-item="{ headers, item }">
+        <td
+          :colspan="headers.length"
+          class="pa-2"
+        >
+          <v-container>
+            <v-data-table
+              dense
+              :items="streams.filter(o => o.hltb_id === item.id)"
+              :headers="headersOffset"
+              :sort-desc="true"
+              sort-by="createdAt"
+              items-per-page="10"
             >
-              {{ translate('dialog.buttons.delete') }}
-            </button-with-icon>
-          </div>
-        </template>
-      </b-table>
-    </template>
-  </div>
+              <template #[`item.createdAt`]="{ item }">
+                {{ (new Date(item.createdAt)).toLocaleString() }}
+              </template>
+              <template #[`item.timestamp`]="{ item }">
+                {{ timeToReadable(timestampToObject(item.timestamp)) }}
+              </template>
+              <template #[`item.offset`]="{ item }">
+                <v-btn
+                  x-small
+                  :color="item.isMainCounted ? 'green' : 'grey darken-4'"
+                  @click="item.isMainCounted = !item.isMainCounted"
+                >
+                  {{ translate('systems.howlongtobeat.main') }}
+                </v-btn>
+                <v-btn
+                  x-small
+                  :color="item.isExtraCounted ? 'green' : 'grey darken-4'"
+                  @click="item.isExtraCounted = !item.isExtraCounted"
+                >
+                  {{ translate('systems.howlongtobeat.extra') }}
+                </v-btn>
+                <v-btn
+                  x-small
+                  :color="item.isCompletionistCounted ? 'green' : 'grey darken-4'"
+                  @click="item.isCompletionistCounted = !item.isCompletionistCounted"
+                >
+                  {{ translate('systems.howlongtobeat.completionist') }}
+                </v-btn>
+              </template>
+              <template #[`item.manual`]="{ item }">
+                <v-row>
+                  <v-col cols="auto">
+                    <timeInput
+                      :key="timestamp"
+                      v-model="item.offset"
+                    />
+                  </v-col>
+                  <v-col
+                    cols="auto"
+                    class="pt-7"
+                  >
+                    <v-btn
+                      @click="item.offset = 0; timestamp = Date.now()"
+                    >
+                      <v-icon>mdi-refresh</v-icon>
+                    </v-btn>
+                  </v-col>
+                </v-row>
+              </template>
+            </v-data-table>
+          </v-container>
+        </td>
+      </template>
+    </v-data-table>
+  </v-container>
 </template>
 
 <script lang="ts">
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faRedo } from '@fortawesome/free-solid-svg-icons';
 import {
-  computed, defineComponent, onMounted, ref, watch,
+  computed, defineAsyncComponent, defineComponent, onMounted, ref, watch,
 } from '@vue/composition-api';
 import { cloneDeep, debounce } from 'lodash-es';
 
@@ -209,7 +232,9 @@ import { HowLongToBeatGameInterface, HowLongToBeatGameItemInterface } from 'src/
 import { getTime, timestampToObject } from 'src/bot/helpers/getTime';
 import { ButtonStates } from 'src/panel/helpers/buttonStates';
 import { error } from 'src/panel/helpers/error';
+import { EventBus } from 'src/panel/helpers/event-bus';
 import translate from 'src/panel/helpers/translate';
+import { minValue, required } from 'src/panel/helpers/validators';
 
 import { getSocket } from '../../helpers/socket';
 
@@ -218,22 +243,27 @@ library.add(faRedo);
 const socket = getSocket('/systems/howlongtobeat');
 
 export default defineComponent({
-  components: {
-    'loading': () => import('src/panel/components/loading.vue'),
-    search:    () => import('src/panel/components/searchDropdown.vue'),
-    panel:     () => import('../../components/panel.vue'),
-  },
+  components: { timeInput: defineAsyncComponent({ loader: () => import('./components/time.vue') }) },
   setup(props, ctx) {
+    const timestamp = ref(Date.now());
     const items = ref([] as HowLongToBeatGameInterface[]);
-    const oldItems = ref([] as HowLongToBeatGameInterface[]);
     const streams = ref([] as HowLongToBeatGameItemInterface[]);
     const oldStreams = ref([] as HowLongToBeatGameItemInterface[]);
     const searchForGameOpts = ref([] as string[]);
+    const deleteDialog = ref(false);
+    const selected = ref([] as HowLongToBeatGameItemInterface[]);
+    const expanded = ref([] as HowLongToBeatGameItemInterface[]);
     const gameToAdd = ref('');
-    const state = ref({ loading: ButtonStates.progress } as {
+    const state = ref({
+      loading: ButtonStates.progress, add: ButtonStates.idle, search: ButtonStates.idle,
+    } as {
       loading: number;
+      add: number;
+      search: number;
     });
     const search = ref('');
+
+    const rules = { offset: [ required, minValue(0) ] };
 
     const getStreamsOffset = (hltb_id: string, type: 'extra' | 'main' | 'completionist') => {
       return streams.value
@@ -250,37 +280,58 @@ export default defineComponent({
     const fItems = computed(() => {
       return items.value
         .filter((o) => {
-          if (search.value.trim() === '') {
+          if (search.value === null || search.value.trim() === '') {
             return true;
           }
           return o.game.trim().toLowerCase().includes(search.value.trim().toLowerCase());
-        })
-        .sort((a, b) => {
-          const A = a.game.toLowerCase();
-          const B = b.game.toLowerCase();
-          if (A < B)  { //sort string ascending
-            return -1;
-          }
-          if (A > B) {
-            return 1;
-          }
-          return 0; //default return value (no sorting)
         });
     });
 
-    const fields = [
-      { key: 'thumbnail', label: '' },
+    const headers = [
+      { value: 'thumbnail', text: '' },
       {
-        key: 'game', label: translate('systems.howlongtobeat.game'), sortable: true,
+        value: 'game', text: translate('systems.howlongtobeat.game'), sortable: true,
       },
       {
-        key: 'startedAt', label: translate('systems.howlongtobeat.startedAt'), sortable: true,
+        value: 'startedAt', text: translate('systems.howlongtobeat.startedAt'), sortable: true,
       },
-      { key: 'main', label: translate('systems.howlongtobeat.main') },
-      { key: 'extra', label: translate('systems.howlongtobeat.extra') },
-      { key: 'completionist', label: translate('systems.howlongtobeat.completionist') },
-      { key: 'offset', label: translate('systems.howlongtobeat.offset') },
-      { key: 'buttons', label: '' },
+      {
+        value: 'main', text: translate('systems.howlongtobeat.main'), sortable: false,
+      },
+      {
+        value: 'extra', text: translate('systems.howlongtobeat.extra'), sortable: false,
+      },
+      {
+        value: 'completionist', text: translate('systems.howlongtobeat.completionist'), sortable: false,
+      },
+      {
+        value: 'offset', text: translate('systems.howlongtobeat.offset'), sortable: false,
+      },
+      {
+        text: '', value: 'data-table-expand', sortable: false,
+      },
+    ];
+
+    const headersDelete = [
+      {
+        value: 'game', text: translate('systems.howlongtobeat.game'), sortable: true,
+      },
+    ];
+
+    const headersOffset = [
+      {
+        value: 'createdAt', text: translate('systems.howlongtobeat.when'), sortable: true,
+      },
+      {
+        value: 'timestamp', text: translate('systems.howlongtobeat.time'), sortable: false,
+      },
+      {
+        value: 'offset', text: translate('systems.howlongtobeat.offset'), sortable: false,
+      },
+      {
+        value: 'manual', text: '', sortable: false, align: 'end',
+      },
+      ,
     ];
 
     onMounted(() => {
@@ -292,9 +343,9 @@ export default defineComponent({
           return error(err);
         }
         items.value = cloneDeep(_games);
-        oldItems.value = cloneDeep(_games);
         streams.value = cloneDeep(_streams);
         oldStreams.value = cloneDeep(_streams);
+        console.debug('Loaded', { _games, _streams });
         state.value.loading = ButtonStates.success;
       });
     };
@@ -319,34 +370,36 @@ export default defineComponent({
       return (value < 0 ? '- ' : '+ ') + timeToReadable(timestampToObject(Math.abs(value)));
     };
 
-    const del = (id: string) => {
-      if (confirm('Do you want to delete tracked game ' + items.value.find(o => o.id === id)?.game + '?')) {
-        socket.emit('generic::deleteById', id, (err: string | null) => {
-          if (err) {
-            return error(err);
+    const update = async (item: typeof items.value[number], multi = false, attr: keyof typeof items.value[number]) => {
+      // check validity
+      for (const key of Object.keys(rules)) {
+        for (const rule of (rules as any)[key]) {
+          const ruleStatus = rule((item as any)[key]);
+          if (ruleStatus === true) {
+            continue;
+          } else {
+            EventBus.$emit('snack', 'red', `[${key}] - ${ruleStatus}`);
+            refresh();
+            return;
           }
-          refresh();
-        });
-      }
-    };
-
-    watch(items, (val) => {
-      for (const game of val) {
-        // find stream and check if changed
-        const oldGame = oldItems.value.find(o => o.id === game.id);
-        if (oldGame
-          && (oldGame.offset !== game.offset)) {
-          socket.emit('hltb::save', game, (err: string | null) => {
-            if (err) {
-              error(err);
-            }
-          });
         }
       }
-      oldItems.value = cloneDeep(items.value);
-    }, { deep: true });
 
-    watch(streams, (val) => {
+      await Promise.all(
+        [item, ...(multi ? selected.value : [])].map(async (itemToUpdate) => {
+          return new Promise((resolve) => {
+            console.log('Updating', { itemToUpdate }, { attr, value: item[attr] });
+            socket.emit('hltb::save', itemToUpdate, () => {
+              resolve(true);
+            });
+          });
+        }),
+      );
+      refresh();
+      EventBus.$emit('snack', 'success', 'Data updated.');
+    };
+
+    watch(streams, debounce((val) => {
       for (const stream of val) {
         // find stream and check if changed
         const oldStream = oldStreams.value.find(o => o.id === stream.id);
@@ -359,41 +412,75 @@ export default defineComponent({
             if (err) {
               error(err);
             }
+            EventBus.$emit('snack', 'success', 'Data updated.');
           });
         }
       }
       oldStreams.value = cloneDeep(streams.value);
-    }, { deep: true });
+    }, 1000), { deep: true });
 
-    watch(gameToAdd, (val) => {
-      if (val.trim().length > 0) {
-        socket.emit('hltb::addNewGame', gameToAdd.value, (err: string | null) => {
-          if (err) {
-            error(err);
-          }
-          gameToAdd.value = '';
-          refresh();
-        });
-      }
-    });
-
-    const searchForGame = debounce((value: string)  => {
-      if (value.trim().length !== 0) {
+    watch(search, debounce((value: string | null) => {
+      if (value && value.trim().length !== 0) {
+        state.value.search = ButtonStates.progress;
         socket.emit('hltb::getGamesFromHLTB', value, (err: string | null, val: string[]) => {
           if (err) {
             return error(err);
           }
           searchForGameOpts.value = val;
+          state.value.search = ButtonStates.idle;
         });
       } else {
         searchForGameOpts.value = [];
       }
-    }, 500);
+    }, 500));
+
+    const addGame = () => {
+      if (gameToAdd.value === '' || gameToAdd.value === null) {
+        EventBus.$emit('snack', 'red', 'Cannot add empty game.');
+        return;
+      }
+      if (state.value.add === 0) {
+        state.value.add = 1;
+        socket.emit('hltb::addNewGame', gameToAdd.value, (err: string | null) => {
+          if (err) {
+            gameToAdd.value = '';
+            state.value.add = 0;
+            return error(err);
+          } else {
+            state.value.add = 0;
+            refresh();
+            gameToAdd.value = '';
+            EventBus.$emit('snack', 'success', 'Game added to list.');
+          }
+        });
+      }
+    };
+
+    const deleteSelected = async () => {
+      deleteDialog.value = false;
+      await Promise.all(
+        selected.value.map(async (item) => {
+          return new Promise((resolve, reject) => {
+            socket.emit('generic::deleteById', item.id, (err: string | null) => {
+              if (err) {
+                reject(error(err));
+              }
+              resolve(true);
+            });
+          });
+        }),
+      );
+      refresh();
+
+      EventBus.$emit('snack', 'success', 'Data removed.');
+      selected.value = [];
+    };
 
     return {
       items,
       streams,
-      fields,
+      headers,
+      expanded,
       state,
       search,
       fItems,
@@ -403,36 +490,20 @@ export default defineComponent({
       timeToReadable,
       timestampToObject,
       minutesFormatter,
-      del,
-      searchForGame,
       searchForGameOpts,
-      gameToAdd,
       translate,
+      gameToAdd,
+
+      deleteDialog,
+      deleteSelected,
+      selected,
+      addGame,
+      headersDelete,
+      rules,
+      update,
+      headersOffset,
+      timestamp,
     };
   },
 });
 </script>
-
-<style scoped>
-.centered {
-  position: absolute;
-  left: 50%;
-  top: 0%;
-  transform: translate(-50%, 0%);
-  padding: 0.5rem;
-  margin: 0.2rem;
-  background-color: rgba(0,0,0,0.5);
-}
-
-.percent {
-  font-size: 1.4rem;
-}
-.small {
-  font-size: 0.6rem;
-}
-
-img.max {
-  max-height: 250px;
-  max-width: inherit;
-}
-</style>
