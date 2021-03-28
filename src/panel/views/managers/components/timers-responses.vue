@@ -135,7 +135,7 @@ export default defineComponent({
   props: { responses: Array, name: String },
   setup(props, ctx) {
     let responsesBackup: any[] = [];
-    const responsesUpdated = ref(props.responses ?? [] as TimerResponseInterface[]);
+    const responsesUpdated = ref((props.responses ?? []) as TimerResponseInterface[]);
     const dialog = ref(false);
 
     watch(dialog, (val) => {
