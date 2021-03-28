@@ -906,7 +906,6 @@ import type { Ref } from '@vue/composition-api';
 import { isNil } from 'lodash-es';
 
 import { getTime } from 'src/bot/helpers/getTime';
-import type { UIError } from 'src/bot/helpers/panel/alerts';
 import { EventBus } from 'src/panel/helpers/event-bus';
 import { getSocket } from 'src/panel/helpers/socket';
 import translate from 'src/panel/helpers/translate';
@@ -930,7 +929,6 @@ const numberReducer = (out: string, item: any) => {
 
 export default defineComponent({
   setup(props, context) {
-    const errors: Ref<(UIError & { date: number, type: 'error' | 'warn' | 'success' })[]> = ref([]);
     const averageStats: any = reactive({});
     const currentStats: any = reactive({});
     const hideStats = ref(localStorage.getItem('hideStats') === 'true');

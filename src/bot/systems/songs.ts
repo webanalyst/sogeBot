@@ -130,7 +130,7 @@ class Songs extends System {
       opts.perPage = opts.perPage ?? 25;
 
       if (opts.perPage === -1) {
-        opts.perPage === Number.MAX_SAFE_INTEGER;
+        opts.perPage = Number.MAX_SAFE_INTEGER;
       }
       const query = getRepository(SongPlaylist).createQueryBuilder('playlist')
         .offset(opts.page * opts.perPage)
