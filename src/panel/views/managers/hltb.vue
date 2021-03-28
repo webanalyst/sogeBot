@@ -326,10 +326,10 @@ export default defineComponent({
         value: 'timestamp', text: translate('systems.howlongtobeat.time'), sortable: false,
       },
       {
-        value: 'offset', text: translate('systems.howlongtobeat.offset'), sortable: false,
+        value: 'offset', text: '', sortable: false,
       },
       {
-        value: 'manual', text: '', sortable: false, align: 'end',
+        value: 'manual', text: translate('systems.howlongtobeat.offset'), sortable: false, align: 'end',
       },
       ,
     ];
