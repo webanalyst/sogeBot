@@ -23,7 +23,7 @@
       calculate-widths
       show-select
       :search="search"
-      :loading="state.loading !== $state.success || state.loadingPrm !== $state.success"
+      :loading="state.loading !== $state.success"
       :headers="headers"
       :items-per-page="-1"
       :items="items"
@@ -229,11 +229,9 @@
 
 <script lang="ts">
 import {
-  computed, defineAsyncComponent, defineComponent, onMounted, ref, watch,
+  defineAsyncComponent, defineComponent, onMounted, ref, watch,
 } from '@vue/composition-api';
-import {
-  capitalize, escapeRegExp, isNil,
-} from 'lodash-es';
+import { capitalize } from 'lodash-es';
 
 import { CooldownInterface } from 'src/bot/database/entity/cooldown';
 import { ButtonStates } from 'src/panel/helpers/buttonStates';
@@ -313,16 +311,6 @@ export default defineComponent({
     const headersDelete = [
       { value: 'name', text: '' },
     ];
-
-    const fItems = computed(() => {
-      if (search.value.length === 0) {
-        return items.value;
-      }
-      return items.value.filter((o) => {
-        const isSearchInKey = !isNil(o.name.match(new RegExp(escapeRegExp(search.value), 'ig')));
-        return isSearchInKey;
-      });
-    });
 
     onMounted(() => {
       refresh();
@@ -418,7 +406,6 @@ export default defineComponent({
       selected,
       deleteSelected,
       update,
-      fItems,
       newDialog,
       deleteDialog,
       translate,

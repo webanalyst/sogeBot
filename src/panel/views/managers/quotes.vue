@@ -436,6 +436,7 @@ export default defineComponent({
       selected,
       timestamp,
       saveSuccess,
+      rules,
 
       dayjs,
       translate,
