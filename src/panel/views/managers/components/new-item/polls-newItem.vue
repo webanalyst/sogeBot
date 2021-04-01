@@ -23,6 +23,7 @@
       v-for="(option, index) of options"
       :key="'poll-option-' + index"
       v-model="options[index]"
+      :class="{'pa-0': index > 0}"
       :label="'Answer ' + String(index + 1)"
       hide-details="auto"
       counter
@@ -51,7 +52,7 @@
 
 <script lang="ts">
 import {
-  computed, defineComponent, ref, 
+  computed, defineComponent, ref,
 } from '@vue/composition-api';
 import { capitalize } from 'lodash-es';
 
