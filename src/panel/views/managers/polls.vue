@@ -140,9 +140,23 @@
       </template>
 
       <template #[`item.votes`]="{ item }">
+        <v-row
+          v-for="(option, index) in item.options"
+          :key="item.id + option + index + 'row'"
+          no-gutters
+          class="ma-0 pa-0 d-flex d-sm-none"
+        >
+          <v-col class="ma-1">
+            {{ option }}
+          </v-col>
+          <v-col class="text-right ma-1">
+            {{ getPercentage(item, index, 1) }}%
+          </v-col>
+        </v-row>
         <v-progress-linear
           v-for="(option, index) in item.options"
           :key="item.id + option + index"
+          class="d-none d-sm-flex"
           height="20"
           :value="getPercentage(item, index, 1)"
         >
@@ -209,15 +223,16 @@ import { error } from 'src/panel/helpers/error';
 import { EventBus } from 'src/panel/helpers/event-bus';
 import { getSocket } from 'src/panel/helpers/socket';
 import translate from 'src/panel/helpers/translate';
+import { expectedValuesCount, required } from 'src/panel/helpers/validators';
 
 const socket = getSocket('/systems/polls');
 
 let interval: number;
 
 export default defineComponent({
-  components: { 'new-item': defineAsyncComponent({ loader: () => import('./components/new-item/cooldowns-newItem.vue') }) },
+  components: { 'new-item': defineAsyncComponent({ loader: () => import('./components/new-item/polls-newItem.vue') }) },
   setup(props, ctx) {
-    const rules = {  };
+    const rules = { title: [required], options: [expectedValuesCount(2)] };
 
     const items = ref([] as PollInterface[]);
     const isRunning = computed(() => {
@@ -254,14 +269,14 @@ export default defineComponent({
       { value: 'title', text: translate('systems.polls.title') },
       { value: 'type', text: translate('systems.polls.votingBy') },
       {
-        value: 'votes', text: '', width: '20rem', sortable: false, 
+        value: 'votes', text: '', width: '20rem', sortable: false,
       },
       {
-        value: 'totalVotes', text: translate('systems.polls.totalVotes'), align: 'align-center', 
+        value: 'totalVotes', text: translate('systems.polls.totalVotes'), align: 'align-center',
       },
       { value: 'closedAt', text: '' },
       {
-        value: 'buttons', text: '', sortable: false, 
+        value: 'buttons', text: '', sortable: false,
       },
     ];
 

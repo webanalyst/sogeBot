@@ -46,7 +46,7 @@
 import {
   defineComponent, onMounted, onUnmounted, ref, watch,
 } from '@vue/composition-api';
-import { capitalize } from 'loadsh-es';
+import { capitalize } from 'lodash-es';
 
 import type { BetsInterface, BetsParticipationsInterface } from 'src/bot/database/entity/bets';
 import { error } from 'src/panel/helpers/error';

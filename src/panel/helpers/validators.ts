@@ -28,6 +28,17 @@ const mustBeCompliant = (acceptedChars: string) => {
   return (v?: string) => typeof v === 'string' && !!v.match(regexp) || 'This value can contain only ' + acceptedChars;
 };
 
+const expectedValuesCount = (count: number) => {
+  return (v?: string[]) => {
+    const err = 'Array needs to contain at least ' + count + ' values.';
+    if (v) {
+      const values = v.filter(o => o.length > 0);
+      return values.length >= count || err;
+    }
+    return err;
+  };
+};
+
 export {
-  mustBeCompliant, isValidRegex, required, minLength, maxValue, startsWithExclamation, startsWithExclamationOrCustomVariable, minValue,
+  expectedValuesCount, mustBeCompliant, isValidRegex, required, minLength, maxValue, startsWithExclamation, startsWithExclamationOrCustomVariable, minValue,
 };
