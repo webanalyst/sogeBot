@@ -39,7 +39,7 @@
             v-model="gameToAdd"
             :search-input.sync="search"
             label="Search or add game"
-            append-outside-icon="mdi-magnify"
+            :append-outside-icon="mdiMagnify"
             :items="searchForGameOpts"
             :return-object="false"
             class="pr-2 pt-5"
@@ -207,7 +207,7 @@
                     <v-btn
                       @click="item.offset = 0; timestamp = Date.now()"
                     >
-                      <v-icon>mdi-refresh</v-icon>
+                      <v-icon>{{ mdiRefresh }}</v-icon>
                     </v-btn>
                   </v-col>
                 </v-row>
@@ -223,6 +223,7 @@
 <script lang="ts">
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faRedo } from '@fortawesome/free-solid-svg-icons';
+import { mdiMagnify, mdiRefresh } from '@mdi/js';
 import {
   computed, defineAsyncComponent, defineComponent, onMounted, ref, watch,
 } from '@vue/composition-api';
@@ -503,6 +504,8 @@ export default defineComponent({
       update,
       headersOffset,
       timestamp,
+
+      mdiMagnify, mdiRefresh,
     };
   },
 });

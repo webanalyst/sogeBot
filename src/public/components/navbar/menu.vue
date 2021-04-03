@@ -18,6 +18,9 @@
 
 <script lang="ts">
 import {
+  mdiFormatQuoteClose, mdiPlaylistMusic, mdiPlaylistPlay, mdiViewDashboard, 
+} from '@mdi/js';
+import {
   defineComponent, onMounted, ref,
 } from '@vue/composition-api';
 
@@ -28,10 +31,10 @@ import translate from 'src/panel/helpers/translate';
 const socket = getSocket('/');
 
 const icons = new Map<string, string>([
-  ['dashboard', 'mdi-view-dashboard'],
-  ['playlist', 'mdi-playlist-music'],
-  ['quotes', 'mdi-format-quote-close'],
-  ['songs', 'mdi-playlist-play'],
+  ['dashboard', mdiViewDashboard],
+  ['playlist', mdiPlaylistMusic],
+  ['quotes', mdiFormatQuoteClose],
+  ['songs', mdiPlaylistPlay],
 ]);
 
 export default defineComponent({

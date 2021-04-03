@@ -34,7 +34,7 @@
         >
           <v-text-field
             v-model="search"
-            append-icon="mdi-magnify"
+            :append-icon="mdiagnify"
             label="Search"
             single-line
             hide-details
@@ -157,7 +157,7 @@
               :rules="rules.count"
               single-line
               :readonly="true"
-              append-outer-icon="mdi-restore"
+              :append-outer-icon="mdiRestore"
               @click:append-outer="item.count = 0"
             />
           </template>
@@ -191,6 +191,7 @@
 </template>
 
 <script lang="ts">
+import { mdiMagnify, mdiRestore } from '@mdi/js';
 import {
   defineAsyncComponent, defineComponent, onMounted, ref, watch,
 } from '@vue/composition-api';
@@ -400,6 +401,7 @@ export default defineComponent({
       update,
       refresh,
       capitalize,
+      mdiMagnify, mdiRestore,
     };
   },
 });

@@ -36,7 +36,7 @@
                 class="caption"
                 style="line-height: 2.5rem;"
               >
-                <v-icon>mdi-key</v-icon>
+                <v-icon>{{ mdiKey }}</v-icon>
                 {{ getPermissionName(r.permission, permissions) }}
               </v-col>
               <v-col
@@ -45,10 +45,10 @@
                 style="line-height: 2.5rem;"
               >
                 <v-icon v-if="r.stopIfExecuted">
-                  mdi-pause
+                  {{ mdiPause }}
                 </v-icon>
                 <v-icon v-else>
-                  mdi-play
+                  {{ mdiPlay }}
                 </v-icon>
                 {{ r.stopIfExecuted ? translate('commons.stop-if-executed') : translate('commons.continue-if-executed') }}
               </v-col>
@@ -59,7 +59,7 @@
                 style="line-height: 2.5rem;"
               >
                 <v-icon>
-                  mdi-filter
+                  {{ mdiFilter }}
                 </v-icon>
                 <text-with-tags
                   class="d-inline-block"
@@ -108,7 +108,7 @@
                     >
                       <template #prepend>
                         <v-icon class="handle">
-                          mdi-drag
+                          {{ mdiDrag }}
                         </v-icon>
                       </template>
                       <template #append>
@@ -159,7 +159,7 @@
                           icon
                           @click="remove(i)"
                         >
-                          <v-icon>mdi-trash-can</v-icon>
+                          <v-icon>{{ mdiTrashCan }}</v-icon>
                         </v-btn>
                       </template>
                     </v-textarea>
@@ -196,6 +196,9 @@
 </template>
 
 <script lang="ts">
+import {
+  mdiDrag, mdiFilter, mdiKey, mdiPause, mdiPlay, mdiTrashCan, 
+} from '@mdi/js';
 import {
   defineAsyncComponent, defineComponent, ref, watch,
 } from '@vue/composition-api';
@@ -253,6 +256,8 @@ export default defineComponent({
       remove,
       responsesUpdated,
       getPermissionName,
+
+      mdiPause, mdiPlay, mdiFilter, mdiDrag, mdiKey, mdiTrashCan,
     };
   },
 });

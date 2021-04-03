@@ -76,11 +76,10 @@
     "velocity-animate": "1.5.2",
     "vue": "2.6.12",
     "vuedraggable": "2.24.3",
-    "vuetify": "2.4.8",
+    "vuetify": "2.4.9",
     "vuex": "3.6.2",
     "ws": "7.4.4",
     "xregexp": "5.0.2",
-    "vuetify": "2.4.6",
     "yargs": "16.2.0",
     "ytdl-core": "4.5.0",
     "ytpl": "2.1.0",
@@ -106,7 +105,7 @@
     "@fortawesome/free-regular-svg-icons": "5.15.3",
     "@fortawesome/free-solid-svg-icons": "5.15.3",
     "@fortawesome/vue-fontawesome": "2.0.2",
-    "@mdi/font": "5.9.55",
+    "@mdi/js": "5.9.55",
     "@types/basic-auth": "1.1.3",
     "@types/chart.js": "2.9.31",
     "@types/color": "3.0.1",
@@ -147,7 +146,7 @@
     "@types/vue-chartkick": "0.5.1",
     "@types/vue2-datepicker": "3.3.0",
     "@types/vuelidate": "0.7.14",
-    "@types/webpack": "4.41.26",
+    "@types/webpack": "5.28.0",
     "@types/ws": "7.4.1",
     "@types/xregexp": "4.3.0",
     "@types/yargs": "16.0.1",
@@ -159,7 +158,7 @@
     "axios-mock-adapter": "1.19.0",
     "base64-loader": "1.0.0",
     "bestzip": "2.2.0",
-    "chart.js": "2.9.4",
+    "chart.js": "3.0.1",
     "clean-webpack-plugin": "3.0.0",
     "css-loader": "5.2.0",
     "deepmerge": "4.2.2",
@@ -182,7 +181,6 @@
     "locate-path": "6.0.0",
     "lodash-es": "4.17.21",
     "mini-css-extract-plugin": "1.4.0",
-    "material-design-icons-iconfont": "6.1.0",
     "minimist": "1.2.5",
     "mocha": "8.3.2",
     "nyc": "15.1.0",
@@ -191,9 +189,9 @@
     "pug": "3.0.2",
     "pug-plain-loader": "1.1.0",
     "raw-loader": "4.0.2",
-    "sinon": "10.0.0",
     "sass": "1.32.8",
     "sass-loader": "11.0.1",
+    "sinon": "10.0.0",
     "terser": "5.6.1",
     "terser-webpack-plugin": "5.1.1",
     "test-until": "1.1.1",
@@ -230,16 +228,16 @@
   },
   "lint-staged": {
     "*.js": [
-      "eslint --fix"
+      "npx eslint --fix"
     ],
     "*.ts": [
-      "eslint --fix"
+      "npx eslint --fix"
     ],
     "*.vue": [
-      "eslint --fix"
+      "npx eslint --fix"
     ],
     "*.json": [
-      "jsonlint"
+      "npx jsonlint"
     ]
   },
   "browser": {

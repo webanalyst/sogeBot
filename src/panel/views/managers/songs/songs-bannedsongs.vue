@@ -35,7 +35,7 @@
         >
           <v-text-field
             v-model="search"
-            append-icon="mdi-magnify"
+            :append-icon="mdiMagnify"
             label="Search or add by link/id"
             single-line
             hide-details
@@ -118,7 +118,7 @@
           target="_blank"
         >
           <v-icon>
-            mdi-link
+            {{ mdiLink }}
           </v-icon>
         </v-btn>
       </template>
@@ -127,6 +127,7 @@
 </template>
 
 <script lang="ts">
+import { mdiLink, mdiMagnify } from '@mdi/js';
 import {
   computed, defineComponent, onMounted, ref,
 } from '@vue/composition-api';
@@ -257,6 +258,7 @@ export default defineComponent({
       deleteDialog,
       deleteSelected,
       selected,
+      mdiLink, mdiMagnify,
     };
   },
 });

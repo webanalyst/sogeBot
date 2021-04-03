@@ -36,7 +36,7 @@
         >
           <v-text-field
             v-model="search"
-            append-icon="mdi-magnify"
+            :append-icon="mdi<agnify"
             label="Search"
             single-line
             hide-details
@@ -134,9 +134,7 @@
           :href="'https://www.twitch.tv/videos/' + item.videoId + '?t=' + timestampToString(item.timestamp)"
           target="_blank"
         >
-          <v-icon>
-            mdi-link
-          </v-icon>
+          <v-icon>{{ mdiLink }}</v-icon>
         </v-btn>
         <span
           v-else
@@ -155,6 +153,7 @@
 
 <script lang="ts">
 
+import { mdiLink, mdiMagnify } from '@mdi/js';
 import {
   computed, defineComponent, onMounted, ref,
 } from '@vue/composition-api';
@@ -301,6 +300,7 @@ export default defineComponent({
       selected,
 
       dayjs,
+      mdiMagnify, mdiLink,
     };
   },
 });

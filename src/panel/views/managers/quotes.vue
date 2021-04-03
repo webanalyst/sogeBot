@@ -34,7 +34,7 @@
         >
           <v-text-field
             v-model="search"
-            append-icon="mdi-magnify"
+            :append-icon="mdiMagnify"
             label="Search"
             single-line
             hide-details
@@ -188,7 +188,7 @@
                 class="pa-2"
                 @click="tagsSearch = ''"
               >
-                mdi-tag-plus
+                {{ mdiTagPlus }}
               </v-icon>
               <template #input>
                 <v-combobox
@@ -233,6 +233,7 @@
 </template>
 
 <script lang="ts">
+import { mdiMagnify, mdiTagPlus } from '@mdi/js';
 import {
   computed, defineAsyncComponent, defineComponent, onMounted, ref,
 } from '@vue/composition-api';
@@ -440,6 +441,8 @@ export default defineComponent({
 
       dayjs,
       translate,
+      mdiMagnify,
+      mdiTagPlus,
     };
   },
 });

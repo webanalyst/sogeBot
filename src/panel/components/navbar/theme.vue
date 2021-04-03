@@ -7,18 +7,19 @@
       v-if="theme === 'light'"
       style="color: rgb(253, 177, 0)"
     >
-      mdi-weather-sunny
+      {{ mdiWeatherSunny }}
     </v-icon>
     <v-icon
       v-else
       style="color: #d0d5d2"
     >
-      mdi-moon-waxing-crescent
+      {{ mdiMoonWaxingCrescent }}
     </v-icon>
   </v-btn>
 </template>
 
 <script lang="ts">
+import { mdiMoonWaxingCrescent, mdiWeatherSunny } from '@mdi/js';
 import {
   defineComponent, onMounted, ref,
 } from '@vue/composition-api';
@@ -73,7 +74,9 @@ export default defineComponent({
         loadTheme(localStorage.getItem('theme') || get(context.root.$store.state.configuration, 'core.ui.theme', 'light'));
       }
     });
-    return { theme, toggleTheme };
+    return {
+      theme, toggleTheme, mdiWeatherSunny, mdiMoonWaxingCrescent, 
+    };
   },
 });
 </script>

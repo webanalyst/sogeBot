@@ -2,6 +2,8 @@ import VueCompositionAPI from '@vue/composition-api';
 import Vue from 'vue';
 import VueRouter from 'vue-router';
 
+import vuetify from '../panel/vuetify'; // path to vuetify export
+
 Vue.use(VueRouter);
 Vue.use(VueCompositionAPI);
 
@@ -11,17 +13,18 @@ const init = async () => {
     base:   __dirname,
     routes: [
       {
-        path: '/login', name: 'login', component: () => import('./views/login.vue'), 
+        path: '/login', name: 'login', component: () => import('./views/login.vue'),
       },
     ],
   });
 
   new Vue({
     router,
+    vuetify,
     template: `
-      <div id="app">
+      <v-app id="app">
         <router-view class="view"></router-view>
-      </div>
+      </v-app>
     `,
   }).$mount('#login');
 };

@@ -178,7 +178,7 @@
                       }"
                       x-small
                       :color="isTrending('maxViewers') ? 'green' : 'red'"
-                    >{{ isTrending('maxViewers') ? 'mdi-trending-up' : 'mdi-trending-down' }}</v-icon>
+                    >{{ isTrending('maxViewers') ? mdiTrendingUp : mdiTrendingDown }}</v-icon>
                     <span
                       :style="{
                         'vertical-align': isTrending('maxViewers') ? 'super' : 'sub',
@@ -252,7 +252,7 @@
                       }"
                       x-small
                       :color="isTrending('newChatters') ? 'green' : 'red'"
-                    >{{ isTrending('newChatters') ? 'mdi-trending-up' : 'mdi-trending-down' }}</v-icon>
+                    >{{ isTrending('newChatters') ? mdiTrendingUp : mdiTrendingDown }}</v-icon>
                     <span
                       :style="{
                         'vertical-align': isTrending('newChatters') ? 'super' : 'sub',
@@ -323,7 +323,7 @@
                   }"
                   x-small
                   :color="isTrending('chatMessages') ? 'green' : 'red'"
-                >{{ isTrending('chatMessages') ? 'mdi-trending-up' : 'mdi-trending-down' }}</v-icon>
+                >{{ isTrending('chatMessages') ? mdiTrendingUp : mdiTrendingDown }}</v-icon>
                 <span
                   :style="{
                     'vertical-align': isTrending('chatMessages') ? 'super' : 'sub',
@@ -388,7 +388,7 @@
                   }"
                   x-small
                   :color="isTrending('currentViews') ? 'green' : 'red'"
-                >{{ isTrending('currentViews') ? 'mdi-trending-up' : 'mdi-trending-down' }}</v-icon>
+                >{{ isTrending('currentViews') ? mdiTrendingUp : mdiTrendingDown }}</v-icon>
                 <span
                   :style="{
                     'vertical-align': isTrending('currentViews') ? 'super' : 'sub',
@@ -453,7 +453,7 @@
                   }"
                   x-small
                   :color="isTrending('currentFollowers') ? 'green' : 'red'"
-                >{{ isTrending('currentFollowers') ? 'mdi-trending-up' : 'mdi-trending-down' }}</v-icon>
+                >{{ isTrending('currentFollowers') ? mdiTrendingUp : mdiTrendingDown }}</v-icon>
                 <span
                   :style="{
                     'vertical-align': isTrending('currentFollowers') ? 'super' : 'sub',
@@ -518,7 +518,7 @@
                   }"
                   x-small
                   :color="isTrending('currentSubscribers') ? 'green' : 'red'"
-                >{{ isTrending('currentSubscribers') ? 'mdi-trending-up' : 'mdi-trending-down' }}</v-icon>
+                >{{ isTrending('currentSubscribers') ? mdiTrendingUp : mdiTrendingDown }}</v-icon>
                 <span
                   :style="{
                     'vertical-align': isTrending('currentSubscribers') ? 'super' : 'sub',
@@ -589,7 +589,7 @@
                   }"
                   x-small
                   :color="isTrending('currentBits') ? 'green' : 'red'"
-                >{{ isTrending('currentBits') ? 'mdi-trending-up' : 'mdi-trending-down' }}</v-icon>
+                >{{ isTrending('currentBits') ? mdiTrendingUp : mdiTrendingDown }}</v-icon>
                 <span
                   :style="{
                     'vertical-align': isTrending('currentBits') ? 'super' : 'sub',
@@ -660,7 +660,7 @@
                   }"
                   x-small
                   :color="isTrending('currentTips') ? 'green' : 'red'"
-                >{{ isTrending('currentTips') ? 'mdi-trending-up' : 'mdi-trending-down' }}</v-icon>
+                >{{ isTrending('currentTips') ? mdiTrendingUp : mdiTrendingDown }}</v-icon>
                 <span
                   :style="{
                     'vertical-align': isTrending('currentTips') ? 'super' : 'sub',
@@ -729,7 +729,7 @@
                   }"
                   x-small
                   :color="isTrending('currentWatched') ? 'green' : 'red'"
-                >{{ isTrending('currentWatched') ? 'mdi-trending-up' : 'mdi-trending-down' }}</v-icon>
+                >{{ isTrending('currentWatched') ? mdiTrendingUp : mdiTrendingDown }}</v-icon>
                 <span
                   v-if="b_percentage"
                   :style="{
@@ -899,6 +899,7 @@
 <script lang="ts">
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faCaretDown, faCaretUp } from '@fortawesome/free-solid-svg-icons';
+import { mdiTrendingDown, mdiTrendingUp } from '@mdi/js';
 import {
   computed, ComputedRef, defineComponent, onMounted, onUnmounted, reactive, ref, watch,
 } from '@vue/composition-api';
@@ -1145,6 +1146,7 @@ export default defineComponent({
       getTime,
       translate,
       numberReducer,
+      mdiTrendingDown, mdiTrendingUp,
     };
   },
 });

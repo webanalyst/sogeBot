@@ -34,7 +34,7 @@
         >
           <v-text-field
             v-model="search"
-            append-icon="mdi-magnify"
+            :append-icon="mdiMagnify"
             label="Search"
             single-line
             hide-details
@@ -193,7 +193,7 @@
           icon
           @click="stop(item)"
         >
-          <v-icon>mdi-stop</v-icon>
+          <v-icon>{{ mdiStop }}</v-icon>
         </v-btn>
         <v-btn
           v-else
@@ -201,7 +201,7 @@
           icon
           @click="copy(item)"
         >
-          <v-icon>mdi-content-copy</v-icon>
+          <v-icon>{{ mdiContentCopy }}</v-icon>
         </v-btn>
       </template>
     </v-data-table>
@@ -209,6 +209,7 @@
 </template>
 
 <script lang="ts">
+
 import {
   computed,
   defineAsyncComponent, defineComponent, onMounted, onUnmounted, ref, watch,

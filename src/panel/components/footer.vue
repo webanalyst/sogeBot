@@ -15,25 +15,25 @@
     </template>
     <div :title="'API ' + title(data.API)">
       <v-icon :color="color(data.API)">
-        mdi-checkbox-blank-circle
+        {{ mdiCheckboxBlankCircle }}
       </v-icon>
       API
     </div>
     <div :title="'TMI ' + title(data.TMI)">
       <v-icon :color="color(data.TMI)">
-        mdi-checkbox-blank-circle
+        {{ mdiCheckboxBlankCircle }}
       </v-icon>
       TMI
     </div>
     <div :title="'SOC ' + title(data.SOC)">
       <v-icon :color="colorMod(data.SOC)">
-        mdi-checkbox-blank-circle
+        {{ mdiCheckboxBlankCircle }}
       </v-icon>
       SOC
     </div>
     <div :title="'MOD ' + title(data.MOD)">
       <v-icon :color="colorMod(data.MOD)">
-        mdi-checkbox-blank-circle
+        {{ mdiCheckboxBlankCircle }}
       </v-icon>
       MOD
     </div>
@@ -41,6 +41,7 @@
 </template>
 
 <script lang="ts">
+import { mdiCheckboxBlankCircle } from '@mdi/js';
 import {
   defineComponent, onMounted, reactive, ref,
 } from '@vue/composition-api';
@@ -125,7 +126,7 @@ export default defineComponent({
     });
 
     return {
-      version, data, colorMod, color, title, setDebug,
+      version, data, colorMod, color, title, setDebug, mdiCheckboxBlankCircle,
     };
   },
 });

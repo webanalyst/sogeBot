@@ -1,47 +1,111 @@
 <template>
-  <b-container class="center p-5 text-center">
-    <h4 class="text-danger" v-if="error === 'must+be+caster'">
-    <svg width="7em" height="7em" viewBox="0 0 16 16" class="bi bi-x-circle" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-      <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-      <path fill-rule="evenodd" d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
-    </svg>
-    <div>Insufficient permission.</div>
-      <b-btn block variant="success" class="mt-3" @click="login">Login</b-btn>
-      <b-btn block variant="primary" @click="publicPage">Public page</b-btn>
+  <v-container class="center">
+    <h4
+      v-if="error === 'must+be+caster'"
+      class="red--text text-center"
+    >
+      <v-icon
+        class="red--text"
+        size="8rem"
+      >
+        {{ mdiCloseCircleOutline }}
+      </v-icon>
+      <div>Insufficient permission.</div>
+      <v-row class="mt-3">
+        <v-col>
+          <v-btn
+            block
+            color="success"
+            @click="login"
+          >
+            Login
+          </v-btn>
+        </v-col>
+        <v-col>
+          <v-btn
+            block
+            color="info"
+            @click="publicPage"
+          >
+            Public page
+          </v-btn>
+        </v-col>
+      </v-row>
     </h4>
-    <h4 class="text-success" v-if="error === 'logged+out'">
-      <svg width="7em" height="7em" viewBox="0 0 16 16" class="bi bi-check2-circle" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-        <path fill-rule="evenodd" d="M15.354 2.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3-3a.5.5 0 1 1 .708-.708L8 9.293l6.646-6.647a.5.5 0 0 1 .708 0z"/>
-        <path fill-rule="evenodd" d="M8 2.5A5.5 5.5 0 1 0 13.5 8a.5.5 0 0 1 1 0 6.5 6.5 0 1 1-3.25-5.63.5.5 0 1 1-.5.865A5.472 5.472 0 0 0 8 2.5z"/>
-      </svg>
+    <h4
+      v-if="error === 'logged+out'"
+      class="green--text text-center"
+    >
+      <v-icon
+        class="green--text"
+        size="8rem"
+      >
+        {{ mdiCheckboxMarkedCircleOutline }}
+      </v-icon>
       <div>You have successfully logged out.</div>
-      <b-btn block variant="success" class="mt-3" @click="login">Login</b-btn>
-      <b-btn block variant="primary" :href="url + '/public/'">Public page</b-btn>
+      <v-row class="mt-3">
+        <v-col>
+          <v-btn
+            block
+            color="success"
+            @click="login"
+          >
+            Login
+          </v-btn>
+        </v-col>
+        <v-col>
+          <v-btn
+            block
+            color="info"
+            @click="publicPage"
+          >
+            Public page
+          </v-btn>
+        </v-col>
+      </v-row>
     </h4>
-    <h4 class="text-danger" v-if="error === 'popout+must+be+logged'">
-    <svg width="7em" height="7em" viewBox="0 0 16 16" class="bi bi-x-circle" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-      <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-      <path fill-rule="evenodd" d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
-    </svg>
-    <div>Cannot access without login.</div>
-      <b-btn block variant="success" class="mt-3" @click="login">Login</b-btn>
-      <b-btn block variant="secondary" @click="tryAgain">Try again</b-btn>
+    <h4
+      v-if="error === 'popout+must+be+logged'"
+      class="red--text text-center"
+    >
+      <v-icon
+        class="red--text"
+        size="8rem"
+      >
+        {{ mdiCloseCircleOutline }}
+      </v-icon>
+      <div>Cannot access without login.</div>
+      <v-row class="mt-3">
+        <v-col>
+          <v-btn
+            block
+            color="success"
+            @click="login"
+          >
+            Login
+          </v-btn>
+        </v-col>
+        <v-col>
+          <v-btn
+            block
+            color="primary"
+            @click="tryAgain"
+          >
+            Try again
+          </v-btn>
+        </v-col>
+      </v-row>
     </h4>
-  </b-container>
+  </v-container>
 </template>
 
 <script lang="ts">
+import { mdiCheckboxMarkedCircleOutline, mdiCloseCircleOutline  } from '@mdi/js';
 import {
-  computed, defineComponent, onMounted, 
+  computed, defineComponent, onMounted,
 } from '@vue/composition-api';
-import { BContainer } from 'bootstrap-vue';
-import { BButton } from 'bootstrap-vue';
 
 export default defineComponent({
-  components: {
-    'b-container': BContainer,
-    'b-btn':       BButton,
-  },
   setup() {
     const error = computed(() => {
       const hash = window.location.hash;
@@ -82,7 +146,10 @@ export default defineComponent({
       }
     });
     return {
-      error, url, login, publicPage, tryAgain, 
+      error, url, login, publicPage, tryAgain,
+
+      mdiCheckboxMarkedCircleOutline,
+      mdiCloseCircleOutline,
     };
   },
 });
@@ -96,13 +163,13 @@ export default defineComponent({
     transform: translate(-50%, -50%);
     width: max-content;
   }
-  body {
+  .v-application {
     background: repeating-linear-gradient(
       -55deg,
       #222,
       #222 10px,
       #333 10px,
       #333 20px
-    );
+    ) !important;
   }
 </style>

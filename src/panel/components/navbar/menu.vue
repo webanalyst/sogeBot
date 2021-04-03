@@ -43,6 +43,9 @@
 
 <script lang="ts">
 import {
+  mdiCog, mdiExclamationThick, mdiFormatListBulletedSquare, mdiInformationVariant, mdiViewDashboard, mdiWrench, 
+} from '@mdi/js';
+import {
   defineComponent, onMounted, ref,
 } from '@vue/composition-api';
 
@@ -55,12 +58,12 @@ type menuWithEnabled = Omit<typeof menuType[number], 'this'> & { enabled: boole
 const socket = getSocket('/');
 
 const icons = new Map<string, string>([
-  ['dashboard', 'mdi-view-dashboard'],
-  ['commands', 'mdi-exclamation-thick'],
-  ['settings', 'mdi-cog'],
-  ['manage', 'mdi-wrench'],
-  ['stats', 'mdi-information-variant'],
-  ['registry', 'mdi-format-list-bulleted-square'],
+  ['dashboard', mdiViewDashboard],
+  ['commands', mdiExclamationThick],
+  ['settings', mdiCog],
+  ['manage', mdiWrench],
+  ['stats', mdiInformationVariant],
+  ['registry', mdiFormatListBulletedSquare],
 ]);
 
 export default defineComponent({

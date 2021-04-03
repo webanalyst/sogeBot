@@ -11,7 +11,7 @@
           v-on="on"
           @click="filterToAdd = ''"
         >
-          <v-icon>mdi-variable</v-icon>
+          <v-icon>{{ mdiVariable }}</v-icon>
         </v-btn>
       </template>
 
@@ -28,6 +28,7 @@
   </div>
 </template>
 <script lang="ts">
+import { mdiVariable } from '@mdi/js';
 import {
   computed, defineComponent, ref,
 } from '@vue/composition-api';
@@ -72,6 +73,8 @@ export default defineComponent({
 
     return {
       filterItems, filterToAdd, addVariable, menu,
+
+      mdiVariable,
     };
   },
 });

@@ -8,7 +8,7 @@
     </h2>
     <v-text-field
       v-model="search"
-      append-icon="mdi-magnify"
+      :append-icon="mdiMagnify"
       label="Search"
       single-line
       hide-details
@@ -34,6 +34,7 @@
 </template>
 
 <script lang="ts">
+import { mdiMagnify } from '@mdi/js';
 import {
   defineComponent, onMounted, ref, watch,
 } from '@vue/composition-api';
@@ -128,6 +129,7 @@ export default defineComponent({
       playlist,
       options,
       search,
+      mdiMagnify,
     };
   },
 });

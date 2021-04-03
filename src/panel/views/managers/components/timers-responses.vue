@@ -55,7 +55,7 @@
                     >
                       <template #prepend>
                         <v-icon class="handle">
-                          mdi-drag
+                          {{ mdiDrag }}
                         </v-icon>
                       </template>
                       <template #append>
@@ -70,17 +70,17 @@
                           @click="responsesUpdated[i].isEnabled = !responsesUpdated[i].isEnabled"
                         >
                           <v-icon v-if="responsesUpdated[i].isEnabled">
-                            mdi-checkbox-marked-circle
+                            {{ mdiCheckboxMarkedCircle }}
                           </v-icon>
                           <v-icon v-else>
-                            mdi-checkbox-blank-circle-outline
+                            {{ mdiCheckboxBlankCircleOutline }}
                           </v-icon>
                         </v-btn>
                         <v-btn
                           icon
                           @click="remove(i)"
                         >
-                          <v-icon>mdi-trash-can</v-icon>
+                          <v-icon>{{ mdiTrashCan }}</v-icon>
                         </v-btn>
                       </template>
                     </v-textarea>
@@ -117,6 +117,9 @@
 </template>
 
 <script lang="ts">
+import {
+  mdiCheckboxBlankCircleOutline, mdiCheckboxMarkedCircle, mdiDrag, mdiTrashCan, 
+} from '@mdi/js';
 import {
   defineAsyncComponent, defineComponent, ref, watch,
 } from '@vue/composition-api';
@@ -169,6 +172,7 @@ export default defineComponent({
       save,
       remove,
       responsesUpdated,
+      mdiDrag, mdiTrashCan, mdiCheckboxMarkedCircle, mdiCheckboxBlankCircleOutline,
     };
   },
 });

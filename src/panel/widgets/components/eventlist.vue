@@ -1,19 +1,19 @@
 <template>
-<div>
-  <v-toolbar>
-    <v-app-bar-nav-icon></v-app-bar-nav-icon>
-    <v-toolbar-title>{{translate('widget-title-eventlist') }}</v-toolbar-title>
-    <v-spacer></v-spacer>
-    <v-btn icon>
-      <v-icon>mdi-magnify</v-icon>
-    </v-btn>
-    <v-btn icon>
-      <v-icon>mdi-heart</v-icon>
-    </v-btn>
-    <v-btn icon>
-      <v-icon>mdi-dots-vertical</v-icon>
-    </v-btn>
-  </v-toolbar>
+  <div>
+    <v-toolbar>
+      <v-app-bar-nav-icon />
+      <v-toolbar-title>{{ translate('widget-title-eventlist') }}</v-toolbar-title>
+      <v-spacer />
+      <v-btn icon>
+        <v-icon>{{ mdiMagnify }}</v-icon>
+      </v-btn>
+      <v-btn icon>
+        <v-icon>{{ mdiHeart }}</v-icon>
+      </v-btn>
+      <v-btn icon>
+        <v-icon>{{ mdiDotsVertical }}</v-icon>
+      </v-btn>
+    </v-toolbar>
   <!--
   <b-card class="border-0 h-100" no-body="no-body">
     <b-tabs class="h-100" pills="pills" card="card" style="overflow:hidden">
@@ -161,15 +161,13 @@
       </template>
     </b-tabs>
   </b-card-->
-</div>
+  </div>
 </template>
 
 <script>
-import { library } from '@fortawesome/fontawesome-svg-core';
 import {
-  faBell, faBellSlash, faRedoAlt, faVolumeMute,
-} from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeLayers } from '@fortawesome/vue-fontawesome';
+  mdiDotsVertical, mdiHeart, mdiMagnify, 
+} from '@mdi/js';
 import {
   chunk, debounce, get,
 } from 'lodash-es';
@@ -180,17 +178,11 @@ import { EventBus } from 'src/panel/helpers/event-bus';
 import { getSocket } from 'src/panel/helpers/socket';
 import translate from 'src/panel/helpers/translate';
 
-library.add(faRedoAlt, faBell, faBellSlash, faVolumeMute);
-
 export default {
-  props:      ['popout', 'nodrag'],
-  components: {
-    'font-awesome-layers': FontAwesomeLayers,
-    holdButton:            () => import('../../components/holdButton.vue'),
-    loading:               () => import('src/panel/components/loading.vue'),
-  },
-  data: function () {
+  props: ['popout', 'nodrag'],
+  data:  function () {
     return {
+      mdiMagnify, mdiHeart, mdiDotsVertical,
       translate,
       dayjs,
       EventBus,
@@ -222,6 +214,39 @@ export default {
       isTTSMuted:           false,
       isSoundMuted:         false,
     };
+  },
+  computed: {
+    fEvents: function () {
+      const toShow = [];
+      if (this.settings.widgetEventlistFollows) {
+        toShow.push('follow');
+      }
+      if (this.settings.widgetEventlistHosts) {
+        toShow.push('host');
+      }
+      if (this.settings.widgetEventlistRaids) {
+        toShow.push('raid');
+      }
+      if (this.settings.widgetEventlistCheers) {
+        toShow.push('cheer');
+      }
+      if (this.settings.widgetEventlistSubs) {
+        toShow.push('sub');
+      }
+      if (this.settings.widgetEventlistSubgifts) {
+        toShow.push('subgift');
+      }
+      if (this.settings.widgetEventlistSubcommunitygifts) {
+        toShow.push('subcommunitygift');
+      }
+      if (this.settings.widgetEventlistResubs) {
+        toShow.push('resub');
+      }
+      if (this.settings.widgetEventlistTips) {
+        toShow.push('tip');
+      }
+      return chunk(this.events.filter(o => toShow.includes(o.event)), this.eventlistShow)[0];
+    },
   },
   beforeDestroy: function() {
     for(const interval of this.interval) {
@@ -266,39 +291,6 @@ export default {
 
     // refresh timestamps
     this.interval.push(setInterval(() => this.socket.emit('eventlist::get', this.eventlistShow), 60000));
-  },
-  computed: {
-    fEvents: function () {
-      const toShow = [];
-      if (this.settings.widgetEventlistFollows) {
-        toShow.push('follow');
-      }
-      if (this.settings.widgetEventlistHosts) {
-        toShow.push('host');
-      }
-      if (this.settings.widgetEventlistRaids) {
-        toShow.push('raid');
-      }
-      if (this.settings.widgetEventlistCheers) {
-        toShow.push('cheer');
-      }
-      if (this.settings.widgetEventlistSubs) {
-        toShow.push('sub');
-      }
-      if (this.settings.widgetEventlistSubgifts) {
-        toShow.push('subgift');
-      }
-      if (this.settings.widgetEventlistSubcommunitygifts) {
-        toShow.push('subcommunitygift');
-      }
-      if (this.settings.widgetEventlistResubs) {
-        toShow.push('resub');
-      }
-      if (this.settings.widgetEventlistTips) {
-        toShow.push('tip');
-      }
-      return chunk(this.events.filter(o => toShow.includes(o.event)), this.eventlistShow)[0];
-    },
   },
   watch: {
     '$route': function(val) {

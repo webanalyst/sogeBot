@@ -40,7 +40,7 @@
         >
           <v-text-field
             v-model="search"
-            append-icon="mdi-magnify"
+            :append-icon="mdiMagnify"
             label="Search or add by link/id"
             single-line
             hide-details
@@ -128,10 +128,10 @@
           {{ item.title }}
         </div>
         <div>
-          <v-icon>mdi-clock-outline</v-icon> {{ item.length | formatTime }}
-          <v-icon>mdi-volume-high</v-icon> {{ Number(item.volume).toFixed(1) }}%
-          <v-icon>mdi-skip-previous</v-icon> {{ item.startTime | formatTime }} - {{ item.endTime | formatTime }} <v-icon>mdi-skip-next</v-icon>
-          <v-icon>mdi-music</v-icon> {{ new Date(item.lastPlayedAt).toLocaleString() }}
+          <v-icon>{{ mdiClockOutline }}</v-icon> {{ item.length | formatTime }}
+          <v-icon>{{ mdiVolumeHigh }}</v-icon> {{ Number(item.volume).toFixed(1) }}%
+          <v-icon>{{ mdiSkipPrevious }}</v-icon> {{ item.startTime | formatTime }} - {{ item.endTime | formatTime }} <v-icon>{{ mdiSkipNext }}</v-icon>
+          <v-icon>{{ mdiMusic }}</v-icon> {{ new Date(item.lastPlayedAt).toLocaleString() }}
         </div>
       </template>
 
@@ -161,9 +161,7 @@
           :href="'http://youtu.be/' + item.videoId"
           target="_blank"
         >
-          <v-icon>
-            mdi-link
-          </v-icon>
+          <v-icon>{{ mdiLink }}</v-icon>
         </v-btn>
       </template>
 
@@ -263,6 +261,9 @@
 
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faStepBackward, faStepForward } from '@fortawesome/free-solid-svg-icons';
+import {
+  mdiClockOutline, mdiLink, mdiMagnify, mdiMusic, mdiSkipNext, mdiSkipPrevious, mdiVolumeHigh, 
+} from '@mdi/js';
 import {
   computed, defineComponent, onMounted, ref, watch,
 } from '@vue/composition-api';
@@ -515,6 +516,7 @@ export default defineComponent({
       expanded,
       rules,
       ensureGeneralTag,
+      mdiMagnify, mdiClockOutline, mdiVolumeHigh, mdiSkipPrevious, mdiSkipNext, mdiMusic, mdiLink,
     };
   },
 });

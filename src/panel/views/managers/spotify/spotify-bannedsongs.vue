@@ -36,7 +36,7 @@
         >
           <v-text-field
             v-model="search"
-            append-icon="mdi-magnify"
+            :append-icon="mdiMagnify"
             label="Search or add by spotifyURI"
             single-line
             hide-details
@@ -109,6 +109,7 @@
 </template>
 
 <script lang="ts">
+import { mdiMagnify } from '@mdi/js';
 import {
   computed, defineComponent, onMounted, ref,
 } from '@vue/composition-api';
@@ -221,6 +222,7 @@ export default defineComponent({
       deleteDialog,
       deleteSelected,
       selected,
+      mdiMagnify,
     };
   },
 });

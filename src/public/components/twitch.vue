@@ -2,7 +2,7 @@
   <v-container
     fluid
     :style="{
-      height: 'calc(100vh - ' + ($vuetify.breakpoint.mobile ? '48px' : '0') + ')'
+      height: 'calc(100vh - ' + ($vuetify.breakpoint.mobile ? '48px' : '0px') + ')'
     }"
     style="padding: 0;"
   >

@@ -23,7 +23,7 @@
         >
           <v-text-field
             v-model="search"
-            append-icon="mdi-magnify"
+            :append-icon="mdi<agnify"
             label="Search"
             single-line
             hide-details
@@ -37,7 +37,7 @@
           <v-icon
             @click="toggle"
           >
-            {{ isOpen ? 'mdi-minus' : 'mdi-plus' }}
+            {{ isOpen ? mdiMinus : mdiPlus }}
           </v-icon>
 
           {{ items[0].type }}
@@ -52,7 +52,7 @@
           @save="update(item, false, 'command')"
         >
           <span :class="{ 'text-decoration-line-through': item.command !== item.defaultValue }">{{ item.defaultValue }}</span>
-          <span v-if="item.command !== item.defaultValue"><v-icon class="d-inline-block">mdi-arrow-right-bold</v-icon> {{ item.command }}</span>
+          <span v-if="item.command !== item.defaultValue"><v-icon class="d-inline-block">{{ mdiArrowRightBold }}</v-icon> {{ item.command }}</span>
           <template #input>
             <v-text-field
               v-model="item.command"
@@ -87,6 +87,9 @@
 </template>
 
 <script lang="ts">
+import {
+  mdiArrowRightBold, mdiMagnify, mdiMinus, mdiPlus, 
+} from '@mdi/js';
 import {
   computed,
   defineComponent, onMounted, ref,
@@ -256,6 +259,7 @@ export default defineComponent({
       refresh,
       capitalize,
       fItems,
+      mdiMagnify, mdiPlus, mdiMinus, mdiArrowRightBold,
     };
   },
 });

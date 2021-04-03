@@ -35,7 +35,7 @@
         >
           <v-text-field
             v-model="search"
-            append-icon="mdi-magnify"
+            :append-icon="mdiMagnify"
             label="Search"
             single-line
             hide-details
@@ -130,7 +130,7 @@
           <v-icon
             @click="toggle"
           >
-            {{ isOpen ? 'mdi-minus' : 'mdi-plus' }}
+            {{ isOpen ? mdiMinus : mdiPlus }}
           </v-icon>
 
           <v-simple-checkbox
@@ -262,6 +262,9 @@
 </template>
 
 <script lang="ts">
+import {
+  mdiMagnify, mdiMinus, mdiPlus, 
+} from '@mdi/js';
 import {
   computed, defineAsyncComponent, defineComponent, onMounted, ref, watch,
 } from '@vue/composition-api';
@@ -501,6 +504,8 @@ export default defineComponent({
 
       timestamp,
       saveSuccess,
+
+      mdiPlus, mdiMinus, mdiMagnify,
     };
   },
 });

@@ -119,7 +119,7 @@
               @click="logout"
             >
               <v-icon class="red--text">
-                mdi-logout
+                {{ mdiLogout }}
               </v-icon>
               {{ translate('logout') }}
             </v-btn>
@@ -133,7 +133,7 @@
         class="mt-3"
       >
         <v-list-item-icon>
-          <v-icon>mdi-earth</v-icon>
+          <v-icon>{{ mdiEarth }}</v-icon>
         </v-list-item-icon>
         <v-list-item-title>{{ translate('go-to-public') }}</v-list-item-title>
       </v-list-item>
@@ -143,7 +143,7 @@
         class="mt-3"
       >
         <v-list-item-icon>
-          <v-icon>mdi-shield</v-icon>
+          <v-icon>{{ mdiShield }}</v-icon>
         </v-list-item-icon>
         <v-list-item-title>{{ translate('go-to-admin') }}</v-list-item-title>
       </v-list-item>
@@ -151,7 +151,7 @@
     <template v-else>
       <v-list-item @click="login">
         <v-list-item-icon>
-          <v-icon>mdi-login</v-icon>
+          <v-icon>{{ mdiLogin }}</v-icon>
         </v-list-item-icon>
         <v-list-item-title>{{ translate('not-logged-in') }}</v-list-item-title>
       </v-list-item>
@@ -160,6 +160,9 @@
 </template>
 
 <script lang="ts">
+import {
+  mdiEarth, mdiLogin, mdiLogout, mdiShield, 
+} from '@mdi/js';
 import {
   computed, defineAsyncComponent, defineComponent, onMounted, onUnmounted, ref,
 } from '@vue/composition-api';
@@ -238,6 +241,9 @@ export default defineComponent({
 
     return {
       menu, defaultPermissions, isViewerLoaded, viewer, viewerIs, isPublicPage, logout, login, translate, joinBot, leaveBot,
+
+      mdiLogout, mdiShield, mdiLogin, mdiEarth,
+
     };
   },
 });
