@@ -65,10 +65,10 @@ const main = async () => {
         path: '/stats/commandcount', name: 'CommandCountStats', component: () => import('./views/stats/commandcount.vue'),
       },
       {
-        path: '/stats/tips', name: 'TipsStats', component: () => import('./views/stats/tips.vue'),
+        path: '/stats/tips', name: 'tips', component: () => import('./views/stats/tips.vue'),
       },
       {
-        path: '/stats/bits', name: 'BitsStats', component: () => import('./views/stats/bits.vue'),
+        path: '/stats/bits', name: 'bits', component: () => import('./views/stats/bits.vue'),
       },
       {
         path: '/stats/profiler', name: 'ProfilerStats', component: () => import('./views/stats/profiler.vue'),
