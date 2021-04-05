@@ -62,7 +62,7 @@ const main = async () => {
         path: '/stats/api', name: 'APIStats', component: () => import('./views/stats/api.vue'),
       },
       {
-        path: '/stats/commandcount', name: 'CommandCountStats', component: () => import('./views/stats/commandcount.vue'),
+        path: '/stats/commandcount', name: 'commandcount', component: () => import('./views/stats/commandcount.vue'),
       },
       {
         path: '/stats/tips', name: 'tips', component: () => import('./views/stats/tips.vue'),
