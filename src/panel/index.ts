@@ -71,7 +71,7 @@ const main = async () => {
         path: '/stats/bits', name: 'bits', component: () => import('./views/stats/bits.vue'),
       },
       {
-        path: '/stats/profiler', name: 'ProfilerStats', component: () => import('./views/stats/profiler.vue'),
+        path: '/stats/profiler', name: 'profiler', component: () => import('./views/stats/profiler.vue'),
       },
 
       {

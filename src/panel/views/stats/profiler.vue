@@ -1,90 +1,115 @@
 <template>
-  <div class="container-fluid" ref="window">
-    <div class="row">
-      <div class="col-12">
-        <span class="title text-default mb-2">
-          {{ translate('menu.stats') }}
-          <small><fa icon="angle-right"/></small>
-          {{ translate('menu.profiler') }}
-        </span>
-      </div>
-    </div>
+  <v-container
+    fluid
+    :class="{ 'pa-4': !$vuetify.breakpoint.mobile }"
+  >
+    <h2 v-if="!$vuetify.breakpoint.mobile">
+      {{ translate('menu.profiler') }}
+    </h2>
 
-    <panel/>
+    <v-data-table
+      :loading="state.loading !== $state.success"
+      :headers="headers"
+      :items="items"
+      sort-by="day"
+    >
+      <template #top>
+        <line-chart
+          class="pa-2"
+          :data="generateChartData()"
+        />
+      </template>
 
-    <line-chart :data="generateChartData()"></line-chart>
+      <template #[`item.min`]="{ item }">
+        {{ item.min }} <small class="text-muted">ms</small>
+      </template>
 
-    <b-table-simple small striped class="mt-3">
-      <b-thead head-variant="dark">
-        <b-tr>
-          <b-th>Function</b-th>
-          <b-th>Samples</b-th>
-          <b-th>Min time</b-th>
-          <b-th>Max time</b-th>
-          <b-th>Average time</b-th>
-          <b-th></b-th>
-        </b-tr>
-      </b-thead>
-      <b-tbody>
-        <b-tr v-for="key of Object.keys(profiler)" :key="key">
-          <b-th scope="row">{{ key }}</b-th>
-          <b-td><small class="text-muted">{{profiler[key].length}}</small></b-td>
-          <b-td>{{ min(profiler[key]) }} <small class="text-muted">ms</small></b-td>
-          <b-td>{{ max(profiler[key]) }} <small class="text-muted">ms</small></b-td>
-          <b-td>{{ avg(profiler[key]) }} <small class="text-muted">ms</small></b-td>
-          <b-td>
-            <button
-              class="btn border-0"
-              @click="toggleFunctionChart(key)"
-              :class="[showChartFunctions.includes(key) ? 'btn-success' : 'btn-outline-dark']">
-              <font-awesome-icon icon="chart-line"></font-awesome-icon>
-            </button>
-          </b-td>
-        </b-tr>
-      </b-tbody>
-    </b-table-simple>
-  </div>
+      <template #[`item.max`]="{ item }">
+        {{ item.max }} <small class="text-muted">ms</small>
+      </template>
+
+      <template #[`item.avg`]="{ item }">
+        {{ item.avg }} <small class="text-muted">ms</small>
+      </template>
+
+      <template #[`item.button`]="{ item }">
+        <v-icon
+          :class="[!showChartFunctions.includes(item.function) ? 'green--text' : 'red--text']"
+          @click="toggleFunctionChart(item.function)"
+        >
+          {{ !showChartFunctions.includes(item.function) ? mdiPlusThick : mdiMinusThick }}
+        </v-icon>
+      </template>
+    </v-data-table>
+  </v-container>
 </template>
 
 <script lang="ts">
-import { library } from '@fortawesome/fontawesome-svg-core';
-import { faChartLine } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import { mdiMinusThick, mdiPlusThick } from '@mdi/js';
 import {
-  defineComponent, onMounted, ref, watch, 
+  defineComponent,
+  onMounted, ref, watch,
 } from '@vue/composition-api';
 import Chart from 'chart.js';
+import { capitalize, orderBy } from 'lodash-es';
 import Vue from 'vue';
 import Chartkick from 'vue-chartkick';
 
+import { ButtonStates } from 'src/panel/helpers/buttonStates';
 import translate from 'src/panel/helpers/translate';
 
-library.add(faChartLine);
-Vue.use(Chartkick.use(Chart));
-
+import { getPermissionName } from '../../helpers/getPermissionName';
 import { getSocket } from '../../helpers/socket';
+
+Vue.use(Chartkick.use(Chart));
 
 const socket = getSocket('/stats/profiler');
 
+type profilerItem = [function: string, times: number[]];
+
 export default defineComponent({
-  components: {
-    panel:               () => import('../../components/panel.vue'),
-    'font-awesome-icon': FontAwesomeIcon,
-  },
-  setup() {
+  setup(props, ctx) {
     const showChartFunctions = ref([] as string[]);
-    const profiler = ref({} as Record<string, number[]>);
+    watch(showChartFunctions, () => {
+      localStorage.setItem('/stats/profiler/showChartFunctions', JSON.stringify(showChartFunctions.value));
+    });
+    const items = ref([] as {
+      function: string, min: number, max: number, avg: number, samples: number, times: number[],
+    }[]);
+    const state = ref({ loading: ButtonStates.progress } as {
+      loading: number;
+    });
 
-    const generateChartData = () => {
-      const data = Object.entries(profiler.value);
-      const generatedData = [];
+    const headers = [
+      { value: 'function', text: capitalize('function') },
+      { value: 'samples', text: capitalize('samples') },
+      { value: 'min', text: capitalize('min time') },
+      { value: 'max', text: capitalize('max time') },
+      { value: 'avg', text: capitalize('average time') },
+      {
+        value: 'button', text: '', sortable: false,
+      },
+    ];
 
-      for (const [name, values] of data) {
-        if (showChartFunctions.value.includes(name)) {
-          generatedData.push({ name, data: { ...values } });
+    const refresh = () => {
+      showChartFunctions.value = JSON.parse(localStorage.getItem('/stats/profiler/showChartFunctions') || '[]');
+
+      socket.emit('profiler::load', (err: string | null, val: profilerItem[]) => {
+        if (err) {
+          return console.error(err);
         }
-      }
-      return generatedData;
+        for (const item of val) {
+          items.value.push({
+            function: item[0],
+            min:      Number(min(item[1]).toFixed(4)),
+            max:      Number(max(item[1]).toFixed(4)),
+            avg:      Number(avg(item[1]).toFixed(4)),
+            samples:  item[1].length,
+            times:    item[1],
+          });
+        }
+        state.value.loading = ButtonStates.success;
+      });
     };
 
     const toggleFunctionChart = (key: string) => {
@@ -107,35 +132,48 @@ export default defineComponent({
       return Math.min(...data);
     };
 
-    watch(showChartFunctions, () => {
-      localStorage.setItem('/stats/commandcount/showChartFunctions', JSON.stringify(showChartFunctions.value));
+    onMounted(() => {
+      refresh();
     });
 
-    onMounted(() => {
-      showChartFunctions.value = JSON.parse(localStorage.getItem('/stats/commandcount/showChartFunctions') || '[]');
-      socket.emit('profiler::load', (err: string | null, val: any) => {
-        if (err) {
-          return console.error(err);
+    const generateChartData = () => {
+      const generatedData = [];
+
+      for (const item of items.value) {
+        if (showChartFunctions.value.includes(item.function)) {
+          generatedData.push({ name: item.function, data: { ...item.times } });
         }
-        profiler.value = Object.fromEntries(val);
-      });
-    });
+      }
+      return generatedData;
+    };
 
     return {
-      showChartFunctions,
-      profiler,
-
-      generateChartData,
-      toggleFunctionChart,
-      avg,
-      min,
-      max,
-
+      orderBy,
+      headers,
+      items,
+      state,
+      getPermissionName,
       translate,
+      refresh,
+      capitalize,
+      toggleFunctionChart,
+      showChartFunctions,
+      avg,
+      max,
+      min,
+      generateChartData,
+      mdiPlusThick,
+      mdiMinusThick,
     };
   },
 });
 </script>
 
-<style scoped>
+<style>
+tr:nth-of-type(odd) {
+  background-color: rgba(0, 0, 0, .05);
+}
+v-small-dialog__activator__content {
+    word-break: break-word;
+}
 </style>
