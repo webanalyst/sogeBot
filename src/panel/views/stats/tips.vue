@@ -18,7 +18,7 @@
           flat
         >
           <v-container
-            class="pt-10"
+            class="pt-10 px-0"
             fluid
           >
             <v-row>

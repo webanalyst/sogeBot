@@ -1,96 +1,120 @@
 <template>
-  <b-container fluid>
-    <b-row>
-      <b-col>
-        <span class="title text-default mb-2">
-          {{ translate('menu.stats') }}
-          <small><fa icon="angle-right"/></small>
-          {{ translate('menu.api') }}
-        </span>
-      </b-col>
-    </b-row>
+  <v-container
+    fluid
+    :class="{ 'pa-4': !$vuetify.breakpoint.mobile }"
+  >
+    <h2 v-if="!$vuetify.breakpoint.mobile">
+      {{ translate('menu.api') }}
+    </h2>
 
-    <panel>
-      <template v-slot:left>
-       <div class="btn-group">
-          <button class="btn border-0"
-            :class="[selected === 'helix' ? 'btn-primary' : 'btn-outline-primary']"
-            @click="selected = 'helix'">HELIX <small>({{ data.filter(o => o.api === 'helix').length }})</small></button>
-          <button class="btn border-0"
-            :class="[selected === 'other' ? 'btn-primary' : 'btn-outline-primary']"
-            @click="selected = 'other'">OTHER <small>({{ data.filter(o => o.api === 'other').length }})</small></button>
-          <button class="btn border-0"
-            :class="[selected === 'unofficial' ? 'btn-primary' : 'btn-outline-primary']"
-            @click="selected = 'unofficial'">UNOFFICIAL <small>({{ data.filter(o => o.api === 'unofficial').length }})</small></button>
-        </div>
+    <v-data-table
+      :loading="true"
+      :headers="headers"
+      :search="search"
+      :items="selectedData"
+      sort-by="day"
+    >
+      <template #top>
+        <v-toolbar
+          flat
+        >
+          <v-container
+            class="pt-10 px-0"
+            fluid
+          >
+            <v-row>
+              <v-col>
+                <v-text-field
+                  v-model="search"
+                  :append-icon="mdiMagnify"
+                  label="Search"
+                  hide-details
+                />
+              </v-col>
+              <v-col cols="auto">
+                <v-select
+                  :value="selected"
+                  :label="translate('menu.api')"
+                  :items="apiItems"
+                />
+              </v-col>
+            </v-row>
+          </v-container>
+        </v-toolbar>
+
+        <area-chart
+          class="pa-2"
+          :data="graphData"
+        />
       </template>
-    </panel>
 
-    <loading v-if="selectedData.length === 0" slow />
-    <template v-else>
-      <area-chart :data="graphData"></area-chart>
-      <table class="table table-hover">
-      <thead class="thead-dark">
-          <tr>
-            <th scope="col">time</th>
-            <th scope="col">name</th>
-            <th scope="col"></th>
-            <th scope="col">remaining API calls</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(item, index) of selectedData" :key="index"
-              :class="{'bg-danger': !String(item.code).startsWith('2'), 'text-light': !String(item.code).startsWith('2') }">
-            <th scope="row">{{ dayjs(item.timestamp).format('LTS') }}</th>
-            <td>{{ item.call }}</td>
-            <td>
-              <div style="word-wrap: break-word; font-family: Monospace; overflow-y: auto; overflow-x: hidden; max-height:200px;">
-                <strong>{{ item.method }}</strong> {{ item.endpoint }} {{ item.code }}
-              </div>
+      <template #[`item.time`]="{ item }">
+        {{ dayjs(item.timestamp).format('LTS') }}
+      </template>
 
-              <pre v-if="item.request" class="pt-1" style="word-wrap: break-word; font-family: Monospace;overflow-y: auto; overflow-x: hidden; max-height:200px; width:100%;">{{ parseJSON(item.request) }}</pre>
-              <pre class="pt-3" style="word-wrap: break-word; font-family: Monospace;overflow-y: auto; overflow-x: hidden; max-height:200px; width:100%;">{{ parseJSON(item.data) }}</pre>
-            </td>
-            <td><pre>{{ parseJSON(item.remaining) }}</pre></td>
-          </tr>
-        </tbody>
-      </table>
-    </template>
-  </b-container>
+      <template #[`item.endpoint`]="{ item }">
+        <strong>{{ item.method }}</strong> {{ item.endpoint }} {{ item.code }}
+      </template>
+
+      <template #[`item.remaining`]="{ item }">
+        <pre>{{ parseJSON(item.remaining) }}</pre>
+      </template>
+
+      <template #[`item.data`]="{ item }">
+        <pre
+          v-if="item.request"
+          class="pt-1"
+          style="word-wrap: break-word; font-family: Monospace;overflow-y: auto; overflow-x: hidden; max-height:200px; width:fit-content;"
+        >{{ parseJSON(item.request) }}</pre>
+        <pre
+          class="pt-3"
+          style="word-wrap: break-word; font-family: Monospace;overflow-y: auto; overflow-x: hidden; max-height:200px; width:fit-content;"
+        >{{ parseJSON(item.data) }}</pre>
+      </template>
+    </v-data-table>
+  </v-container>
 </template>
 
 <script lang="ts">
+import { mdiMagnify } from '@mdi/js';
 import {
-  computed, defineComponent, onMounted, ref,
+  computed, defineComponent,
+  onMounted, ref,
 } from '@vue/composition-api';
 import Chart from 'chart.js';
 import {
-  get, groupBy, isNil,
+  capitalize, get, groupBy, isNil, orderBy,
 } from 'lodash-es';
 import Vue from 'vue';
 import Chartkick from 'vue-chartkick';
 
 import { dayjs } from 'src/bot/helpers/dayjs';
-import { getSocket } from 'src/panel/helpers/socket';
 import translate from 'src/panel/helpers/translate';
+
+import { getSocket } from '../../helpers/socket';
 
 Vue.use(Chartkick.use(Chart));
 
 const socket = getSocket('/');
 
 export default defineComponent({
-  components: { 'loading': () => import('../../components/loading.vue') },
-  setup() {
+  setup(props, ctx) {
     const selected = ref('helix');
-    const data = ref([] as any[]);
+    const apiItems = computed(() => {
+      return [
+        { value: 'helix', text: `helix (${items.value.filter(o => o.api === 'helix').length})` },
+        { value: 'unofficial', text: `unofficial (${items.value.filter(o => o.api === 'unofficial').length})` },
+        { value: 'other', text: `other (${items.value.filter(o => o.api === 'other').length})` },
+      ];
+    });
 
     const selectedData = computed(() => {
-      return data.value.filter(o => o.api === selected.value).sort((a, b) => b.timestamp - a.timestamp);
+      return items.value.filter(o => o.api === selected.value).sort((a, b) => b.timestamp - a.timestamp);
     });
 
     const graphData = computed(() => {
-      const success = data.value.filter(o => o.api === selected.value && String(o.code).startsWith('2'));
-      const errors = data.value.filter(o => o.api === selected.value && !String(o.code).startsWith('2'));
+      const success = items.value.filter(o => o.api === selected.value && String(o.code).startsWith('2'));
+      const errors = items.value.filter(o => o.api === selected.value && !String(o.code).startsWith('2'));
 
       const successPerMinute: any = {};
       const _successPerMinute = groupBy(success, o => {
@@ -123,14 +147,31 @@ export default defineComponent({
       ];
     });
 
-    onMounted(() => {
+    const search = ref('');
+
+    const items = ref([] as any[]);
+
+    const headers = [
+      { value: 'time', text: capitalize(translate('date')) },
+      { value: 'call', text: capitalize('name') },
+      { value: 'endpoint', text: capitalize('endpoint') },
+      { value: 'remaining', text: capitalize('remaining API calls') },
+      {
+        value: 'data', text: capitalize('data'), sortable: false, 
+      },
+    ];
+
+    const refresh = () => {
       socket.off('api.stats').on('api.stats', (c: { code: number, remaining: number | string, data: string}) => {
         c.code = get(c, 'code', 200); // set default to 200
         c.data = !isNil(c.data) ? JSON.stringify(c.data) : 'n/a';
         c.remaining = !isNil(c.remaining) ? c.remaining : 'n/a';
-
-        data.value.push(c);
+        items.value.push(c);
       });
+    };
+
+    onMounted(() => {
+      refresh();
     });
 
     function parseJSON(JSONString: string) {
@@ -142,15 +183,30 @@ export default defineComponent({
     }
 
     return {
-      data,
+      orderBy,
+      headers,
+      search,
+      items,
+      translate,
+      refresh,
+      capitalize,
+      mdiMagnify,
       selected,
       parseJSON,
-      selectedData,
       graphData,
-
       dayjs,
-      translate,
+      selectedData,
+      apiItems,
     };
   },
 });
 </script>
+
+<style>
+tr:nth-of-type(odd) {
+  background-color: rgba(0, 0, 0, .05);
+}
+v-small-dialog__activator__content {
+    word-break: break-word;
+}
+</style>
