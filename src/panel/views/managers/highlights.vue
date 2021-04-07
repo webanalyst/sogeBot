@@ -36,7 +36,7 @@
         >
           <v-text-field
             v-model="search"
-            :append-icon="mdi<agnify"
+            :append-icon="mdiMagnify"
             label="Search"
             single-line
             hide-details

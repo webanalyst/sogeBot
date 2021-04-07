@@ -126,13 +126,9 @@ const main = async () => {
       {
         path: '/manage/timers', name: 'timers', component: () => import('./views/managers/timers.vue'),
       },
-      { path: '/manage/viewers/', redirect: '/manage/viewers/list' },
       {
-        path: '/manage/viewers/list', name: 'viewersManagerList', component: () => import('./views/managers/viewers.vue'),
-      },
-      {
-        path: '/manage/viewers/edit/:id?', name: 'viewersManagerEdit', component: () => import('./views/managers/viewers.vue'),
-      },
+        path: '/manage/viewers', name: 'viewers', component: () => import('./views/managers/viewers.vue'),
+      }
 
       {
         path: '/settings/permissions/:id?', name: 'PermissionsSettings', component: () => import('./views/settings/permissions.vue'),

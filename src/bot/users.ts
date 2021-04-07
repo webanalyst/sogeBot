@@ -30,7 +30,7 @@ class Users extends Core {
   constructor () {
     super();
     this.addMenu({
-      category: 'manage', name: 'viewers', id: 'manage/viewers/list', this: null,
+      category: 'manage', name: 'viewers', id: 'manage/viewers', this: null,
     });
   }
 
@@ -301,28 +301,29 @@ class Users extends Core {
         cb(null);
       }
     });
-    adminEndpoint(this.nsp, 'viewers::save', async (viewer: Required<UserInterface>, cb) => {
+
+    adminEndpoint(this.nsp, 'viewers::update', async ([userId, update], cb) => {
       try {
-        // recount sortAmount and add exchangeRates if needed
-        for (const tip of viewer.tips) {
-          if (typeof tip.exchangeRates === 'undefined') {
-            tip.exchangeRates = currency.rates;
+        if (typeof update.tips !== 'undefined') {
+          for (const tip of update.tips) {
+            if (typeof tip.exchangeRates === 'undefined') {
+              tip.exchangeRates = currency.rates;
+            }
+            tip.sortAmount = currency.exchange(Number(tip.amount), tip.currency, 'EUR');
           }
-          tip.sortAmount = currency.exchange(Number(tip.amount), tip.currency, 'EUR');
         }
 
-        if (viewer.messages < viewer.pointsByMessageGivenAt) {
-          viewer.pointsByMessageGivenAt = viewer.messages;
+        if (typeof update.messages !== 'undefined') {
+          update.pointsByMessageGivenAt = update.messages;
         }
 
-        const result = await getRepository(User).save(viewer);
+        await getRepository(User).update({ userId }, update);
         // as cascade remove set ID as null, we need to get rid of tips/bits
         await getRepository(UserTip).delete({ userId: IsNull() });
         await getRepository(UserBit).delete({ userId: IsNull() });
-        cb(null, result);
+        cb(null);
       } catch (e) {
-        error(e);
-        cb(e.stack, viewer);
+        cb(e.stack);
       }
     });
     adminEndpoint(this.nsp, 'viewers::remove', async (viewer: Required<UserInterface>, cb) => {
@@ -344,6 +345,10 @@ class Users extends Core {
       try {
         const connection = await getConnection();
         opts.page = opts.page ?? 0;
+        opts.perPage = opts.perPage ?? 25;
+        if (opts.perPage === -1) {
+          opts.perPage = Number.MAX_SAFE_INTEGER;
+        }
 
         /*
           SQL query:
@@ -359,20 +364,22 @@ class Users extends Core {
             .select('COALESCE("sumTips", 0)', 'sumTips')
             .addSelect('COALESCE("sumBits", 0)', 'sumBits')
             .addSelect('"user".*')
-            .offset(opts.page * 25)
-            .limit(25)
+            .offset(opts.page * opts.perPage)
+            .limit(opts.perPage)
             .leftJoin('(select "userUserId", sum("amount") as "sumBits" from "user_bit" group by "userUserId")', 'user_bit', '"user_bit"."userUserId" = "user"."userId"')
-            .leftJoin('(select "userUserId", sum("sortAmount") as "sumTips" from "user_tip" group by "userUserId")', 'user_tip', '"user_tip"."userUserId" = "user"."userId"');
+            .leftJoin('(select "userUserId", sum("sortAmount") as "sumTips" from "user_tip" group by "userUserId")', 'user_tip', '"user_tip"."userUserId" = "user"."userId"')
+            .leftJoinAndSelect('user.tips', 'tips')
+            .leftJoinAndSelect('user.bits', 'bits');
         } else {
           query = getRepository(User).createQueryBuilder('user')
             .orderBy(opts.order?.orderBy ?? 'user.username' , opts.order?.sortOrder ?? 'ASC')
             .select('COALESCE(sumTips, 0)', 'sumTips')
             .addSelect('COALESCE(sumBits, 0)', 'sumBits')
             .addSelect('user.*')
-            .offset(opts.page * 25)
-            .limit(25)
+            .offset(opts.page * opts.perPage)
+            .limit(opts.perPage)
             .leftJoin('(select userUserId, sum(amount) as sumBits from user_bit group by userUserId)', 'user_bit', 'user_bit.userUserId = user.userId')
-            .leftJoin('(select userUserId, sum(sortAmount) as sumTips from user_tip group by userUserId)', 'user_tip', 'user_tip.userUserId = user.userId');
+            .leftJoin('(select userUserId, sum(sortAmount) as sumTips from user_tip group by userUserId)', 'user_tip', 'user_tip.userUserId = user.userId')
         }
 
         if (typeof opts.order !== 'undefined') {
@@ -422,7 +429,6 @@ class Users extends Core {
             } catch (e) {
               // we don't care if user is not found
             }
-
           }
         }
 

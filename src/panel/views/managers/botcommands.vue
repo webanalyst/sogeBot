@@ -23,7 +23,7 @@
         >
           <v-text-field
             v-model="search"
-            :append-icon="mdi<agnify"
+            :append-icon="mdiMagnify"
             label="Search"
             single-line
             hide-details
@@ -88,7 +88,7 @@
 
 <script lang="ts">
 import {
-  mdiArrowRightBold, mdiMagnify, mdiMinus, mdiPlus, 
+  mdiArrowRightBold, mdiMagnify, mdiMinus, mdiPlus,
 } from '@mdi/js';
 import {
   computed,
