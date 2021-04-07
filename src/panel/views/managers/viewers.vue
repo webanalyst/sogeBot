@@ -112,6 +112,10 @@
         </v-edit-dialog>
       </template>
 
+      <template #[`item.sumTips`]="{ item }">
+        <tips :sum="item.sumTips" :userId="item.userId" @save="value=>{ item.tips = value; update(item, false, 'tips'); }"/>
+      </template>
+
       <template #[`item.watchedTime`]="{ item }">
         <v-edit-dialog
           persistent
@@ -187,7 +191,6 @@
             @close="item.haveFollowedAtLock = lockBackup"
             @save="update(item, true, 'followedAt')"
           >
-
             <template v-if="item.followedAt > 0">
               <v-icon x-small v-if="item.haveFollowedAtLock">{{ mdiLock }}</v-icon>
               {{ dayjs(item.followedAt).format('LL') }} {{ dayjs(item.followedAt).format('LTS') }}
@@ -312,12 +315,10 @@ const socket = {
   eventlist: getSocket('/overlays/eventlist'),
 } as const;
 
-
 const watchedTimeFormat = (value: number) => {
   return Intl.NumberFormat((store.state.configuration ?? { lang: 'en' }).lang, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value / 1000 / 60 / 60);
 };
 const timeToDate = (value: number) => {
-
   return new Date(value).toISOString().substr(0, 10);
 };
 const timeToTime = (value: number) => {
@@ -333,6 +334,7 @@ export default defineComponent({
   components: {
     followersChip:   defineAsyncComponent({ loader: () => import ('./components/viewers/followersChip.vue') }),
     subscribersChip: defineAsyncComponent({ loader: () => import ('./components/viewers/subscribersChip.vue') }),
+    tips: defineAsyncComponent({ loader: () => import ('./components/viewers/tips.vue') }),
   },
   setup(props, ctx) {
     const rules = {

@@ -310,7 +310,13 @@ class Users extends Core {
               tip.exchangeRates = currency.rates;
             }
             tip.sortAmount = currency.exchange(Number(tip.amount), tip.currency, 'EUR');
+            if (typeof tip.id === 'string') {
+              delete tip.id; // remove tip id as it is string (we are expecting number -> autoincrement)
+            }
+            await getRepository(UserTip).save({ ...tip, userId });
           }
+          cb(null);
+          return;
         }
 
         if (typeof update.messages !== 'undefined') {
