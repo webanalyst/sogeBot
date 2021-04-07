@@ -5,7 +5,6 @@ import VueCompositionAPI from '@vue/composition-api';
 import { get } from 'lodash-es';
 import Vue from 'vue';
 import VueRouter from 'vue-router';
-import Vuelidate from 'vuelidate';
 
 import { setLocale } from 'src/bot/helpers/dayjs';
 
@@ -19,7 +18,6 @@ import { store } from './helpers/store';
 import urlParam from './helpers/urlParam';
 import vuetify from './vuetify'; // path to vuetify export
 
-Vue.use(Vuelidate);
 Vue.use(LoadScript);
 Vue.use(VueCompositionAPI);
 
@@ -128,8 +126,7 @@ const main = async () => {
       },
       {
         path: '/manage/viewers', name: 'viewers', component: () => import('./views/managers/viewers.vue'),
-      }
-
+      },
       {
         path: '/settings/permissions/:id?', name: 'PermissionsSettings', component: () => import('./views/settings/permissions.vue'),
       },

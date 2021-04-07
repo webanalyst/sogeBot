@@ -21,11 +21,6 @@
         >
           <template #button-content>
             <span class="dropdown-icon">
-              <template v-if="sort === 'user.username'">{{ translate('username') }}</template>
-              <template v-if="sort === 'user.seenAt'">{{ translate('last-seen') }}</template>
-              <template v-if="sort === 'user.watchedTime'">{{ translate('watched-time') }}</template>
-              <template v-if="sort === 'user.followedAt'">{{ translate('followed-since') }}</template>
-              <template v-if="sort === 'user.subscribedAt'">{{ translate('subscribed-since') }}</template>
               <template v-if="sort === 'user.points'">{{ translate('points') }}</template>
               <template v-if="sort === 'user.messages'">{{ translate('messages') }}</template>
               <template v-if="sort === 'sumTips'">{{ translate('tips') }}</template>

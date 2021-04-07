@@ -24,7 +24,6 @@ import { get } from 'lodash-es';
 import Vue from 'vue';
 import LoadScript from 'vue-plugin-load-script';
 import VueRouter from 'vue-router';
-import Vuelidate from 'vuelidate';
 
 import { setLocale } from 'src/bot/helpers/dayjs';
 import { ButtonStates, states } from 'src/panel/helpers/buttonStates';
@@ -42,7 +41,6 @@ Vue.component('Fa', FontAwesomeIcon);
 Vue.component('FontAwesomeIcon', FontAwesomeIcon);
 
 Vue.use(BootstrapVue);
-Vue.use(Vuelidate);
 Vue.use(LoadScript);
 Vue.use(VueCompositionAPI);
 
