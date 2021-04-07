@@ -35,6 +35,31 @@
             hide-details
             class="pr-2"
           />
+
+          <filter-button
+            :value="filter.followers"
+            @save="value=>filter.followers=value"
+          >
+            followers
+          </filter-button>
+          <filter-button
+            :value="filter.subscribers"
+            @save="value=>filter.subscribers=value"
+          >
+            subscribers
+          </filter-button>
+          <filter-button
+            :value="filter.vips"
+            @save="value=>filter.vips=value"
+          >
+            vips
+          </filter-button>
+          <filter-button
+            :value="filter.active"
+            @save="value=>filter.active=value"
+          >
+            active
+          </filter-button>
         </v-toolbar>
       </template>
 
@@ -113,7 +138,79 @@
       </template>
 
       <template #[`item.sumTips`]="{ item }">
-        <tips :sum="item.sumTips" :userId="item.userId" @save="value=>{ item.tips = value; update(item, false, 'tips'); }"/>
+        <tips
+          :sum="item.sumTips"
+          :user-id="item.userId"
+          @save="value=>{ item.tips = value; update(item, false, 'tips'); }"
+        />
+      </template>
+
+      <template #[`item.sumBits`]="{ item }">
+        <bits
+          :sum="item.sumBits"
+          :user-id="item.userId"
+          @save="value=>{ item.bits = value; update(item, false, 'bits'); }"
+        />
+      </template>
+
+      <template #[`item.subscribeCumulativeMonths`]="{ item }">
+        <v-edit-dialog
+          persistent
+          large
+          :return-value.sync="item.subscribeCumulativeMonths"
+          @save="update(item, true, 'subscribeCumulativeMonths')"
+        >
+          {{ item.subscribeCumulativeMonths }}
+          <template #input>
+            <v-text-field
+              v-model="item.subscribeCumulativeMonths"
+              type="number"
+              min="0"
+              :rules="rules.subscribeCumulativeMonths"
+              single-line
+            />
+          </template>
+        </v-edit-dialog>
+      </template>
+
+      <template #[`item.subscribeStreak`]="{ item }">
+        <v-edit-dialog
+          persistent
+          large
+          :return-value.sync="item.subscribeStreak"
+          @save="update(item, true, 'subscribeStreak')"
+        >
+          {{ item.subscribeStreak }}
+          <template #input>
+            <v-text-field
+              v-model="item.subscribeStreak"
+              type="number"
+              min="0"
+              :rules="rules.subscribeStreak"
+              single-line
+            />
+          </template>
+        </v-edit-dialog>
+      </template>
+
+      <template #[`item.giftedSubscribes`]="{ item }">
+        <v-edit-dialog
+          persistent
+          large
+          :return-value.sync="item.giftedSubscribes"
+          @save="update(item, true, 'giftedSubscribes')"
+        >
+          {{ item.giftedSubscribes }}
+          <template #input>
+            <v-text-field
+              v-model="item.giftedSubscribes"
+              type="number"
+              min="0"
+              :rules="rules.giftedSubscribes"
+              single-line
+            />
+          </template>
+        </v-edit-dialog>
       </template>
 
       <template #[`item.watchedTime`]="{ item }">
@@ -127,13 +224,13 @@
           <template #input>
             <v-text-field
               :value="item.watchedTime | watchedTimeFormat"
-              @input="value=>item.watchedTime=value*1000*60*60"
               type="number"
               min="0"
               step="0.5"
               :rules="rules.watchedTime"
               single-line
               suffix="h"
+              @input="value=>item.watchedTime=value*1000*60*60"
             />
           </template>
         </v-edit-dialog>
@@ -161,21 +258,23 @@
                 class="timePicker"
                 :value="(item.seenAt > 0 ? item.seenAt : Date.now()) | timeToTime"
                 @input="value => setAttr(item, 'seenAtTime', value)"
-              ></v-time-picker>
+              />
 
               <v-date-picker
                 :key="item.userId + 'seenAtDate' + timestamp"
                 :max="new Date().toISOString()"
                 :value="(item.seenAt > 0 ? item.seenAt : Date.now()) | timeToDate"
                 @input="value => setAttr(item, 'seenAtDate', value)"
-              ></v-date-picker>
+              />
 
               <v-btn
                 block
                 :disabled="item.seenAt === 0"
                 :color="item.seenAt === 0 ? 'info' : 'error'"
                 @click="item.seenAt = 0; timestamp = Date.now()"
-              >{{ item.seenAt === 0 ? 'Not set' : 'Clear' }}</v-btn>
+              >
+                {{ item.seenAt === 0 ? 'Not set' : 'Clear' }}
+              </v-btn>
             </template>
           </v-edit-dialog>
         </div>
@@ -192,7 +291,12 @@
             @save="update(item, true, 'followedAt')"
           >
             <template v-if="item.followedAt > 0">
-              <v-icon x-small v-if="item.haveFollowedAtLock">{{ mdiLock }}</v-icon>
+              <v-icon
+                v-if="item.haveFollowedAtLock"
+                x-small
+              >
+                {{ mdiLock }}
+              </v-icon>
               {{ dayjs(item.followedAt).format('LL') }} {{ dayjs(item.followedAt).format('LTS') }}
             </template>
             <v-divider
@@ -206,20 +310,33 @@
                 class="timePicker"
                 :value="(item.followedAt > 0 ? item.followedAt : Date.now()) | timeToTime"
                 @input="value => setAttr(item, 'followedAtTime', value)"
-              ></v-time-picker>
+              />
 
               <v-date-picker
                 :key="item.userId + 'followedAtDate' + timestamp"
                 :max="new Date().toISOString()"
                 :value="(item.followedAt > 0 ? item.followedAt : Date.now()) | timeToDate"
                 @input="value => setAttr(item, 'followedAtDate', value)"
-              ></v-date-picker>
+              />
 
               <v-btn
-                style="position: absolute;left: 10px;top: 10px;"
-                :color="item.haveFollowedAtLock ? 'success' : 'error'"
-                @click="item.haveFollowedAtLock = !item.haveFollowedAtLock"
+                style="position: absolute;left: 45px; top: 10px;"
                 icon
+                :disabled="state.forceCheckFollowedAt !== $state.idle"
+                @click="forceCheckFollowedAt(item)"
+              >
+                <v-progress-circular
+                  indeterminate
+                  v-if="state.forceCheckFollowedAt !== $state.idle"
+                ></v-progress-circular>
+                <v-icon v-else>{{ mdiRefresh }}</v-icon>
+              </v-btn>
+
+              <v-btn
+                style="position: absolute;left: 10px; top: 10px;"
+                :color="item.haveFollowedAtLock ? 'success' : 'error'"
+                icon
+                @click="item.haveFollowedAtLock = !item.haveFollowedAtLock"
               >
                 <v-icon>{{ item.haveFollowedAtLock ? mdiLock : mdiLockOff }}</v-icon>
               </v-btn>
@@ -228,7 +345,9 @@
                 :disabled="item.followedAt === 0"
                 :color="item.followedAt === 0 ? 'info' : 'error'"
                 @click="item.followedAt = 0; timestamp = Date.now()"
-              >{{ item.followedAt === 0 ? 'Not set' : 'Clear' }}</v-btn>
+              >
+                {{ item.followedAt === 0 ? 'Not set' : 'Clear' }}
+              </v-btn>
             </template>
           </v-edit-dialog>
         </div>
@@ -245,7 +364,12 @@
             @save="update(item, true, 'subscribedAt')"
           >
             <template v-if="item.subscribedAt > 0">
-              <v-icon x-small v-if="item.haveSubscribedAtLock">{{ mdiLock }}</v-icon>
+              <v-icon
+                v-if="item.haveSubscribedAtLock"
+                x-small
+              >
+                {{ mdiLock }}
+              </v-icon>
               {{ dayjs(item.subscribedAt).format('LL') }} {{ dayjs(item.subscribedAt).format('LTS') }}
             </template>
             <v-divider
@@ -259,20 +383,20 @@
                 class="timePicker"
                 :value="(item.subscribedAt > 0 ? item.subscribedAt : Date.now()) | timeToTime"
                 @input="value => setAttr(item, 'subscribedAtTime', value)"
-              ></v-time-picker>
+              />
 
               <v-date-picker
                 :key="item.userId + 'suscribedAtDate' + timestamp"
                 :max="new Date().toISOString()"
                 :value="(item.subscribedAt > 0 ? item.subscribedAt : Date.now()) | timeToDate"
                 @input="value => setAttr(item, 'subscribedAtDate', value)"
-              ></v-date-picker>
+              />
 
               <v-btn
                 style="position: absolute;left: 10px;top: 10px;"
                 :color="item.haveSubscribedAtLock ? 'success' : 'error'"
-                @click="item.haveSubscribedAtLock = !item.haveSubscribedAtLock"
                 icon
+                @click="item.haveSubscribedAtLock = !item.haveSubscribedAtLock"
               >
                 <v-icon>{{ item.haveSubscribedAtLock ? mdiLock : mdiLockOff }}</v-icon>
               </v-btn>
@@ -282,17 +406,66 @@
                 :disabled="item.subscribedAt === 0"
                 :color="item.subscribedAt === 0 ? 'info' : 'error'"
                 @click="item.subscribedAt = 0; timestamp = Date.now()"
-              >{{ item.subscribedAt === 0 ? 'Not set' : 'Clear' }}</v-btn>
+              >
+                {{ item.subscribedAt === 0 ? 'Not set' : 'Clear' }}
+              </v-btn>
             </template>
           </v-edit-dialog>
         </div>
+      </template>
+
+      <template #expanded-item="{ headers, item: parentItem }">
+        <td
+          :colspan="headers.length"
+          class="pa-2"
+        >
+          <v-container>
+            <v-data-table
+              dense
+              :items="history"
+              :loading="state.history !== $state.success"
+              hide-default-header
+              :headers="headersHistory"
+              :sort-desc="true"
+              sort-by="timestamp"
+              :items-per-page="10"
+            >
+              <template #top>
+                <h3>History</h3>
+              </template>
+              <template #[`item.timestamp`]="{ item }">
+                {{ dayjs(item.timestamp).format('LL') }} {{ dayjs(item.timestamp).format('LTS') }}
+              </template>
+              <template #[`item.info`]="{ item }">
+                <template v-if="item.event === 'raid' || item.event === 'host'">
+                  {{ translate('managers.viewers.hostAndRaidViewersCount').replace('$value', JSON.parse(item.values_json).viewers) }}
+                </template>
+                <template v-else-if="item.event === 'subcommunitygift'">
+                  <strong>{{ item.event }} - {{ JSON.parse(item.values_json).count }}</strong>
+                </template>
+                <template v-else-if="item.event === 'subgift'">
+                  <div
+                    v-if="item.username === parentItem.username"
+                    v-html="translate('managers.viewers.receivedSubscribeFrom').replace('$value', JSON.parse(item.values_json).fromId)"
+                  />
+                  <div
+                    v-else
+                    v-html="translate('managers.viewers.giftedSubscribeTo').replace('$value', item.username)"
+                  />
+                </template>
+              </template>
+            </v-data-table>
+          </v-container>
+        </td>
       </template>
     </v-data-table>
   </v-container>
 </template>
 
 <script lang="ts">
-import { mdiMagnify, mdiLock, mdiLockOff } from '@mdi/js';
+import {
+  mdiLock, mdiLockOff, mdiMagnify, mdiRefresh,
+} from '@mdi/js';
 import {
   computed,
   defineAsyncComponent,
@@ -300,6 +473,7 @@ import {
 } from '@vue/composition-api';
 import { capitalize, orderBy } from 'lodash-es';
 
+import { EventListInterface } from 'src/bot/database/entity/eventList';
 import { UserInterface } from 'src/bot/database/entity/user';
 import { dayjs } from 'src/bot/helpers/dayjs';
 import { ButtonStates } from 'src/panel/helpers/buttonStates';
@@ -322,7 +496,7 @@ const timeToDate = (value: number) => {
   return new Date(value).toISOString().substr(0, 10);
 };
 const timeToTime = (value: number) => {
-  return dayjs(value).format('HH:mm:ss')
+  return dayjs(value).format('HH:mm:ss');
 };
 
 export default defineComponent({
@@ -334,16 +508,22 @@ export default defineComponent({
   components: {
     followersChip:   defineAsyncComponent({ loader: () => import ('./components/viewers/followersChip.vue') }),
     subscribersChip: defineAsyncComponent({ loader: () => import ('./components/viewers/subscribersChip.vue') }),
-    tips: defineAsyncComponent({ loader: () => import ('./components/viewers/tips.vue') }),
+    tips:            defineAsyncComponent({ loader: () => import ('./components/viewers/tips.vue') }),
+    bits:            defineAsyncComponent({ loader: () => import ('./components/viewers/bits.vue') }),
+    FilterButton:    defineAsyncComponent({ loader: () => import ('./components/viewers/filterButton.vue') }),
   },
   setup(props, ctx) {
     const rules = {
-      messages:    [minValue(0), required],
-      points:      [minValue(0), required],
-      watchedTime: [minValue(0), required],
+      messages:                  [minValue(0), required],
+      points:                    [minValue(0), required],
+      watchedTime:               [minValue(0), required],
+      giftedSubscribes:          [minValue(0), required],
+      subscribeCumulativeMonths: [minValue(0), required],
+      subscribeStreak:           [minValue(0), required],
     };
 
-    const search = ref('');
+    const search = ref(ctx.root.$route.params.id ? ctx.root.$route.params.id : '');
+    const history = ref([] as EventListInterface[]);
     const items = ref([] as UserInterface[]);
     const selected = ref([] as UserInterface[]);
     const expanded = ref([] as UserInterface[]);
@@ -351,9 +531,11 @@ export default defineComponent({
 
     const timestamp = ref(Date.now());
     const state = ref({
+      history:              ButtonStates.idle,
       forceCheckFollowedAt: ButtonStates.idle,
       loading:              ButtonStates.progress,
     } as {
+      history: number;
       forceCheckFollowedAt: number;
       loading: number;
     });
@@ -363,6 +545,19 @@ export default defineComponent({
     const perPage = ref(15);
     const sortBy = ref('username');
     const sortDesc = ref(false);
+
+    watch(expanded, (expandedItems) => {
+      if (expandedItems.length > 0) {
+        state.value.history = ButtonStates.progress;
+        socket.eventlist.emit('eventlist::getUserEvents', expandedItems[0].userId, (err: string | null, events: Required<EventListInterface>[]) => {
+          if (err) {
+            return console.error(err);
+          }
+          history.value = events;
+          state.value.history = ButtonStates.success;
+        });
+      }
+    }, { deep: true });
 
     watch([sortBy, sortDesc], () => {
       if (!sortBy.value) {
@@ -396,6 +591,12 @@ export default defineComponent({
     watch([currentPage, sortBy, sortDesc, filter, search, perPage], () => {
       refresh();
     }, { deep: true });
+
+    const headersHistory = [
+      { value: 'timestamp', text: '' },
+      { value: 'event', text: '' },
+      { value: 'info', text: '' },
+    ];
 
     const headers = [
       { value: 'username', text: capitalize(translate('username')) },
@@ -507,7 +708,7 @@ export default defineComponent({
         }
         (item as any)[attr.replace('Date', '')] = Date.parse(`${value} ${time}`);
       } else if (['seenAtTime', 'followedAtTime', 'subscribedAtTime'].includes(attr)) {
-        const attrValue = item[attr.replace('Time', '')] === 0 ? Date.now() : item[attr.replace('Time', '')]
+        const attrValue = item[attr.replace('Time', '')] === 0 ? Date.now() : item[attr.replace('Time', '')];
         let date = timeToDate(attrValue);
         if (value.includes('00:')) {
           // we need to +1 day as day is setting back
@@ -519,7 +720,22 @@ export default defineComponent({
       } else {
         throw new Error('Unknown attr ' + attr);
       }
-    }
+    };
+
+    const forceCheckFollowedAt = (item: UserInterface) => {
+      state.value.forceCheckFollowedAt = ButtonStates.progress;
+      socket.users.emit('viewers::followedAt', item.userId, (err: string | null, followed_at: number) => {
+        state.value.forceCheckFollowedAt = ButtonStates.idle;
+        if (err) {
+          if (err.includes('Not a follower') && item) {
+            item.followedAt = 0;
+          }
+          return console.error(err);
+        } else if (item) {
+          item.followedAt = followed_at;
+        }
+      });
+    };
 
     return {
       setAttr,
@@ -535,6 +751,7 @@ export default defineComponent({
       state,
       selected,
       expanded,
+      filter,
       translate,
       rules,
       saveSuccess,
@@ -542,9 +759,12 @@ export default defineComponent({
       refresh,
       capitalize,
       fItems,
+      forceCheckFollowedAt,
       timestamp,
-      mdiMagnify, mdiLock, mdiLockOff,
+      mdiMagnify, mdiLock, mdiLockOff, mdiRefresh,
       dayjs, lockBackup,
+      headersHistory,
+      history,
     };
   },
 });

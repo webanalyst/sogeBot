@@ -319,6 +319,17 @@ class Users extends Core {
           return;
         }
 
+        if (typeof update.bits !== 'undefined') {
+          for (const bit of update.bits) {
+            if (typeof bit.id === 'string') {
+              delete bit.id; // remove bit id as it is string (we are expecting number -> autoincrement)
+            }
+            await getRepository(UserBit).save({ ...bit, userId });
+          }
+          cb(null);
+          return;
+        }
+
         if (typeof update.messages !== 'undefined') {
           update.pointsByMessageGivenAt = update.messages;
         }

@@ -3,6 +3,7 @@
     v-model="dialog"
     transition="dialog-bottom-transition"
     fullscreen
+    persistent
     hide-overlay
     large
   >
@@ -197,7 +198,7 @@
 
 <script lang="ts">
 import {
-  mdiDrag, mdiFilter, mdiKey, mdiPause, mdiPlay, mdiTrashCan, 
+  mdiDrag, mdiFilter, mdiKey, mdiPause, mdiPlay, mdiTrashCan,
 } from '@mdi/js';
 import {
   defineAsyncComponent, defineComponent, ref, watch,

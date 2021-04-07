@@ -10,58 +10,57 @@
         v-bind="attrs"
         v-on="on"
       >
-        {{ Intl.NumberFormat($store.state.configuration.lang, { style: 'currency', currency: $store.state.configuration.currency }).format(sum) }}
+        {{ Intl.NumberFormat($store.state.configuration.lang).format(sum) }}
       </div>
     </template>
 
     <v-card>
       <v-card-title class="headline">
-        Update <code class="mx-2">{{ username }}</code> {{ translate('tips').toLowerCase() }}
+        Update <code class="mx-2">{{ username }}</code> {{ translate('bits').toLowerCase() }}
       </v-card-title>
 
       <v-card-text>
         <v-data-table
           :headers="headers"
-          :items="tips"
-          sort-by="tippedAt"
+          :items="bits"
+          sort-by="cheeredAt"
           :sort-desc="true"
           hide-default-header
         >
           <template #top>
             <v-btn
-              @click="tips.push({
+              @click="bits.push({
                 id: uuid(),
                 amount: 0,
-                currency: $store.state.configuration.currency,
                 message: '',
-                tippedAt: Date.now(),
+                cheeredAt: Date.now(),
               })"
             >
-              add tip
+              add bit
             </v-btn>
           </template>
 
-          <template #[`item.tippedAt`]="{ item }">
+          <template #[`item.cheeredAt`]="{ item }">
             <v-edit-dialog
               persistent
               large
-              :return-value.sync="item.tippedAt"
+              :return-value.sync="item.cheeredAt"
             >
-              {{ dayjs(item.tippedAt).format('LL') }} {{ dayjs(item.tippedAt).format('LTS') }}
+              {{ dayjs(item.cheeredAt).format('LL') }} {{ dayjs(item.cheeredAt).format('LTS') }}
               <template #input>
                 <v-time-picker
                   :use-seconds="true"
-                  :key="userId + 'tippedAtTime' + timestamp"
+                  :key="userId + 'cheeredAtTime' + timestamp"
                   class="timePicker"
-                  :value="(item.tippedAt > 0 ? item.tippedAt : Date.now()) | timeToTime"
-                  @input="value => setAttr(item, 'tippedAtTime', value)"
+                  :value="(item.cheeredAt > 0 ? item.cheeredAt : Date.now()) | timeToTime"
+                  @input="value => setAttr(item, 'cheeredAtTime', value)"
                 />
 
                 <v-date-picker
-                  :key="userId + 'tippedAtDate' + timestamp"
+                  :key="userId + 'cheeredAtDate' + timestamp"
                   :max="new Date().toISOString()"
-                  :value="(item.tippedAt > 0 ? item.tippedAt : Date.now()) | timeToDate"
-                  @input="value => setAttr(item, 'tippedAtDate', value)"
+                  :value="(item.cheeredAt > 0 ? item.cheeredAt : Date.now()) | timeToDate"
+                  @input="value => setAttr(item, 'cheeredAtDate', value)"
                 />
               </template>
             </v-edit-dialog>
@@ -72,23 +71,16 @@
               persistent
               large
               :return-value.sync="item.amount"
-              @open="currencyBackup = item.currency"
-              @close="item.currency = currencyBackup"
-              @save="currencyBackup = item.currency"
             >
-              {{ Intl.NumberFormat($store.state.configuration.lang, { style: 'currency', currency: item.currency }).format(item.amount) }}
+              {{ Intl.NumberFormat($store.state.configuration.lang).format(item.amount) }}
               <template #input>
                 <v-text-field
                   v-model="item.amount"
                   type="number"
                   min="0"
-                  step="0.01"
+                  step="1"
                   :rules="rules.amount"
                   single-line
-                />
-                <v-select
-                  v-model="item.currency"
-                  :items="currencyItems"
                 />
               </template>
             </v-edit-dialog>
@@ -171,7 +163,7 @@ export default defineComponent({
   },
   props: { sum: Number, userId: String },
   setup(props, ctx) {
-    const tips = ref([] as UserInterface['tips']);
+    const bits = ref([] as UserInterface['bits']);
     const username = ref('');
     const dialog = ref(false);
     const timestamp = ref(Date.now());
@@ -181,60 +173,23 @@ export default defineComponent({
     }
 
     const headers = [
-      { value: 'tippedAt', text: '' },
+      { value: 'cheeredAt', text: '' },
       { value: 'amount', text: '' },
       { value: 'message', text: '' },
     ];
 
-    const currencyItems = [
-      { value: 'USD', text: 'USD' },
-      { value: 'AUD', text: 'AUD' },
-      { value: 'BGN', text: 'BGN' },
-      { value: 'BRL', text: 'BRL' },
-      { value: 'CAD', text: 'CAD' },
-      { value: 'CHF', text: 'CHF' },
-      { value: 'CNY', text: 'CNY' },
-      { value: 'CZK', text: 'CZK' },
-      { value: 'DKK', text: 'DKK' },
-      { value: 'EUR', text: 'EUR' },
-      { value: 'GBP', text: 'GBP' },
-      { value: 'HKD', text: 'HKD' },
-      { value: 'HRK', text: 'HRK' },
-      { value: 'HUF', text: 'HUF' },
-      { value: 'IDR', text: 'IDR' },
-      { value: 'ILS', text: 'ILS' },
-      { value: 'INR', text: 'INR' },
-      { value: 'ISK', text: 'ISK' },
-      { value: 'JPY', text: 'JPY' },
-      { value: 'KRW', text: 'KRW' },
-      { value: 'MXN', text: 'MXN' },
-      { value: 'MYR', text: 'MYR' },
-      { value: 'NOK', text: 'NOK' },
-      { value: 'NZD', text: 'NZD' },
-      { value: 'PHP', text: 'PHP' },
-      { value: 'PLN', text: 'PLN' },
-      { value: 'RON', text: 'RON' },
-      { value: 'RUB', text: 'RUB' },
-      { value: 'SEK', text: 'SEK' },
-      { value: 'SGD', text: 'SGD' },
-      { value: 'THB', text: 'THB' },
-      { value: 'TRY', text: 'TRY' },
-      { value: 'ZAR', text: 'ZAR' },
-    ]
-
     watch(dialog, (val) => {
       if (val) {
-        // load tips
         socket.users.emit('viewers::findOne', props.userId, (error: null | string, viewer: UserInterface) => {
           console.log('User loaded', viewer);
           username.value = viewer.username;
-          tips.value = viewer.tips;
+          bits.value = viewer.bits;
         });
       }
     });
 
     const save = () => {
-      ctx.emit('save', tips.value);
+      ctx.emit('save', bits.value);
       dialog.value = false;
     };
 
@@ -245,12 +200,12 @@ export default defineComponent({
 
     const remove = (idx: number) => {
       console.log({ idx });
-      tips.value.splice(idx, 1);
+      bits.value.splice(idx, 1);
     };
 
     const setAttr = (item: any, attr: any, value: any) => {
-      if (['tippedAtDate'].includes(attr)) {
-        (item as any)[attr.replace('Date', '')] = Date.parse(`${value} ${timeToTime(item.tippedAt ?? 0)}`);
+      if (['cheeredAtDate'].includes(attr)) {
+        (item as any)[attr.replace('Date', '')] = Date.parse(`${value} ${timeToTime(item.cheeredAt ?? 0)}`);
         const time = timeToTime(item[attr.replace('Date', '')] ?? Date.now());
         if (time.includes('00:')) {
           // we need to +1 day as day is setting back
@@ -259,7 +214,7 @@ export default defineComponent({
           value = timeToDate(dateToUpdate.getTime());
         }
         (item as any)[attr.replace('Date', '')] = Date.parse(`${value} ${time}`);
-      } else if (['tippedAtTime'].includes(attr)) {
+      } else if (['cheeredAtTime'].includes(attr)) {
         const attrValue = item[attr.replace('Time', '')] === 0 ? Date.now() : item[attr.replace('Time', '')];
         let date = timeToDate(attrValue);
         if (value.includes('00:')) {
@@ -283,13 +238,12 @@ export default defineComponent({
       close,
       save,
       remove,
-      tips,
+      bits,
       headers,
       uuid,
       dayjs,
       setAttr,
       timestamp,
-      currencyItems,
       currencyBackup,
       rules,
     };

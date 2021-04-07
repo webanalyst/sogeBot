@@ -610,7 +610,7 @@ export default defineComponent({
 
     const linkTo = (item: Required<UserInterface>) => {
       console.debug('Clicked', item.userId);
-      ctx.root.$router.push({ name: 'viewersManagerEdit', params: { id: String(item.userId) } });
+      ctx.root.$router.push({ name: 'viewers', params: { id: String(item.userId) } });
     };
 
     const isSidebarVisibleChange = (isVisible: boolean, ev: any) => {
@@ -701,7 +701,7 @@ export default defineComponent({
     };
 
     const del = () => {
-      if (!editationItem.value) {
+      if (!editationItem.value) {s
         return;
       }
 

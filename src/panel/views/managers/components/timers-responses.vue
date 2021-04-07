@@ -3,6 +3,7 @@
     v-model="dialog"
     transition="dialog-bottom-transition"
     fullscreen
+    persistent
     hide-overlay
     large
   >
@@ -118,7 +119,7 @@
 
 <script lang="ts">
 import {
-  mdiCheckboxBlankCircleOutline, mdiCheckboxMarkedCircle, mdiDrag, mdiTrashCan, 
+  mdiCheckboxBlankCircleOutline, mdiCheckboxMarkedCircle, mdiDrag, mdiTrashCan,
 } from '@mdi/js';
 import {
   defineAsyncComponent, defineComponent, ref, watch,

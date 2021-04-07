@@ -139,7 +139,7 @@
       </template>
 
       <template #[`item.startedAt`]="{ item }">
-        {{ new Date(item.startedAt).toLocaleString() }}
+        {{ dayjs(item.startedAt).format('LL') }} {{ dayjs(item.startedAt).format('LTS') }}
       </template>
       <template #[`item.thumbnail`]="{ item }">
         <v-img
@@ -164,7 +164,7 @@
               items-per-page="10"
             >
               <template #[`item.createdAt`]="{ item }">
-                {{ (new Date(item.createdAt)).toLocaleString() }}
+                {{ dayjs(item.createdAt).format('LL') }} {{ dayjs(item.createdAt).format('LTS') }}
               </template>
               <template #[`item.timestamp`]="{ item }">
                 {{ timeToReadable(timestampToObject(item.timestamp)) }}
@@ -228,6 +228,7 @@ import {
   computed, defineAsyncComponent, defineComponent, onMounted, ref, watch,
 } from '@vue/composition-api';
 import { cloneDeep, debounce } from 'lodash-es';
+import { dayjs } from 'src/bot/helpers/dayjs';
 
 import { HowLongToBeatGameInterface, HowLongToBeatGameItemInterface } from 'src/bot/database/entity/howLongToBeatGame';
 import { getTime, timestampToObject } from 'src/bot/helpers/getTime';
@@ -504,6 +505,7 @@ export default defineComponent({
       update,
       headersOffset,
       timestamp,
+      dayjs,
 
       mdiMagnify, mdiRefresh,
     };

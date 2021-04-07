@@ -52,7 +52,7 @@
       </template>
 
       <template #[`item.user`]="{ item }">
-        <router-link :to="{ name: 'viewersManagerEdit', params: { id: item.user.userId }}">
+        <router-link :to="{ name: 'viewers', params: { id: item.user.userId }}">
           {{ item.user.username }}&nbsp;<small class="text-muted">{{ item.user.userId }}</small>
         </router-link>
       </template>

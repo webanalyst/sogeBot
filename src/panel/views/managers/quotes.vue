@@ -154,7 +154,7 @@
       </template>
 
       <template #[`item.quotedByName`]="{ item }">
-        <router-link :to="{ name: 'viewersManagerEdit', params: { id: item.quotedBy }}">
+        <router-link :to="{ name: 'viewers', params: { id: item.quotedBy }}">
           {{ item.quotedByName }}&nbsp;<small>{{ item.quotedBy }}</small>
         </router-link>
       </template>

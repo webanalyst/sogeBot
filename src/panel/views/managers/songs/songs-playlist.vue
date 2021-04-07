@@ -131,7 +131,7 @@
           <v-icon>{{ mdiClockOutline }}</v-icon> {{ item.length | formatTime }}
           <v-icon>{{ mdiVolumeHigh }}</v-icon> {{ Number(item.volume).toFixed(1) }}%
           <v-icon>{{ mdiSkipPrevious }}</v-icon> {{ item.startTime | formatTime }} - {{ item.endTime | formatTime }} <v-icon>{{ mdiSkipNext }}</v-icon>
-          <v-icon>{{ mdiMusic }}</v-icon> {{ new Date(item.lastPlayedAt).toLocaleString() }}
+          <v-icon>{{ mdiMusic }}</v-icon> {{ dayjs(item.lastPlayedAt).format('LL') }} {{ dayjs(item.lastPlayedAt).format('LTS') }}
         </div>
       </template>
 
@@ -262,11 +262,12 @@
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faStepBackward, faStepForward } from '@fortawesome/free-solid-svg-icons';
 import {
-  mdiClockOutline, mdiLink, mdiMagnify, mdiMusic, mdiSkipNext, mdiSkipPrevious, mdiVolumeHigh, 
+  mdiClockOutline, mdiLink, mdiMagnify, mdiMusic, mdiSkipNext, mdiSkipPrevious, mdiVolumeHigh,
 } from '@mdi/js';
 import {
   computed, defineComponent, onMounted, ref, watch,
 } from '@vue/composition-api';
+import { dayjs } from 'src/bot/helpers/dayjs';
 
 import { SongPlaylistInterface } from 'src/bot/database/entity/song';
 import { ButtonStates } from 'src/panel/helpers/buttonStates';
@@ -510,6 +511,7 @@ export default defineComponent({
       ButtonStates,
       translate,
 
+      dayjs,
       deleteDialog,
       deleteSelected,
       selected,
