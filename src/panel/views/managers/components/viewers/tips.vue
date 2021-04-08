@@ -50,8 +50,8 @@
               {{ dayjs(item.tippedAt).format('LL') }} {{ dayjs(item.tippedAt).format('LTS') }}
               <template #input>
                 <v-time-picker
-                  :use-seconds="true"
                   :key="userId + 'tippedAtTime' + timestamp"
+                  :use-seconds="true"
                   class="timePicker"
                   :value="(item.tippedAt > 0 ? item.tippedAt : Date.now()) | timeToTime"
                   @input="value => setAttr(item, 'tippedAtTime', value)"
@@ -92,6 +92,12 @@
                 />
               </template>
             </v-edit-dialog>
+          </template>
+
+          <template #[`item.button`]="{ item }">
+            <v-icon @click="remove(item)">
+              {{ mdiDelete }}
+            </v-icon>
           </template>
 
           <template #[`item.message`]="{ item }">
@@ -143,6 +149,7 @@
 </template>
 
 <script lang="ts">
+import { mdiDelete } from '@mdi/js';
 import {
   defineComponent, ref, watch,
 } from '@vue/composition-api';
@@ -150,7 +157,7 @@ import { orderBy } from 'lodash-es';
 import { capitalize } from 'lodash-es';
 import { v4 as uuid } from 'uuid';
 
-import { UserInterface } from 'src/bot/database/entity/user';
+import { UserInterface, UserTipInterface } from 'src/bot/database/entity/user';
 import { dayjs } from 'src/bot/helpers/dayjs';
 import { getSocket } from 'src/panel/helpers/socket';
 import translate from 'src/panel/helpers/translate';
@@ -176,14 +183,13 @@ export default defineComponent({
     const dialog = ref(false);
     const timestamp = ref(Date.now());
     const currencyBackup = ref('USD');
-    const rules = {
-      amount: [required, minValue(0)],
-    }
+    const rules = { amount: [required, minValue(0)] };
 
     const headers = [
       { value: 'tippedAt', text: '' },
       { value: 'amount', text: '' },
       { value: 'message', text: '' },
+      { value: 'button', text: '' },
     ];
 
     const currencyItems = [
@@ -220,7 +226,7 @@ export default defineComponent({
       { value: 'THB', text: 'THB' },
       { value: 'TRY', text: 'TRY' },
       { value: 'ZAR', text: 'ZAR' },
-    ]
+    ];
 
     watch(dialog, (val) => {
       if (val) {
@@ -243,9 +249,8 @@ export default defineComponent({
       dialog.value = false;
     };
 
-    const remove = (idx: number) => {
-      console.log({ idx });
-      tips.value.splice(idx, 1);
+    const remove = (item: UserTipInterface) => {
+      tips.value.splice(tips.value.findIndex(o => o.id === item.id), 1);
     };
 
     const setAttr = (item: any, attr: any, value: any) => {
@@ -292,6 +297,7 @@ export default defineComponent({
       currencyItems,
       currencyBackup,
       rules,
+      mdiDelete,
     };
   },
 });

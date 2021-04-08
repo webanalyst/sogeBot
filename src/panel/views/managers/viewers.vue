@@ -7,6 +7,48 @@
       {{ translate('menu.viewers') }}
     </h2>
 
+    <v-speed-dial
+      v-model="fab"
+      class="actionFab"
+      bottom
+      right
+      fixed
+    >
+      <template #activator>
+        <v-btn
+          v-model="fab"
+          color="grey darken-4"
+          fab
+        >
+          <v-icon v-if="fab">
+            {{ mdiClose }}
+          </v-icon>
+          <v-icon v-else>
+            {{ mdiDotsVertical }}
+          </v-icon>
+        </v-btn>
+      </template>
+
+      <v-btn @click="resetPoints">
+        {{ translate('commons.reset') }} {{ translate('points') }}
+      </v-btn>
+      <v-btn @click="resetWatchedTime">
+        {{ translate('commons.reset') }} {{ translate('watched-time') }}
+      </v-btn>
+      <v-btn @click="resetMessages">
+        {{ translate('commons.reset') }} {{ translate('messages') }}
+      </v-btn>
+      <v-btn @click="resetBits">
+        {{ translate('commons.reset') }} {{ translate('bits') }}
+      </v-btn>
+      <v-btn @click="resetTips">
+        {{ translate('commons.reset') }} {{ translate('tips') }}
+      </v-btn>
+      <v-btn @click="resetSubgifts">
+        {{ translate('commons.reset') }} {{ translate('subgifts') }}
+      </v-btn>
+    </v-speed-dial>
+
     <v-data-table
       v-model="selected"
       :expanded.sync="expanded"
@@ -60,6 +102,55 @@
           >
             active
           </filter-button>
+
+          <template v-if="selected.length > 0">
+            <v-dialog
+              v-model="deleteDialog"
+              max-width="500px"
+            >
+              <template #activator="{ on, attrs }">
+                <v-btn
+                  color="error"
+                  v-bind="attrs"
+                  v-on="on"
+                >
+                  Delete {{ selected.length }} Item(s)
+                </v-btn>
+              </template>
+
+              <v-card>
+                <v-card-title>
+                  <span class="headline">Delete {{ selected.length }} Item(s)?</span>
+                </v-card-title>
+
+                <v-card-text>
+                  <v-data-table
+                    dense
+                    :items="selected"
+                    :headers="headersDelete"
+                    hide-default-header
+                    hide-default-footer
+                  />
+                </v-card-text>
+                <v-card-actions>
+                  <v-spacer />
+                  <v-btn
+                    text
+                    @click="deleteDialog = false"
+                  >
+                    Cancel
+                  </v-btn>
+                  <v-btn
+                    color="error"
+                    text
+                    @click="deleteSelected"
+                  >
+                    Delete
+                  </v-btn>
+                </v-card-actions>
+              </v-card>
+            </v-dialog>
+          </template>
         </v-toolbar>
       </template>
 
@@ -326,10 +417,12 @@
                 @click="forceCheckFollowedAt(item)"
               >
                 <v-progress-circular
-                  indeterminate
                   v-if="state.forceCheckFollowedAt !== $state.idle"
-                ></v-progress-circular>
-                <v-icon v-else>{{ mdiRefresh }}</v-icon>
+                  indeterminate
+                />
+                <v-icon v-else>
+                  {{ mdiRefresh }}
+                </v-icon>
               </v-btn>
 
               <v-btn
@@ -464,7 +557,7 @@
 
 <script lang="ts">
 import {
-  mdiLock, mdiLockOff, mdiMagnify, mdiRefresh,
+  mdiClose, mdiDotsVertical, mdiLock, mdiLockOff, mdiMagnify, mdiRefresh,
 } from '@mdi/js';
 import {
   computed,
@@ -477,6 +570,7 @@ import { EventListInterface } from 'src/bot/database/entity/eventList';
 import { UserInterface } from 'src/bot/database/entity/user';
 import { dayjs } from 'src/bot/helpers/dayjs';
 import { ButtonStates } from 'src/panel/helpers/buttonStates';
+import { error } from 'src/panel/helpers/error';
 import { EventBus } from 'src/panel/helpers/event-bus';
 import translate from 'src/panel/helpers/translate';
 import { minValue, required } from 'src/panel/helpers/validators';
@@ -528,6 +622,7 @@ export default defineComponent({
     const selected = ref([] as UserInterface[]);
     const expanded = ref([] as UserInterface[]);
     const lockBackup = ref(false);
+    const deleteDialog = ref(false);
 
     const timestamp = ref(Date.now());
     const state = ref({
@@ -545,6 +640,7 @@ export default defineComponent({
     const perPage = ref(15);
     const sortBy = ref('username');
     const sortDesc = ref(false);
+    const fab = ref(false);
 
     watch(expanded, (expandedItems) => {
       if (expandedItems.length > 0) {
@@ -591,6 +687,11 @@ export default defineComponent({
     watch([currentPage, sortBy, sortDesc, filter, search, perPage], () => {
       refresh();
     }, { deep: true });
+
+    const headersDelete = [
+      { value: 'userId', text: '' },
+      { value: 'username', text: '' },
+    ];
 
     const headersHistory = [
       { value: 'timestamp', text: '' },
@@ -737,6 +838,62 @@ export default defineComponent({
       });
     };
 
+    const resetPoints = () => {
+      socket.users.emit('viewers::resetPointsAll', () => {
+        refresh();
+      });
+    };
+
+    const resetWatchedTime = () => {
+      socket.users.emit('viewers::resetWatchedTimeAll', () => {
+        refresh();
+      });
+    };
+
+    const resetMessages = () => {
+      socket.users.emit('viewers::resetMessagesAll', () => {
+        refresh();
+      });
+    };
+
+    const resetBits = () => {
+      socket.users.emit('viewers::resetBitsAll', () => {
+        refresh();
+      });
+    };
+
+    const resetTips = () => {
+      socket.users.emit('viewers::resetTipsAll', () => {
+        refresh();
+      });
+    };
+
+    const resetSubgifts = () => {
+      socket.users.emit('viewers::resetSubgiftsAll', () => {
+        refresh();
+      });
+    };
+
+    const deleteSelected = async () => {
+      deleteDialog.value = false;
+      await Promise.all(
+        selected.value.map(async (item) => {
+          return new Promise((resolve, reject) => {
+            socket.users.emit('viewers::remove', item, (err: string | null) => {
+              if (err) {
+                reject(error(err));
+              }
+              resolve(true);
+            });
+          });
+        }),
+      );
+      refresh();
+
+      EventBus.$emit('snack', 'success', 'Data removed.');
+      selected.value = [];
+    };
+
     return {
       setAttr,
       orderBy,
@@ -746,7 +903,9 @@ export default defineComponent({
       currentPage,
       sortBy,
       perPage,
+      headersDelete,
       sortDesc,
+      fab,
       count,
       state,
       selected,
@@ -761,10 +920,19 @@ export default defineComponent({
       fItems,
       forceCheckFollowedAt,
       timestamp,
-      mdiMagnify, mdiLock, mdiLockOff, mdiRefresh,
+      mdiMagnify, mdiLock, mdiLockOff, mdiRefresh, mdiClose, mdiDotsVertical,
       dayjs, lockBackup,
       headersHistory,
       history,
+      deleteDialog,
+      deleteSelected,
+
+      resetTips,
+      resetBits,
+      resetMessages,
+      resetWatchedTime,
+      resetPoints,
+      resetSubgifts,
     };
   },
 });
@@ -786,5 +954,15 @@ v-small-dialog__activator__content {
 .dividerEdit .v-small-dialog__activator__content {
   width: 100%;
   transform: translateY(-4px);
+}
+
+.actionFab .v-speed-dial__list {
+  width: fit-content !important;
+  align-items:flex-end;
+  transform: translateX(-150px);
+}
+
+.actionFab {
+  transform: translateY(-25px)
 }
 </style>

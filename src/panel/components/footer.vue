@@ -3,11 +3,11 @@
     bottom
     right
     fixed
-    open-on-hover
   >
     <template #activator>
       <v-chip
         x-small
+        color="grey darken-4"
         @dblclick="setDebug()"
       >
         {{ version }}
