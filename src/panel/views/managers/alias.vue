@@ -263,7 +263,7 @@
 
 <script lang="ts">
 import {
-  mdiMagnify, mdiMinus, mdiPlus, 
+  mdiMagnify, mdiMinus, mdiPlus,
 } from '@mdi/js';
 import {
   computed, defineAsyncComponent, defineComponent, onMounted, ref, watch,
