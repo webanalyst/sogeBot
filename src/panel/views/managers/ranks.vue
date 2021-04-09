@@ -68,11 +68,20 @@
                     dense
                     :items="selected"
                     :headers="headersDelete"
+                    :items-per-page="-1"
                     hide-default-header
                     hide-default-footer
                   >
                     <template #[`item.type`]="{ item }">
-                      {{ typeItems.find(o => o.value === item.type).text }}
+                      <span
+                        v-if="item.type === null"
+                        class="red--text text--lighten-1"
+                      >
+                        Pending (not saved)
+                      </span>
+                      <span v-else>
+                        {{ typeItems.find(o => o.value === item.type).text }}
+                      </span>
                     </template>
                   </v-data-table>
                 </v-card-text>
@@ -120,7 +129,7 @@
                 <new-item
                   :rules="rules"
                   @close="newDialog = false"
-                  @save="saveSuccess"
+                  @save="value=>{items.push(value);saveSuccess()}"
                 />
               </v-card-text>
             </v-card>
@@ -143,7 +152,13 @@
             :value="isTypeSelected(items[0].type)"
             @click="toggleTypeSelection(items[0].type)"
           />
-          {{ typeItems.find(o => o.value === items[0].type).text }}
+
+          <span v-if="items[0].type === null">
+            Pending (not saved)
+          </span>
+          <span v-else>
+            {{ typeItems.find(o => o.value === items[0].type).text }}
+          </span>
         </th>
       </template>
 
@@ -194,7 +209,15 @@
           :return-value.sync="item.type"
           @save="update(item, true, 'type')"
         >
-          {{ typeItems.find(o => o.value === item.type).text }}
+          <span
+            v-if="item.type === null"
+            class="red--text text--lighten-1"
+          >
+            Pending (not saved)
+          </span>
+          <span v-else>
+            {{ typeItems.find(o => o.value === item.type).text }}
+          </span>
           <template #input>
             <v-select
               v-model="item.type"
@@ -208,7 +231,9 @@
 </template>
 
 <script lang="ts">
-import { mdiMagnify } from '@mdi/js';
+import {
+  mdiMagnify, mdiMinus, mdiPlus,
+} from '@mdi/js';
 import {
   defineAsyncComponent, defineComponent, onMounted, ref, watch,
 } from '@vue/composition-api';
@@ -227,12 +252,17 @@ const socket = getSocket('/systems/ranks');
 type RankInterfaceUI = RankInterface & { typeToBeShownInTable: string };
 
 export default defineComponent({
-  components: { 'new-item': defineAsyncComponent({ loader: () => import('./components/new-item/cooldowns-newItem.vue') }) },
+  components: { 'new-item': defineAsyncComponent({ loader: () => import('./components/new-item/ranks-newItem.vue') }) },
   setup(props, ctx) {
     const rules = { value: [required, minValue(0)], rank: [required] };
 
     const items = ref([] as RankInterfaceUI[]);
     const typeItems = [
+      {
+        text:     'Pending (not saved)',
+        value:    null,
+        disabled: true,
+      },
       {
         text:  'Watch time',
         value: 'viewer',
@@ -264,7 +294,6 @@ export default defineComponent({
       { value: 'value', text: capitalize(translate('responses.variable.value')) },
       { value: 'rank', text: translate('rank') },
       { value: 'type', text: translate('type') },
-      { value: 'typeToBeShownInTable', text: translate('type') },
     ];
 
     const headersDelete = [
@@ -281,11 +310,12 @@ export default defineComponent({
         if (err) {
           return error(err);
         }
-        console.debug('Loaded', itemsGetAll);
-        items.value = itemsGetAll;
+        items.value = [...itemsGetAll, ...JSON.parse(sessionStorage.getItem('ranks-pending') ?? '[]')];
+        console.debug('Loaded', items.value);
         for (const item of items.value) {
           item.typeToBeShownInTable = item.type;
         }
+
         // we also need to reset selection values
         if (selected.value.length > 0) {
           selected.value.forEach((selectedItem, index) => {
@@ -298,8 +328,12 @@ export default defineComponent({
     };
 
     const saveSuccess = () => {
+      // save pending
+      sessionStorage.setItem('ranks-pending', JSON.stringify(items.value.filter(o => (o.type as any) === null)));
+
       refresh();
       EventBus.$emit('snack', 'success', 'Data updated.');
+
       newDialog.value = false;
     };
     const update = async (item: typeof items.value[number], multi = false, attr: keyof typeof items.value[number]) => {
@@ -317,25 +351,38 @@ export default defineComponent({
         }
       }
 
-      if (attr === 'value') {
-        // check if is unique
-        if (items.value.find(o => o.type === item.type && o.value === item.value)) {
-          EventBus.$emit('snack', 'red', `[value] - Value is not unique.`);
-          refresh();
-          return;
-        }
+      // check if is unique
+      if (items.value.filter(o => o.type === item.type && o.value === item.value).length > 1) {
+        EventBus.$emit('snack', 'red', `[value] - Value is not unique.`);
+        refresh();
+        return;
       }
 
       await Promise.all(
         [item, ...(multi ? selected.value : [])].map(async (itemToUpdate) => {
           return new Promise((resolve) => {
-            console.log('Updating', { itemToUpdate }, { attr, value: item[attr] });
-            socket.emit('ranks::save', {
-              ...itemToUpdate,
-              [attr]: item[attr], // save new value for all selected items
-            } , () => {
-              resolve(true);
-            });
+            if (itemToUpdate.type !== null) {
+              console.log('Updating', { itemToUpdate }, { attr, value: item[attr] });
+              socket.emit('ranks::save', {
+                ...itemToUpdate,
+                [attr]: item[attr], // save new value for all selected items
+              } , () => {
+                // remove from pending if needed
+                sessionStorage.setItem('ranks-pending', JSON.stringify(
+                  JSON.parse(sessionStorage.getItem('ranks-pending') ?? '[]').filter((o: RankInterface) => o.id !== itemToUpdate.id),
+                ));
+                resolve(true);
+              });
+            } else {
+              // resave pending
+              console.log('Updating pending', { itemToUpdate }, { attr, value: item[attr] });
+              sessionStorage.setItem('ranks-pending', JSON.stringify(
+                [
+                  ...JSON.parse(sessionStorage.getItem('ranks-pending') ?? '[]').filter((o: RankInterface) => o.id !== itemToUpdate.id),
+                  itemToUpdate,
+                ],
+              ));
+            }
           });
         }),
       );
@@ -347,6 +394,11 @@ export default defineComponent({
       deleteDialog.value = false;
       await Promise.all(
         selected.value.map(async (item) => {
+          if ((item.type as any) === null) {
+            sessionStorage.setItem('ranks-pending', JSON.stringify(
+              JSON.parse(sessionStorage.getItem('ranks-pending') ?? '[]').filter((o: RankInterface) => o.id !== item.id),
+            ));
+          }
           return new Promise((resolve, reject) => {
             socket.emit('ranks::remove', item.id, (err: string | null) => {
               if (err) {
@@ -401,7 +453,7 @@ export default defineComponent({
       timestamp,
       rules,
       typeItems,
-      mdiMagnify,
+      mdiMagnify, mdiMinus, mdiPlus,
     };
   },
 });

@@ -73,6 +73,7 @@
                     dense
                     :items="selected"
                     :headers="headersDelete"
+                    :items-per-page="-1"
                     hide-default-header
                     hide-default-footer
                   />
@@ -267,9 +268,9 @@ import {
 import {
   computed, defineComponent, onMounted, ref, watch,
 } from '@vue/composition-api';
-import { dayjs } from 'src/bot/helpers/dayjs';
 
 import { SongPlaylistInterface } from 'src/bot/database/entity/song';
+import { dayjs } from 'src/bot/helpers/dayjs';
 import { ButtonStates } from 'src/panel/helpers/buttonStates';
 import { error } from 'src/panel/helpers/error';
 import { EventBus } from 'src/panel/helpers/event-bus';

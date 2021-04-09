@@ -79,6 +79,7 @@
                     dense
                     :items="selected"
                     :headers="headersDelete"
+                    :items-per-page="-1"
                     hide-default-header
                     hide-default-footer
                   />
@@ -228,9 +229,9 @@ import {
   computed, defineAsyncComponent, defineComponent, onMounted, ref, watch,
 } from '@vue/composition-api';
 import { cloneDeep, debounce } from 'lodash-es';
-import { dayjs } from 'src/bot/helpers/dayjs';
 
 import { HowLongToBeatGameInterface, HowLongToBeatGameItemInterface } from 'src/bot/database/entity/howLongToBeatGame';
+import { dayjs } from 'src/bot/helpers/dayjs';
 import { getTime, timestampToObject } from 'src/bot/helpers/getTime';
 import { ButtonStates } from 'src/panel/helpers/buttonStates';
 import { error } from 'src/panel/helpers/error';

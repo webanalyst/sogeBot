@@ -77,6 +77,7 @@
                     dense
                     :items="selected"
                     :headers="headersDelete"
+                    :items-per-page="-1"
                     hide-default-header
                     hide-default-footer
                   >
