@@ -25,7 +25,7 @@
       :search="search"
       :loading="state.loading !== $state.success"
       :headers="headers"
-      type-by="typeToBeShownInTable"
+      group-by="typeToBeShownInTable"
       :items-per-page="-1"
       :items="items"
     >
@@ -70,7 +70,11 @@
                     :headers="headersDelete"
                     hide-default-header
                     hide-default-footer
-                  />
+                  >
+                    <template #[`item.type`]="{ item }">
+                      {{ typeItems.find(o => o.value === item.type).text }}
+                    </template>
+                  </v-data-table>
                 </v-card-text>
                 <v-card-actions>
                   <v-spacer />
@@ -124,8 +128,8 @@
         </v-toolbar>
       </template>
 
-      <template #[`type.header`]="{ items, isOpen, toggle }">
-        <th colspan="7">
+      <template #[`group.header`]="{ items, isOpen, toggle }">
+        <th colspan="4">
           <v-icon
             @click="toggle"
           >
@@ -144,21 +148,21 @@
       </template>
 
       <template #[`item.value`]="{ item }">
-        {{ item }}
         <v-edit-dialog
           persistent
           large
           :return-value.sync="item.value"
           @save="update(item, false, 'value')"
         >
-          {{ item.value }}
+          {{ item.value }} {{ item.type === 'viewer' ? translate('hours') : translate('months') }}
           <template #input>
             <v-text-field
               v-model.number="item.value"
               :min="0"
+              type="number"
               :rules="rules.value"
               single-line
-              counter
+              :suffix=" item.type === 'viewer' ? translate('hours') : translate('months')"
             />
           </template>
         </v-edit-dialog>
@@ -257,12 +261,15 @@ export default defineComponent({
     });
 
     const headers = [
-      { value: 'value', text: capitalize(translate('hours')) },
-      { value: 'rank', text: translate('rank') },{ value: 'type', text: translate('type') },
+      { value: 'value', text: capitalize(translate('responses.variable.value')) },
+      { value: 'rank', text: translate('rank') },
+      { value: 'type', text: translate('type') },
+      { value: 'typeToBeShownInTable', text: translate('type') },
     ];
 
     const headersDelete = [
       { value: 'rank', text: '' },
+      { value: 'type', text: '' },
     ];
 
     onMounted(() => {
@@ -310,6 +317,15 @@ export default defineComponent({
         }
       }
 
+      if (attr === 'value') {
+        // check if is unique
+        if (items.value.find(o => o.type === item.type && o.value === item.value)) {
+          EventBus.$emit('snack', 'red', `[value] - Value is not unique.`);
+          refresh();
+          return;
+        }
+      }
+
       await Promise.all(
         [item, ...(multi ? selected.value : [])].map(async (itemToUpdate) => {
           return new Promise((resolve) => {
@@ -332,7 +348,7 @@ export default defineComponent({
       await Promise.all(
         selected.value.map(async (item) => {
           return new Promise((resolve, reject) => {
-            socket.emit('generic::deleteById', item.id, (err: string | null) => {
+            socket.emit('ranks::remove', item.id, (err: string | null) => {
               if (err) {
                 reject(error(err));
               }
