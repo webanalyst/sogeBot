@@ -45,7 +45,7 @@ jobs:
           USERNAME: ${{ secrets.DOCKER_USERNAME }}
           PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
           REGISTRY: docker.pkg.github.com
-          IMAGE_NAME: ${{ secrets.GITHUB_REGISTRY_IMAGE }}
+          IMAGE_NAME: ${{ secrets.GIT_REPO }}
           TAG_NAME: nightly:${{ github.sha }}
       - name: Build & Push to GitHub Package as latest
         uses: opspresso/action-docker@v0.2.1
@@ -53,7 +53,7 @@ jobs:
           USERNAME: ${{ secrets.DOCKER_USERNAME }}
           PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
           REGISTRY: docker.pkg.github.com
-          IMAGE_NAME: ${{ secrets.GITHUB_REGISTRY_IMAGE }}
+          IMAGE_NAME: ${{ secrets.GIT_REPO }}
           TAG_NAME: nightly:latest
       - name: Docker Build & Push to Docker Hub
         uses: opspresso/action-docker@v0.2.8
