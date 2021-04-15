@@ -1,6 +1,6 @@
 {
   "name": "sogebot",
-  "version": "12.12.0-SNAPSHOT",
+  "version": "12.14.0-SNAPSHOT",
   "description": "Free Twitch Bot built on Node.js",
   "private": true,
   "sideEffects": [
@@ -11,6 +11,8 @@
   "author": "Michal Orlik <sogehige@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "@sogebot/ui-helpers": "^1.0.3",
+    "@sogebot/ui-oauth": "^1.1.5",
     "axios": "0.21.1",
     "basic-auth": "2.0.1",
     "better-sqlite3": "7.1.4",

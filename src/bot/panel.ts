@@ -1,5 +1,6 @@
 'use strict';
 
+import fs from 'fs';
 import path from 'path';
 
 import bodyParser from 'body-parser';
@@ -116,6 +117,23 @@ export const init = () => {
 
   // static routing
   app?.use('/dist', express.static(path.join(__dirname, '..', 'public', 'dist')));
+
+  const nuxtCache = new Map<string, string>();
+  app?.get('/_nuxt/*', (req, res) => {
+    if (!nuxtCache.get(req.url)) {
+      // search through node_modules to find correct nuxt file
+      const paths = [
+        path.join(__dirname, '..', 'node_modules', '@sogebot', 'ui-oauth', 'dist', '_nuxt'),
+      ];
+      for (const dir of paths) {
+        const pathToFile = path.join(dir, req.url.replace('_nuxt', ''));
+        if (fs.existsSync(pathToFile)) {
+          nuxtCache.set(req.url, pathToFile);
+        }
+      }
+    }
+    res.sendFile(nuxtCache.get(req.url) as string);
+  });
   app?.get('/dist/*/*.js', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', (req.url + '.gz').split('/').map(o => sanitize(o)).join('/')), {
       headers: {
@@ -146,14 +164,11 @@ export const init = () => {
   app?.get('/popout/', function (req, res) {
     res.sendFile(path.join(__dirname, '..', 'public', 'popout.html'));
   });
-  app?.get('/oauth', function (req, res) {
-    res.sendFile(path.join(__dirname, '..', 'public', 'oauth.html'));
+  app?.get('/oauth/:page?', function (req, res) {
+    res.sendFile(path.join(__dirname, '..', 'node_modules', '@sogebot', 'ui-oauth', 'dist', 'oauth', 'index.html'));
   });
   app?.get('/login', function (req, res) {
-    res.sendFile(path.join(__dirname, '..', 'public', 'login.html'));
-  });
-  app?.get('/oauth/:page', function (req, res) {
-    res.sendFile(path.join(__dirname, '..', 'public', 'oauth-' + sanitize(req.params.page) + '.html'));
+    res.sendFile(path.join(__dirname, '..', 'node_modules', '@sogebot', 'ui-oauth', 'dist', 'login', 'index.html'));
   });
   app?.get('/overlays/:overlay', function (req, res) {
     res.sendFile(path.join(__dirname, '..', 'public', 'overlays.html'));

@@ -18,72 +18,77 @@
     <input
       v-model="currentValue"
       class="form-control"
-      :type="secret && !show ? 'password' : 'text'"
-      :readonly="readonly"
-      @focus="show = true"
-      @blur="show = false"
     >
     <div
-      v-if="!secret && defaultValue !== currentValue && !readonly"
       class="input-group-append"
     >
-      <b-button @click="currentValue = defaultValue">
-        <fa
-          icon="history"
-          fixed-width
-        />
+      <b-button
+        :variant="getVariantByState(state)"
+        @click="validate"
+      >
+        <template v-if="state === ButtonStates.idle">
+          Set current active device
+        </template>
+        <template v-else-if="state === ButtonStates.progress">
+          <b-spinner small />
+        </template>
       </b-button>
     </div>
   </div>
 </template>
 
 <script lang="ts">
+import { getSocket } from '@sogebot/ui-helpers/socket';
 import translate from '@sogebot/ui-helpers/translate';
 import {
   defineComponent, ref, watch,
 } from '@vue/composition-api';
-import { isFinite } from 'lodash-es';
+
+import { ButtonStates } from 'src/panel/helpers/buttonStates';
+import { error } from 'src/panel/helpers/error';
+import { getVariantByState } from 'src/panel/helpers/variant';
 
 export default defineComponent({
   props: {
-    value:        [String, Number],
+    value:        String,
     defaultValue: String,
     title:        String,
     type:         String,
     readonly:     Boolean,
-    secret:       Boolean,
   },
-  setup(props: { value: string | number; title: string, defaultValue: string, type: string, readonly: boolean, secret: boolean }, ctx) {
+  setup(props: { value: string | number; title: string, defaultValue: string, type: string, readonly: boolean }, ctx) {
+    const socket = getSocket('/integrations/spotify');
+
     const currentValue = ref(props.value);
     const translatedTitle = ref(translate(props.title));
-    const show = ref(false);
+    const state = ref(ButtonStates.idle as number);
 
     watch(currentValue, (val) => {
-      if (props.type === 'number') {
-        if (isFinite(Number(val))) {
-          val = Number(val);
-        } else {
-          val = props.value;
-        }
-      }
       ctx.emit('update', { value: val });
     });
+
+    async function validate() {
+
+      state.value = ButtonStates.progress;
+      socket.emit('get.value', 'lastActiveDeviceId', (err: null | string, value: string) => {
+        if (err) {
+          error(err);
+        }
+        currentValue.value = value;
+        state.value = ButtonStates.idle;
+      });
+    }
 
     return {
       currentValue,
       translatedTitle,
-      show,
+      state,
+      validate,
+
+      getVariantByState,
+      ButtonStates,
       translate,
     };
   },
 });
 </script>
-
-<style scoped>
-.fade-enter-active, .fade-leave-active {
-  transition: opacity .5s;
-}
-.fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
-  opacity: 0;
-}
-</style>
