@@ -45,7 +45,7 @@ jobs:
           USERNAME: ${{ secrets.DOCKER_USERNAME }}
           PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
           REGISTRY: docker.pkg.github.com
-          IMAGE_NAME: "sogehige/sogebot"
+          IMAGE_NAME: ${{ secrets.GITHUB_REGISTRY_IMAGE }}
           TAG_NAME: nightly:${{ github.sha }}
       - name: Build & Push to GitHub Package as latest
         uses: opspresso/action-docker@v0.2.1
@@ -53,7 +53,7 @@ jobs:
           USERNAME: ${{ secrets.DOCKER_USERNAME }}
           PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
           REGISTRY: docker.pkg.github.com
-          IMAGE_NAME: "sogehige/sogebot"
+          IMAGE_NAME: ${{ secrets.GITHUB_REGISTRY_IMAGE }}
           TAG_NAME: nightly:latest
       - name: Docker Build & Push to Docker Hub
         uses: opspresso/action-docker@v0.2.8
@@ -63,7 +63,7 @@ jobs:
           USERNAME: ${{ secrets.DOCKER_REGISTRY_USERNAME }}
           PASSWORD: ${{ secrets.DOCKER_REGISTRY_PASSWORD }}
           DOCKERFILE: "Dockerfile"
-          IMAGE_NAME: "sogebot/nightly"
+          IMAGE_NAME: ${{ secrets.DOCKER_REGISTRY_IMAGE_NIGHTLY }}
           TAG_NAME: ${{ github.sha }}
           LATEST: "true"
 
