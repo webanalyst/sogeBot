@@ -66,4 +66,3 @@ jobs:
           IMAGE_NAME: ${{ secrets.DOCKER_REGISTRY_IMAGE_NIGHTLY }}
           TAG_NAME: ${{ github.sha }}
           LATEST: "true"
-
