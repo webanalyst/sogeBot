@@ -1,4 +1,5 @@
 {
+  "announcements": "Announcements",
   "currency": "Currency",
   "general": "General",
   "settings": "Settings",
@@ -12,6 +13,7 @@
   "levels": "Levels",
   "notifications": "Notifications",
   "options": "Options",
+  "messages": "Messages",
   "results": "Results",
   "customization": "Customization",
   "status": "Status",
@@ -34,7 +36,7 @@
   "conversion": "Conversion",
   "xp": "XP",
   "caps_filter": "Caps filter",
-  "color_filter": "Color (/me) filter",
+  "color_filter": "Italic (/me) filter",
   "links_filter": "Links filter",
   "symbols_filter": "Symbols filter",
   "longMessage_filter": "Message length filter",

@@ -23,7 +23,7 @@
     },
     "raffleAnnounceInterval": {
       "title": "Announce interval",
-      "help": "in minutes"
+      "help": "Minutes"
     },
     "raffleAnnounceMessageInterval": {
       "title": "Announce message interval",
@@ -31,11 +31,11 @@
     },
     "subscribersPercent": {
       "title": "Additional subscribers luck",
-      "help": "in percents"
+      "help": "en pourcents"
     },
     "followersPercent": {
       "title": "Additional followers luck",
-      "help": "in percents"
+      "help": "en pourcents"
     }
   }
 }

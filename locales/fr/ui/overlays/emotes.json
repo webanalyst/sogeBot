@@ -1,9 +1,9 @@
 {
 	"settings": {
 		"btnRemoveCache": "Delete cache",
-		"btnTestExplosion": "Emote explosion",
-		"btnTestEmote": "Emote",
-		"btnTestFirework": "Emote firework",
+		"btnTestExplosion": "Test emote explosion",
+		"btnTestEmote": "Test emote",
+		"btnTestFirework": "Test emote firework",
 		"cEmotesSize": "Emotes size",
 		"cEmotesMaxEmotesPerMessage": "Maximum of emotes per messge",
 		"cEmotesAnimation": "Animation",
@@ -15,7 +15,7 @@
 		"comboBreakMessages": "Combo break messages",
 		"threshold": "Threshold",
 		"noMessagesFound": "No messages found.",
-		"message": "Message",
+		"message": "Message ",
 		"showEmoteInOverlayThreshold": "Minimal message threshold to show emote in overlay",
 		"hideEmoteInOverlayAfter": {
 			"title": "Hide emote in overlay after inactivity",

@@ -4,7 +4,7 @@ const fs = require('fs');
 let status = 0;
 async function retest() {
   const file = fs.readFileSync('report').toString();
-  const regexp = /^  \d\)(.*)$/gm;
+  const regexp = /^ {2}\d\)(.*)$/gm;
   const match = file.match(regexp);
 
   if (match) {
@@ -12,6 +12,13 @@ async function retest() {
       return o.trim().split(/\d\) /)[1];
     }))) {
       await new Promise((resolve) => {
+        console.log('------------------------------------------------------------------------------');
+        console.log('\tRemoving sogebot.db file');
+        console.log('------------------------------------------------------------------------------');
+        if (fs.existsSync('./sogebot.db')) {
+          fs.unlinkSync('./sogebot.db');
+        }
+
         console.log('------------------------------------------------------------------------------');
         console.log('\t=> Re-Running ' + suite + ' tests');
         console.log('------------------------------------------------------------------------------');
